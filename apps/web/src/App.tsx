@@ -22,6 +22,7 @@ import { WsClient } from "./ws/client";
 import { dispatchWs } from "./ws/dispatcher";
 import { useStore } from "./store/useStore";
 import { WS_URL } from "./cesium/cesium-config";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 export default function App() {
   const [viewer, setViewer] = useState<Cesium.Viewer | null>(null);
@@ -41,25 +42,25 @@ export default function App() {
 
   return (
     <div className="fixed inset-0 bg-ink overflow-hidden">
-      <CesiumViewer onReady={setViewer} />
-      <BusesLayer viewer={viewer} />
-      <ReportsLayer viewer={viewer} />
-      <TrafficLayer viewer={viewer} />
-      <ThermalLayer viewer={viewer} />
-      <VotesLayer viewer={viewer} />
+      <ErrorBoundary name="viewer"><CesiumViewer onReady={setViewer} /></ErrorBoundary>
+      <ErrorBoundary name="buses"><BusesLayer viewer={viewer} /></ErrorBoundary>
+      <ErrorBoundary name="reports"><ReportsLayer viewer={viewer} /></ErrorBoundary>
+      <ErrorBoundary name="traffic"><TrafficLayer viewer={viewer} /></ErrorBoundary>
+      <ErrorBoundary name="thermal"><ThermalLayer viewer={viewer} /></ErrorBoundary>
+      <ErrorBoundary name="votes"><VotesLayer viewer={viewer} /></ErrorBoundary>
 
-      <TimeSlider />
-      <ThinkingCard />
-      <ResultsCard />
-      <VariantCompare />
-      <VoteCounter />
-      <AgentOrb />
-      <Subtitles />
-      <EngagePanel />
-      <BacktestPanel />
-      <DecisionPanel />
-      <DirectorBar />
-      <FPSOverlay />
+      <ErrorBoundary name="time"><TimeSlider /></ErrorBoundary>
+      <ErrorBoundary name="thinking"><ThinkingCard /></ErrorBoundary>
+      <ErrorBoundary name="results"><ResultsCard /></ErrorBoundary>
+      <ErrorBoundary name="variant"><VariantCompare /></ErrorBoundary>
+      <ErrorBoundary name="vote-counter"><VoteCounter /></ErrorBoundary>
+      <ErrorBoundary name="orb"><AgentOrb /></ErrorBoundary>
+      <ErrorBoundary name="subtitles"><Subtitles /></ErrorBoundary>
+      <ErrorBoundary name="engage"><EngagePanel /></ErrorBoundary>
+      <ErrorBoundary name="backtest"><BacktestPanel /></ErrorBoundary>
+      <ErrorBoundary name="decision"><DecisionPanel /></ErrorBoundary>
+      <ErrorBoundary name="director"><DirectorBar /></ErrorBoundary>
+      <ErrorBoundary name="fps"><FPSOverlay /></ErrorBoundary>
     </div>
   );
 }

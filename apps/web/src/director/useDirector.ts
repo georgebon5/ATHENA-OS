@@ -3,6 +3,7 @@ import { useStore } from "@/store/useStore";
 import type { DemoBeat } from "@/types/contracts";
 import { triggerBeat, triggerText } from "./directorApi";
 import { playFallback } from "./fallback";
+import { cameraController, SHOTS } from "@/cesium/cameraShots";
 
 const BEATS: DemoBeat[] = [
   "INTRO",
@@ -64,6 +65,7 @@ export function useDirector(): {
       if (ev.key === "r" || ev.key === "R") {
         reset();
         setBeat("INTRO");
+        cameraController.flyTo({ ...SHOTS.riseToOverview, durationS: 0.6 });
         return;
       }
     };

@@ -42,10 +42,12 @@ export function CesiumViewer({ onReady }: Props) {
       shouldAnimate: true,
       skyBox: false,
       skyAtmosphere: new Cesium.SkyAtmosphere(),
-      // Ξεκινάμε με OSM imagery· το Google Photorealistic το φορτώνουμε στο
-      // επόμενο βήμα αν υπάρχει κλειδί.
-      baseLayer: Cesium.ImageryLayer.fromProviderAsync(
-        Cesium.IonImageryProvider.fromAssetId(2),
+      // Default imagery = OSM (δεν θέλει token). Αν υπάρχει Google key,
+      // το Photorealistic 3D Tiles καλύπτει την πόλη από πάνω.
+      baseLayer: new Cesium.ImageryLayer(
+        new Cesium.OpenStreetMapImageryProvider({
+          url: "https://tile.openstreetmap.org/",
+        }),
         {},
       ),
     });

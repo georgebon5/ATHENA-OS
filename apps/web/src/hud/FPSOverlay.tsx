@@ -29,7 +29,7 @@ export function FPSOverlay() {
     };
   }, []);
 
-  if (!import.meta.env.DEV && !director) return null;
+  if (!director) return null;
   const color = fps >= 55 ? "text-cool" : fps >= 45 ? "text-warn" : "text-hot";
 
   return (

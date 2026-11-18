@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #06090d;
+    color: #e8edf2;
+    -webkit-font-smoothing: antialiased;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  /* Κρύβουμε όλο το default chrome του Cesium — το credits φαίνεται
+     όμως μόνο σε μικρό μέγεθος στην γωνία για τους όρους χρήσης */
+  .cesium-viewer-bottom {
+    display: none !important;
+  }
+  .cesium-viewer-toolbar,
+  .cesium-viewer-animationContainer,
+  .cesium-viewer-timelineContainer,
+  .cesium-viewer-fullscreenContainer,
+  .cesium-viewer-vrContainer,
+  .cesium-viewer-geocoderContainer,
+  .cesium-viewer-selectionIndicatorContainer,
+  .cesium-viewer-infoBoxContainer {
+    display: none !important;
+  }
+  .cesium-widget-credits {
+    opacity: 0.4;
+    transform: scale(0.85);
+    transform-origin: bottom right;
+  }
+}
+
+@layer components {
+  .glass {
+    background: rgba(11, 15, 20, 0.55);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid rgba(123, 209, 255, 0.08);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+  }
+  .glass-strong {
+    background: rgba(6, 9, 13, 0.78);
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    border: 1px solid rgba(123, 209, 255, 0.14);
+    box-shadow: 0 10px 60px rgba(0, 0, 0, 0.65);
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+    background: rgba(123, 209, 255, 0.12);
+    color: #bfe5ff;
+    border: 1px solid rgba(123, 209, 255, 0.25);
+  }
+  .range-badge {
+    @apply text-chalk/60 text-xs tracking-wide;
+  }
+}
+
+/* Για να μην φαίνεται η μαύρη λωρίδα πίσω από το Cesium */
+.cesium-widget,
+.cesium-widget canvas {
+  background: transparent !important;
+}

@@ -6,6 +6,7 @@ import { ReportsLayer } from "./layers/ReportsLayer";
 import { TrafficLayer } from "./layers/TrafficLayer";
 import { ThermalLayer } from "./layers/ThermalLayer";
 import { VotesLayer } from "./layers/VotesLayer";
+import { DrawLayer } from "./layers/DrawLayer";
 import { AgentOrb } from "./hud/AgentOrb";
 import { Subtitles } from "./hud/Subtitles";
 import { ThinkingCard } from "./hud/ThinkingCard";
@@ -18,6 +19,8 @@ import { DecisionPanel } from "./hud/DecisionPanel";
 import { DirectorBar } from "./hud/DirectorBar";
 import { FPSOverlay } from "./hud/FPSOverlay";
 import { VoteCounter } from "./hud/VoteCounter";
+import { Minimap } from "./hud/Minimap";
+import { DrawPanel } from "./hud/DrawPanel";
 import { WsClient } from "./ws/client";
 import { dispatchWs } from "./ws/dispatcher";
 import { useStore } from "./store/useStore";
@@ -48,8 +51,11 @@ export default function App() {
       <ErrorBoundary name="traffic"><TrafficLayer viewer={viewer} /></ErrorBoundary>
       <ErrorBoundary name="thermal"><ThermalLayer viewer={viewer} /></ErrorBoundary>
       <ErrorBoundary name="votes"><VotesLayer viewer={viewer} /></ErrorBoundary>
+      <ErrorBoundary name="draw"><DrawLayer viewer={viewer} /></ErrorBoundary>
 
       <ErrorBoundary name="time"><TimeSlider /></ErrorBoundary>
+      <ErrorBoundary name="minimap"><Minimap /></ErrorBoundary>
+      <ErrorBoundary name="draw-panel"><DrawPanel /></ErrorBoundary>
       <ErrorBoundary name="thinking"><ThinkingCard /></ErrorBoundary>
       <ErrorBoundary name="results"><ResultsCard /></ErrorBoundary>
       <ErrorBoundary name="variant"><VariantCompare /></ErrorBoundary>

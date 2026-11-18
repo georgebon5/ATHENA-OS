@@ -7,6 +7,7 @@ import type {
   DecisionDraft,
   DemoBeat,
   LayerKey,
+  LngLat,
   Report,
   Scenario,
   SimResult,
@@ -73,6 +74,10 @@ export interface AthenaState {
   // time
   when: string | null;
 
+  // scenario draw mode (interactive, ο χρήστης κλικάρει σημεία)
+  drawMode: boolean;
+  drawPoints: LngLat[];
+
   // actions
   setWsConnected: (v: boolean, latencyMs?: number) => void;
   setBeat: (b: DemoBeat) => void;
@@ -93,6 +98,9 @@ export interface AthenaState {
   pushThinking: (stepEl: string) => void;
   clearThinking: () => void;
   setWhen: (iso: string | null) => void;
+  setDrawMode: (v: boolean) => void;
+  pushDrawPoint: (p: LngLat) => void;
+  clearDrawPoints: () => void;
   reset: () => void;
 }
 
@@ -125,6 +133,8 @@ export const useStore = create<AthenaState>((set) => ({
   agentSpeech: null,
   thinking: [],
   when: null,
+  drawMode: false,
+  drawPoints: [],
 
   setWsConnected: (v, latencyMs) =>
     set({ wsConnected: v, wsLatencyMs: latencyMs ?? null }),
@@ -154,6 +164,11 @@ export const useStore = create<AthenaState>((set) => ({
     })),
   clearThinking: () => set({ thinking: [] }),
   setWhen: (iso) => set({ when: iso }),
+  setDrawMode: (v) =>
+    set((s) => ({ drawMode: v, drawPoints: v ? s.drawPoints : [] })),
+  pushDrawPoint: (p) =>
+    set((s) => ({ drawPoints: [...s.drawPoints, p] })),
+  clearDrawPoints: () => set({ drawPoints: [] }),
   reset: () =>
     set({
       beat: "INTRO",
@@ -170,6 +185,8 @@ export const useStore = create<AthenaState>((set) => ({
       agentSpeech: null,
       thinking: [],
       when: null,
+      drawMode: false,
+      drawPoints: [],
       layers: initialLayers,
     }),
 }));

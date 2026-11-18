@@ -1,0 +1,62 @@
+[
+  {
+    "atMs": 0,
+    "event": {
+      "type": "camera.flyTo",
+      "payload": {
+        "lngLat": [23.7111, 37.9789],
+        "heightM": 120,
+        "headingDeg": 300,
+        "pitchDeg": -15,
+        "durationS": 2.5,
+        "shot": "diveToStreet"
+      }
+    }
+  },
+  {
+    "atMs": 400,
+    "event": {
+      "type": "report.created",
+      "payload": {
+        "id": "r-fallback-001",
+        "createdAt": "2026-11-21T10:12:00Z",
+        "photoUrl": "https://images.unsplash.com/photo-1518709268805-4e9042af2176?auto=format&fit=crop&w=600&q=70",
+        "location": [23.7111, 37.9789],
+        "heading": 48,
+        "accuracyM": 6
+      }
+    }
+  },
+  {
+    "atMs": 900,
+    "event": {
+      "type": "agent.say",
+      "payload": {
+        "textEl": "Νέα αναφορά στην Πειραιώς 144 — αναλύω την εικόνα.",
+        "mood": "alert"
+      }
+    }
+  },
+  {
+    "atMs": 3000,
+    "event": {
+      "type": "report.classified",
+      "payload": {
+        "id": "r-fallback-001",
+        "createdAt": "2026-11-21T10:12:00Z",
+        "photoUrl": "https://images.unsplash.com/photo-1518709268805-4e9042af2176?auto=format&fit=crop&w=600&q=70",
+        "location": [23.7111, 37.9789],
+        "heading": 48,
+        "accuracyM": 6,
+        "classification": {
+          "category": "heat_exposure",
+          "severity": 4,
+          "summaryEl": "Έκθεση σε υψηλή θερμοκρασία στο πεζοδρόμιο της Πειραιώς",
+          "department": "Διεύθυνση Πρασίνου & Αστικής Πανίδας",
+          "duplicates": [],
+          "confidence": 0.84
+        }
+      }
+    }
+  }
+]

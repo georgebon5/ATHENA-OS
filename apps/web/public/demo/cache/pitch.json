@@ -1,0 +1,16 @@
+[
+  {
+    "atMs": 0,
+    "event": {
+      "type": "camera.flyTo",
+      "payload": {
+        "lngLat": [23.7108, 37.9787],
+        "heightM": 900,
+        "headingDeg": 0,
+        "pitchDeg": -55,
+        "durationS": 2.5,
+        "shot": "riseToOverview"
+      }
+    }
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "atMs": 0,
+    "event": {
+      "type": "camera.flyTo",
+      "payload": {
+        "lngLat": [23.7108, 37.9787],
+        "heightM": 900,
+        "headingDeg": 0,
+        "pitchDeg": -55,
+        "durationS": 4,
+        "shot": "riseToOverview"
+      }
+    }
+  },
+  {
+    "atMs": 1000,
+    "event": {
+      "type": "agent.say",
+      "payload": {
+        "textEl": "Μία γειτονιά. Τρεις μήνες. Ένα πιλοτικό που μπορείτε να μετρήσετε.",
+        "mood": "proud"
+      }
+    }
+  }
+]

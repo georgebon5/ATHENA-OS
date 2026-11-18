@@ -1,0 +1,30 @@
+[
+  {
+    "atMs": 0,
+    "event": {
+      "type": "camera.flyTo",
+      "payload": {
+        "lngLat": [23.7108, 37.9787],
+        "heightM": 500,
+        "headingDeg": 35,
+        "pitchDeg": -35,
+        "durationS": 3.5,
+        "shot": "orbitSerafio"
+      }
+    }
+  },
+  {
+    "atMs": 800,
+    "event": {
+      "type": "agent.say",
+      "payload": {
+        "textEl": "Είμαι η ATHENA. Αυτή τη στιγμή παρακολουθώ 3 λεωφορεία στην Πειραιώς και 180 αναφορές πολιτών.",
+        "mood": "neutral"
+      }
+    }
+  },
+  {
+    "atMs": 1200,
+    "event": { "type": "layer.set", "payload": { "layer": "buses", "visible": true } }
+  }
+]

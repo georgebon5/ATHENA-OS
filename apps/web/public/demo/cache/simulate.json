@@ -1,0 +1,83 @@
+[
+  {
+    "atMs": 0,
+    "event": {
+      "type": "agent.say",
+      "payload": {
+        "textEl": "«Τι θα γίνει αν αφαιρέσουμε μία λωρίδα και φυτέψουμε δέντρα;» Το υπολογίζω.",
+        "mood": "neutral"
+      }
+    }
+  },
+  {
+    "atMs": 500,
+    "event": {
+      "type": "scenario.created",
+      "payload": {
+        "id": "s-fallback-001",
+        "title": "Δέντρα και λωρίδα λεωφορείου στην Πειραιώς",
+        "edits": [
+          { "type": "bus_lane", "wayIds": [10045, 10046] },
+          { "type": "add_trees", "geometry": [[23.705, 37.974], [23.7108, 37.9787], [23.7155, 37.9815]], "count": 42, "side": "south" }
+        ],
+        "when": "2026-11-21T10:30:00Z",
+        "origin": "user"
+      }
+    }
+  },
+  {
+    "atMs": 900,
+    "event": { "type": "agent.thinking", "payload": { "stepEl": "Δοκιμάζω παραλλαγή 1/4: δέντρα στη βόρεια πλευρά…" } }
+  },
+  {
+    "atMs": 1800,
+    "event": { "type": "agent.thinking", "payload": { "stepEl": "Δοκιμάζω παραλλαγή 2/4: δέντρα στη νότια πλευρά…" } }
+  },
+  {
+    "atMs": 2400,
+    "event": { "type": "sim.progress", "payload": { "scenarioId": "s-fallback-001", "pct": 0.5 } }
+  },
+  {
+    "atMs": 2800,
+    "event": { "type": "agent.thinking", "payload": { "stepEl": "Δοκιμάζω παραλλαγή 3/4: cool pavement…" } }
+  },
+  {
+    "atMs": 3400,
+    "event": { "type": "agent.thinking", "payload": { "stepEl": "Δοκιμάζω παραλλαγή 4/4: δέντρα νότια + λωρίδα λεωφορείου…" } }
+  },
+  {
+    "atMs": 4200,
+    "event": {
+      "type": "sim.result",
+      "payload": {
+        "scenarioId": "s-fallback-001",
+        "status": "ok",
+        "computeMs": 2100,
+        "traffic": {
+          "segments": [
+            { "wayId": 10001, "baseFlow": 1200, "newFlow": 1050, "baseTimeS": 65, "newTimeS": 58, "path": [[23.705, 37.974], [23.7108, 37.9787]] },
+            { "wayId": 10002, "baseFlow": 1150, "newFlow": 990, "baseTimeS": 60, "newTimeS": 54, "path": [[23.7108, 37.9787], [23.7155, 37.9815]] }
+          ],
+          "corridorTravelTimeDeltaPct": { "p10": -6.5, "p50": -3.8, "p90": -1.1 },
+          "vehicleKmDeltaPct": { "p10": -5.1, "p50": -2.4, "p90": 0.3 },
+          "trips": []
+        },
+        "thermal": {
+          "when": "2026-11-21T10:30:00Z",
+          "cells": [
+            { "lngLat": [23.7108, 37.9787], "baseC": 36, "newC": 33.8 },
+            { "lngLat": [23.7120, 37.9790], "baseC": 35.5, "newC": 33.4 },
+            { "lngLat": [23.7095, 37.9780], "baseC": 35.8, "newC": 33.6 }
+          ],
+          "hotspotDeltaC": { "p10": -3.1, "p50": -2.2, "p90": -0.9 }
+        },
+        "emissions": { "co2DeltaPct": { "p10": -4.8, "p50": -2.1, "p90": 0.2 } },
+        "notes": [
+          "Προσομοίωση με δεδομένα ΟΑΣΑ Πεμ 20/11, 08:00–10:00",
+          "Θερμικό πλέγμα 25m από Landsat 14/07/2025",
+          "Παραδοχή: 42 δέντρα, κάλυψη κόμης +18%"
+        ]
+      }
+    }
+  }
+]

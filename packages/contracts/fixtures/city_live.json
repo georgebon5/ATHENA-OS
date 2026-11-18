@@ -1,0 +1,36 @@
+{
+  "updatedAt": "2026-11-21T10:00:00Z",
+  "buses": {
+    "active": 7,
+    "lines": [
+      "049",
+      "815",
+      "838",
+      "856",
+      "914",
+      "Β18",
+      "Γ18"
+    ],
+    "source": "mock"
+  },
+  "weather": {
+    "temperatureC": 17.4,
+    "apparentC": 16.1,
+    "source": "open-meteo"
+  },
+  "reports": {
+    "total": 40,
+    "last24h": 3,
+    "byCategory": {
+      "accessibility": 7,
+      "graffiti": 1,
+      "heat_exposure": 4,
+      "lighting": 2,
+      "obstruction": 3,
+      "other": 2,
+      "pothole": 6,
+      "sidewalk_damage": 7,
+      "waste": 8
+    }
+  }
+}

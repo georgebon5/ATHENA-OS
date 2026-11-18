@@ -1,0 +1,758 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "events.json",
+  "definitions": {
+    "DemoBeat": {
+      "title": "DemoBeat",
+      "type": "string",
+      "enum": [
+        "INTRO",
+        "PITCH",
+        "SENSE",
+        "SIMULATE",
+        "ENGAGE",
+        "DECISION",
+        "CLOSE"
+      ]
+    },
+    "LayerKey": {
+      "title": "LayerKey",
+      "type": "string",
+      "enum": [
+        "traffic",
+        "thermal",
+        "reports",
+        "votes",
+        "buses"
+      ]
+    },
+    "AgentMood": {
+      "title": "AgentMood",
+      "type": "string",
+      "enum": [
+        "neutral",
+        "alert",
+        "proud"
+      ]
+    },
+    "BusesUpdatePayload": {
+      "title": "BusesUpdatePayload",
+      "type": "object",
+      "required": [
+        "buses"
+      ],
+      "properties": {
+        "buses": {
+          "type": "array",
+          "items": {
+            "$ref": "city.json#/definitions/Bus"
+          }
+        }
+      }
+    },
+    "ReportHiddenPayload": {
+      "title": "ReportHiddenPayload",
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "description": "ΠΡΟΤΑΣΗ Dev4: ο director κρύβει ακατάλληλη φωτογραφία (moderation)"
+    },
+    "AgentSayPayload": {
+      "title": "AgentSayPayload",
+      "type": "object",
+      "required": [
+        "textEl"
+      ],
+      "properties": {
+        "textEl": {
+          "type": "string"
+        },
+        "audioUrl": {
+          "type": "string"
+        },
+        "mood": {
+          "$ref": "events.json#/definitions/AgentMood"
+        }
+      }
+    },
+    "AgentThinkingPayload": {
+      "title": "AgentThinkingPayload",
+      "type": "object",
+      "required": [
+        "stepEl"
+      ],
+      "properties": {
+        "stepEl": {
+          "type": "string"
+        }
+      }
+    },
+    "CameraFlyToPayload": {
+      "title": "CameraFlyToPayload",
+      "type": "object",
+      "required": [
+        "lngLat",
+        "heightM",
+        "headingDeg",
+        "pitchDeg",
+        "durationS"
+      ],
+      "properties": {
+        "lngLat": {
+          "$ref": "geo.json#/definitions/LngLat"
+        },
+        "heightM": {
+          "type": "number"
+        },
+        "headingDeg": {
+          "type": "number"
+        },
+        "pitchDeg": {
+          "type": "number"
+        },
+        "durationS": {
+          "type": "number",
+          "minimum": 0
+        },
+        "shot": {
+          "type": "string",
+          "description": "Όνομα προκαθορισμένου πλάνου του web (π.χ. orbitSerafio)"
+        }
+      }
+    },
+    "LayerSetPayload": {
+      "title": "LayerSetPayload",
+      "type": "object",
+      "required": [
+        "layer",
+        "visible"
+      ],
+      "properties": {
+        "layer": {
+          "$ref": "events.json#/definitions/LayerKey"
+        },
+        "visible": {
+          "type": "boolean"
+        }
+      }
+    },
+    "TimeSetPayload": {
+      "title": "TimeSetPayload",
+      "type": "object",
+      "required": [
+        "when"
+      ],
+      "properties": {
+        "when": {
+          "type": "string",
+          "description": "ISO 8601"
+        }
+      }
+    },
+    "SimProgressPayload": {
+      "title": "SimProgressPayload",
+      "type": "object",
+      "required": [
+        "scenarioId",
+        "pct"
+      ],
+      "properties": {
+        "scenarioId": {
+          "type": "string"
+        },
+        "pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Κλάσμα 0–1"
+        }
+      }
+    },
+    "VariantComparePayload": {
+      "title": "VariantComparePayload",
+      "type": "object",
+      "required": [
+        "base",
+        "best",
+        "reasonEl"
+      ],
+      "properties": {
+        "base": {
+          "$ref": "sim.json#/definitions/SimResult"
+        },
+        "best": {
+          "$ref": "sim.json#/definitions/SimResult"
+        },
+        "reasonEl": {
+          "type": "string"
+        }
+      }
+    },
+    "BacktestShowPayload": {
+      "title": "BacktestShowPayload",
+      "type": "object",
+      "required": [
+        "model"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "enum": [
+            "traffic",
+            "thermal"
+          ]
+        }
+      }
+    },
+    "DirectorBeatPayload": {
+      "title": "DirectorBeatPayload",
+      "type": "object",
+      "required": [
+        "beat"
+      ],
+      "properties": {
+        "beat": {
+          "$ref": "events.json#/definitions/DemoBeat"
+        }
+      }
+    },
+    "ServiceState": {
+      "title": "ServiceState",
+      "type": "string",
+      "enum": [
+        "up",
+        "down",
+        "mock"
+      ]
+    },
+    "SystemStatus": {
+      "title": "SystemStatus",
+      "type": "object",
+      "required": [
+        "at",
+        "services",
+        "fallbacks"
+      ],
+      "properties": {
+        "at": {
+          "type": "string"
+        },
+        "services": {
+          "title": "SystemServices",
+          "type": "object",
+          "required": [
+            "db",
+            "sim",
+            "agent",
+            "oasa"
+          ],
+          "properties": {
+            "db": {
+              "type": "string",
+              "enum": [
+                "postgres",
+                "sqlite"
+              ]
+            },
+            "sim": {
+              "$ref": "events.json#/definitions/ServiceState"
+            },
+            "agent": {
+              "$ref": "events.json#/definitions/ServiceState"
+            },
+            "oasa": {
+              "$ref": "city.json#/definitions/DataSource"
+            }
+          }
+        },
+        "fallbacks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Πρόσφατα fallbacks, στα ελληνικά. Δείχνονται ΜΟΝΟ στον director."
+        }
+      },
+      "description": "ΠΡΟΤΑΣΗ Dev4: κατάσταση υπηρεσιών. Το web το δείχνει μόνο στο director panel, ποτέ στο κοινό."
+    },
+    "StateResetPayload": {
+      "title": "StateResetPayload",
+      "type": "object",
+      "required": [],
+      "properties": {},
+      "description": "ΠΡΟΤΑΣΗ Dev4: ο director έκανε reset για νέα πρόβα. Ο client καθαρίζει σενάριο/ψήφους/απόφαση."
+    },
+    "BusesUpdateEvent": {
+      "title": "BusesUpdateEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "buses.update"
+        },
+        "payload": {
+          "$ref": "events.json#/definitions/BusesUpdatePayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "ReportCreatedEvent": {
+      "title": "ReportCreatedEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "report.created"
+        },
+        "payload": {
+          "$ref": "report.json#/definitions/Report"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "ReportClassifiedEvent": {
+      "title": "ReportClassifiedEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "report.classified"
+        },
+        "payload": {
+          "$ref": "report.json#/definitions/Report"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "ReportHiddenEvent": {
+      "title": "ReportHiddenEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "report.hidden"
+        },
+        "payload": {
+          "$ref": "events.json#/definitions/ReportHiddenPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "AgentSayEvent": {
+      "title": "AgentSayEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "agent.say"
+        },
+        "payload": {
+          "$ref": "events.json#/definitions/AgentSayPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "AgentThinkingEvent": {
+      "title": "AgentThinkingEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "agent.thinking"
+        },
+        "payload": {
+          "$ref": "events.json#/definitions/AgentThinkingPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "CameraFlyToEvent": {
+      "title": "CameraFlyToEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "camera.flyTo"
+        },
+        "payload": {
+          "$ref": "events.json#/definitions/CameraFlyToPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "LayerSetEvent": {
+      "title": "LayerSetEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "layer.set"
+        },
+        "payload": {
+          "$ref": "events.json#/definitions/LayerSetPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "TimeSetEvent": {
+      "title": "TimeSetEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "time.set"
+        },
+        "payload": {
+          "$ref": "events.json#/definitions/TimeSetPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "ScenarioCreatedEvent": {
+      "title": "ScenarioCreatedEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "scenario.created"
+        },
+        "payload": {
+          "$ref": "scenario.json#/definitions/Scenario"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "SimProgressEvent": {
+      "title": "SimProgressEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "sim.progress"
+        },
+        "payload": {
+          "$ref": "events.json#/definitions/SimProgressPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "SimResultEvent": {
+      "title": "SimResultEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "sim.result"
+        },
+        "payload": {
+          "$ref": "sim.json#/definitions/SimResult"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "VariantCompareEvent": {
+      "title": "VariantCompareEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "variant.compare"
+        },
+        "payload": {
+          "$ref": "events.json#/definitions/VariantComparePayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "BacktestShowEvent": {
+      "title": "BacktestShowEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "backtest.show"
+        },
+        "payload": {
+          "$ref": "events.json#/definitions/BacktestShowPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "ConsultationOpenedEvent": {
+      "title": "ConsultationOpenedEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "consultation.opened"
+        },
+        "payload": {
+          "$ref": "engage.json#/definitions/Consultation"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "VoteTallyEvent": {
+      "title": "VoteTallyEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "vote.tally"
+        },
+        "payload": {
+          "$ref": "engage.json#/definitions/VoteTally"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "DecisionReadyEvent": {
+      "title": "DecisionReadyEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "decision.ready"
+        },
+        "payload": {
+          "$ref": "engage.json#/definitions/DecisionDraft"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "DirectorBeatEvent": {
+      "title": "DirectorBeatEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "director.beat"
+        },
+        "payload": {
+          "$ref": "events.json#/definitions/DirectorBeatPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "SystemStatusEvent": {
+      "title": "SystemStatusEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "system.status"
+        },
+        "payload": {
+          "$ref": "events.json#/definitions/SystemStatus"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "StateResetEvent": {
+      "title": "StateResetEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "state.reset"
+        },
+        "payload": {
+          "$ref": "events.json#/definitions/StateResetPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "WsEvent": {
+      "title": "WsEvent",
+      "description": "Κάθε μήνυμα στο /ws: { type, payload }",
+      "oneOf": [
+        {
+          "$ref": "events.json#/definitions/BusesUpdateEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/ReportCreatedEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/ReportClassifiedEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/ReportHiddenEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/AgentSayEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/AgentThinkingEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/CameraFlyToEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/LayerSetEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/TimeSetEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/ScenarioCreatedEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/SimProgressEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/SimResultEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/VariantCompareEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/BacktestShowEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/ConsultationOpenedEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/VoteTallyEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/DecisionReadyEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/DirectorBeatEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/SystemStatusEvent"
+        },
+        {
+          "$ref": "events.json#/definitions/StateResetEvent"
+        }
+      ]
+    }
+  }
+}

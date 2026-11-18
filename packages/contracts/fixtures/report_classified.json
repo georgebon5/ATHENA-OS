@@ -1,0 +1,21 @@
+{
+  "id": "r-demo-001",
+  "createdAt": "2026-11-21T10:00:00Z",
+  "photoUrl": "https://images.unsplash.com/photo-1518709268805-4e9042af2176?auto=format&fit=crop&w=1200&q=70",
+  "location": [
+    23.7111,
+    37.9789
+  ],
+  "heading": 48.0,
+  "accuracyM": 6.0,
+  "classification": {
+    "category": "heat_exposure",
+    "severity": 4,
+    "summaryEl": "Πεζοδρόμιο της Πειραιώς χωρίς σκιά, με υψηλή έκθεση στον ήλιο τις μεσημεριανές ώρες.",
+    "department": "Διεύθυνση Πρασίνου & Αστικής Πανίδας",
+    "duplicates": [
+      "r-seed-029"
+    ],
+    "confidence": 0.86
+  }
+}

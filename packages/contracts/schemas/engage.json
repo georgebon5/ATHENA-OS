@@ -1,0 +1,193 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "engage.json",
+  "definitions": {
+    "Consultation": {
+      "title": "Consultation",
+      "type": "object",
+      "required": [
+        "id",
+        "scenarioId",
+        "beforeUrl",
+        "afterUrl",
+        "questionEl",
+        "publicUrl"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "scenarioId": {
+          "type": "string"
+        },
+        "reportId": {
+          "type": "string"
+        },
+        "beforeUrl": {
+          "type": "string"
+        },
+        "afterUrl": {
+          "type": "string"
+        },
+        "questionEl": {
+          "type": "string"
+        },
+        "publicUrl": {
+          "type": "string",
+          "description": "Αυτό γίνεται QR"
+        }
+      }
+    },
+    "ConsultationCreate": {
+      "title": "ConsultationCreate",
+      "description": "Body του POST /api/consultations. Τα id και publicUrl τα βάζει ο gateway.",
+      "type": "object",
+      "required": [
+        "scenarioId",
+        "beforeUrl",
+        "afterUrl",
+        "questionEl"
+      ],
+      "properties": {
+        "scenarioId": {
+          "type": "string"
+        },
+        "reportId": {
+          "type": "string"
+        },
+        "beforeUrl": {
+          "type": "string"
+        },
+        "afterUrl": {
+          "type": "string"
+        },
+        "questionEl": {
+          "type": "string"
+        }
+      }
+    },
+    "VoteChoice": {
+      "title": "VoteChoice",
+      "type": "string",
+      "enum": [
+        "yes",
+        "no",
+        "maybe"
+      ]
+    },
+    "Vote": {
+      "title": "Vote",
+      "type": "object",
+      "required": [
+        "consultationId",
+        "choice"
+      ],
+      "properties": {
+        "consultationId": {
+          "type": "string"
+        },
+        "choice": {
+          "$ref": "engage.json#/definitions/VoteChoice"
+        },
+        "location": {
+          "$ref": "geo.json#/definitions/LngLat"
+        },
+        "comment": {
+          "type": "string",
+          "maxLength": 500
+        }
+      },
+      "description": "Body του POST /api/consultations/{id}/votes. location = προαιρετικά η γειτονιά του ψηφοφόρου."
+    },
+    "VotePoint": {
+      "title": "VotePoint",
+      "type": "object",
+      "required": [
+        "lngLat",
+        "choice"
+      ],
+      "properties": {
+        "lngLat": {
+          "$ref": "geo.json#/definitions/LngLat"
+        },
+        "choice": {
+          "$ref": "engage.json#/definitions/VoteChoice"
+        }
+      }
+    },
+    "VoteTally": {
+      "title": "VoteTally",
+      "type": "object",
+      "required": [
+        "consultationId",
+        "yes",
+        "no",
+        "maybe",
+        "points"
+      ],
+      "properties": {
+        "consultationId": {
+          "type": "string"
+        },
+        "yes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "no": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maybe": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "engage.json#/definitions/VotePoint"
+          }
+        }
+      }
+    },
+    "Citation": {
+      "title": "Citation",
+      "type": "object",
+      "required": [
+        "label",
+        "source"
+      ],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        }
+      }
+    },
+    "DecisionDraft": {
+      "title": "DecisionDraft",
+      "type": "object",
+      "required": [
+        "scenarioId",
+        "markdownEl",
+        "citations"
+      ],
+      "properties": {
+        "scenarioId": {
+          "type": "string"
+        },
+        "markdownEl": {
+          "type": "string",
+          "description": "ΘΕΜΑ / ΣΚΕΠΤΙΚΟ / ΔΕΔΟΜΕΝΑ / ΔΙΑΒΟΥΛΕΥΣΗ / ΑΠΟΦΑΣΙΖΕΙ, με ένδειξη «ΣΧΕΔΙΟ»"
+        },
+        "citations": {
+          "type": "array",
+          "items": {
+            "$ref": "engage.json#/definitions/Citation"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "report.json": "Report",
+  "report_classified.json": "Report",
+  "classification.json": "ReportClassification",
+  "reports_seed.json": "Report[]",
+  "scenario.json": "Scenario",
+  "scenario_variant.json": "Scenario",
+  "sim_result.json": "SimResult",
+  "sim_result_variant.json": "SimResult",
+  "backtests.json": "Backtest[]",
+  "consultation.json": "Consultation",
+  "vote_tally.json": "VoteTally",
+  "decision.json": "DecisionDraft",
+  "buses.json": "Bus[]",
+  "city_live.json": "CityLive"
+}

@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+import { fileURLToPath, URL } from "node:url";
 
 // Το Cesium χρειάζεται τα static assets (workers, widgets, assets, ThirdParty)
 // να εξυπηρετούνται από το /cesium/ στο runtime.
@@ -16,6 +17,11 @@ export default defineConfig({
       ],
     }),
   ],
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
   define: {
     CESIUM_BASE_URL: JSON.stringify("/cesium/"),
   },

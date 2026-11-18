@@ -13,47 +13,44 @@ interface Props {
  * ~10 δευτερόλεπτα (όσο κι ο ρυθμός ανανέωσης από τον gateway).
  */
 export function BusesLayer({ viewer }: Props) {
-  const entities = useRef<Map<string, Cesium.Entity>>(new Map());
-  const prev = useRef<Map<string, Bus>>(new Map());
-  const prevTime = useRef<number>(performance.now());
+  const entitiesRef = useRef<Map<string, Cesium.Entity>>(new Map());
+  const prevRef = useRef<Map<string, Bus>>(new Map());
+  const targetRef = useRef<Map<string, Bus>>(new Map());
+  const prevTimeRef = useRef<number>(performance.now());
+  const dsRef = useRef<Cesium.CustomDataSource | null>(null);
 
   const buses = useStore((s) => s.buses);
   const visible = useStore((s) => s.layers.buses);
 
+  // Mount: φτιάχνουμε το data source ΜΙΑ φορά ανά viewer, μαζί με τον tick.
   useEffect(() => {
     if (!viewer) return;
-    const scene = viewer.scene;
     const ds = new Cesium.CustomDataSource("buses");
     viewer.dataSources.add(ds);
+    dsRef.current = ds;
 
     let raf = 0;
     const tick = () => {
       const now = performance.now();
-      const dt = Math.min(1, (now - prevTime.current) / 10_000);
-      for (const [id, b] of prev.current.entries()) {
-        const target = buses.find((x) => x.id === id);
-        const entity = entities.current.get(id);
-        if (!entity) continue;
-        if (target) {
-          const lng = b.lngLat[0] + (target.lngLat[0] - b.lngLat[0]) * dt;
-          const lat = b.lngLat[1] + (target.lngLat[1] - b.lngLat[1]) * dt;
-          const bearing = b.bearing + shortestAngle(b.bearing, target.bearing) * dt;
-          entity.position = new Cesium.ConstantPositionProperty(
+      const dt = Math.min(1, (now - prevTimeRef.current) / 10_000);
+      for (const [id, start] of prevRef.current.entries()) {
+        const target = targetRef.current.get(id);
+        const entity = entitiesRef.current.get(id);
+        if (!entity || !target) continue;
+        const lng = start.lngLat[0] + (target.lngLat[0] - start.lngLat[0]) * dt;
+        const lat = start.lngLat[1] + (target.lngLat[1] - start.lngLat[1]) * dt;
+        const bearing = start.bearing + shortestAngle(start.bearing, target.bearing) * dt;
+        entity.position = new Cesium.ConstantPositionProperty(
+          Cesium.Cartesian3.fromDegrees(lng, lat, 2),
+        );
+        entity.orientation = new Cesium.ConstantProperty(
+          Cesium.Transforms.headingPitchRollQuaternion(
             Cesium.Cartesian3.fromDegrees(lng, lat, 2),
-          );
-          entity.orientation = new Cesium.ConstantProperty(
-            Cesium.Transforms.headingPitchRollQuaternion(
-              Cesium.Cartesian3.fromDegrees(lng, lat, 2),
-              new Cesium.HeadingPitchRoll(
-                Cesium.Math.toRadians(bearing),
-                0,
-                0,
-              ),
-            ),
-          );
-        }
+            new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(bearing), 0, 0),
+          ),
+        );
       }
-      scene.requestRender();
+      viewer.scene.requestRender();
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -61,31 +58,50 @@ export function BusesLayer({ viewer }: Props) {
     return () => {
       cancelAnimationFrame(raf);
       viewer.dataSources.remove(ds, true);
-      entities.current.clear();
-      prev.current.clear();
+      entitiesRef.current.clear();
+      prevRef.current.clear();
+      targetRef.current.clear();
+      dsRef.current = null;
     };
-  }, [viewer, buses]);
+  }, [viewer]);
 
+  // Sync: κάθε νέο buses update ενημερώνει τα entities χωρίς να
+  // ξαναδημιουργεί το data source.
   useEffect(() => {
-    if (!viewer) return;
-    const ds = viewer.dataSources.getByName("buses")[0] as
-      | Cesium.CustomDataSource
-      | undefined;
+    const ds = dsRef.current;
     if (!ds) return;
 
-    prevTime.current = performance.now();
+    // Το tick ξεκινά από τις ΤΡΕΧΟΥΣΕΣ θέσεις των entities και στοχεύει στις νέες.
+    const freshPrev = new Map<string, Bus>();
+    for (const [id, old] of prevRef.current.entries()) {
+      const target = targetRef.current.get(id);
+      const t = Math.min(1, (performance.now() - prevTimeRef.current) / 10_000);
+      if (target) {
+        freshPrev.set(id, {
+          id,
+          line: old.line,
+          lngLat: [
+            old.lngLat[0] + (target.lngLat[0] - old.lngLat[0]) * t,
+            old.lngLat[1] + (target.lngLat[1] - old.lngLat[1]) * t,
+          ],
+          bearing: old.bearing + shortestAngle(old.bearing, target.bearing) * t,
+        });
+      } else {
+        freshPrev.set(id, old);
+      }
+    }
+    prevRef.current = freshPrev;
+    targetRef.current = new Map(buses.map((b) => [b.id, b]));
+    prevTimeRef.current = performance.now();
+
     const seen = new Set<string>();
     for (const b of buses) {
       seen.add(b.id);
-      let ent = entities.current.get(b.id);
+      let ent = entitiesRef.current.get(b.id);
       if (!ent) {
         ent = ds.entities.add({
           id: `bus-${b.id}`,
-          position: Cesium.Cartesian3.fromDegrees(
-            b.lngLat[0],
-            b.lngLat[1],
-            2,
-          ),
+          position: Cesium.Cartesian3.fromDegrees(b.lngLat[0], b.lngLat[1], 2),
           box: {
             dimensions: new Cesium.Cartesian3(12, 3.5, 3),
             material: Cesium.Color.fromCssColorString("#7bd1ff").withAlpha(0.95),
@@ -104,26 +120,25 @@ export function BusesLayer({ viewer }: Props) {
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
           },
         });
-        entities.current.set(b.id, ent);
+        entitiesRef.current.set(b.id, ent);
+        prevRef.current.set(b.id, b);
       }
-      prev.current.set(b.id, b);
     }
-
     // Αφαίρεση όσων δεν υπάρχουν πια
-    for (const [id, ent] of entities.current.entries()) {
+    for (const [id, ent] of entitiesRef.current.entries()) {
       if (!seen.has(id)) {
         ds.entities.remove(ent);
-        entities.current.delete(id);
-        prev.current.delete(id);
+        entitiesRef.current.delete(id);
+        prevRef.current.delete(id);
+        targetRef.current.delete(id);
       }
     }
-  }, [buses, viewer]);
+  }, [buses]);
 
   useEffect(() => {
-    if (!viewer) return;
-    const ds = viewer.dataSources.getByName("buses")[0];
+    const ds = dsRef.current;
     if (ds) ds.show = visible;
-    viewer.scene.requestRender();
+    viewer?.scene.requestRender();
   }, [visible, viewer]);
 
   return null;

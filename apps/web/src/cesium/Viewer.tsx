@@ -57,9 +57,11 @@ export function CesiumViewer({ onReady }: Props) {
     scene.globe.showGroundAtmosphere = true;
     scene.fog.enabled = true;
     scene.fog.density = 0.0008;
-    scene.skyAtmosphere.hueShift = -0.05;
-    scene.skyAtmosphere.saturationShift = 0.05;
-    scene.skyAtmosphere.brightnessShift = -0.08;
+    if (scene.skyAtmosphere) {
+      scene.skyAtmosphere.hueShift = -0.05;
+      scene.skyAtmosphere.saturationShift = 0.05;
+      scene.skyAtmosphere.brightnessShift = -0.08;
+    }
     scene.globe.baseColor = Cesium.Color.fromCssColorString("#0b0f14");
     scene.backgroundColor = Cesium.Color.fromCssColorString("#06090d");
 

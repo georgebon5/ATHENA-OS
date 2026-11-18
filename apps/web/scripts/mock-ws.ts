@@ -5,10 +5,10 @@
  * Χρήση:  pnpm --filter @athena-os/web mock
  * Μετά: VITE_WS_URL=ws://localhost:8787 pnpm dev
  */
-import { WebSocketServer, type WebSocket } from "ws";
+// @ts-expect-error — το `ws` module δεν έχει types στο minimal setup
+import { WebSocketServer } from "ws";
 import type { WsEvent } from "../src/types/contracts";
 import {
-  DEMO_BACKTESTS,
   DEMO_CONSULTATION,
   DEMO_DECISION,
   DEMO_REPORT,
@@ -236,7 +236,14 @@ function samplePoints(n: number) {
   return out;
 }
 
-function schedule(ws: WebSocket, startAt: number) {
+interface MockSocket {
+  readyState: number;
+  OPEN: number;
+  send(data: string): void;
+  on(event: string, cb: (...args: unknown[]) => void): void;
+}
+
+function schedule(ws: MockSocket, startAt: number) {
   for (const { atMs, ev } of timeline) {
     setTimeout(() => {
       if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(ev));
@@ -263,13 +270,13 @@ function schedule(ws: WebSocket, startAt: number) {
   );
 }
 
-wss.on("connection", (ws) => {
+wss.on("connection", (ws: MockSocket) => {
   console.log("[mock-ws] client connected, πατάω play στο demo timeline");
   const start = Date.now();
   schedule(ws, start);
-  ws.on("message", (raw) => {
+  ws.on("message", (raw: unknown) => {
     try {
-      const msg = JSON.parse(raw.toString());
+      const msg = JSON.parse((raw as { toString(): string }).toString());
       if (msg.type === "ping") ws.send(JSON.stringify({ type: "pong" }));
     } catch {
       // ignore

@@ -22,13 +22,11 @@ import { WsClient } from "./ws/client";
 import { dispatchWs } from "./ws/dispatcher";
 import { useStore } from "./store/useStore";
 import { WS_URL } from "./cesium/cesium-config";
-import { useDirector } from "./director/useDirector";
 
 export default function App() {
   const [viewer, setViewer] = useState<Cesium.Viewer | null>(null);
   const setWsConnected = useStore((s) => s.setWsConnected);
   const clientRef = useRef<WsClient | null>(null);
-  useDirector();
 
   useEffect(() => {
     const client = new WsClient({

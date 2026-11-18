@@ -73,19 +73,12 @@ export function EngagePanel() {
                   alt="before"
                   className="absolute inset-0 w-full h-full object-cover"
                 />
-                <div
-                  className="absolute inset-y-0 left-0 overflow-hidden"
-                  style={{ width: `${split * 100}%` }}
-                >
-                  <img
-                    src={consultation.afterUrl}
-                    alt="after"
-                    className="absolute inset-0 w-full h-full object-cover"
-                    style={{
-                      width: `${(1 / Math.max(0.001, split)) * 100}%`,
-                    }}
-                  />
-                </div>
+                <img
+                  src={consultation.afterUrl}
+                  alt="after"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ clipPath: `inset(0 ${(1 - split) * 100}% 0 0)` }}
+                />
                 <div
                   className="absolute inset-y-0"
                   style={{

@@ -2,8 +2,6 @@ import { useState } from "react";
 import { useDirector } from "@/director/useDirector";
 import { useStore } from "@/store/useStore";
 
-const BEATS = ["INTRO", "PITCH", "SENSE", "SIMULATE", "ENGAGE", "DECISION", "CLOSE"] as const;
-
 /**
  * Status bar του director — ορατή μόνο όταν director mode είναι on.
  * Δείχνει beat, συνδέσεις WS και FPS. Επίσης text prompt input (T).

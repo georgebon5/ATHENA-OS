@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import * as Cesium from "cesium";
 import { useStore } from "@/store/useStore";
-import type { Report } from "@/types/contracts";
+import type { Report, ReportCategory } from "@/types/contracts";
 
 interface Props {
   viewer: Cesium.Viewer | null;
@@ -154,11 +154,7 @@ function upsertReportEntity(
   }
 }
 
-function categoryLabel(c: Report["classification"] extends infer T
-  ? T extends { category: infer U }
-    ? U
-    : never
-  : never): string {
+function categoryLabel(c: ReportCategory): string {
   switch (c) {
     case "pothole":
       return "Λακκούβα";

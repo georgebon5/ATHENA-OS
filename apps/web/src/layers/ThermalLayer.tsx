@@ -9,6 +9,12 @@ interface Props {
 const MORPH_MS = 1500;
 const CELL_SIZE_M = 25;
 
+interface MorphEntity {
+  entity: Cesium.Entity;
+  baseColor: string;
+  targetColor: string;
+}
+
 /**
  * Θερμικό heatmap ως εκτεταμένα ορθογώνια πλακίδια στο έδαφος.
  * Όταν αλλάζει η σκηνή, κάνει morph από baseC → newC σε ~1.5s.
@@ -16,10 +22,12 @@ const CELL_SIZE_M = 25;
 export function ThermalLayer({ viewer }: Props) {
   const dsRef = useRef<Cesium.CustomDataSource | null>(null);
   const morphStart = useRef<number>(0);
+  const morphEntitiesRef = useRef<MorphEntity[]>([]);
 
   const simResult = useStore((s) => s.simResult);
   const visible = useStore((s) => s.layers.thermal);
 
+  // Create-once effect με tick για το morph.
   useEffect(() => {
     if (!viewer) return;
     const ds = new Cesium.CustomDataSource("thermal");
@@ -28,9 +36,17 @@ export function ThermalLayer({ viewer }: Props) {
 
     let raf = 0;
     const tick = () => {
-      if (dsRef.current && simResult && visible) {
+      const list = morphEntitiesRef.current;
+      if (list.length) {
         const t = Math.min(1, (performance.now() - morphStart.current) / MORPH_MS);
-        updateAlpha(dsRef.current, t);
+        for (const m of list) {
+          if (!m.entity.rectangle) continue;
+          m.entity.rectangle.material = new Cesium.ColorMaterialProperty(
+            Cesium.Color.fromCssColorString(
+              lerpColor(m.baseColor, m.targetColor, t),
+            ).withAlpha(0.42),
+          );
+        }
         viewer.scene.requestRender();
       }
       raf = requestAnimationFrame(tick);
@@ -41,20 +57,25 @@ export function ThermalLayer({ viewer }: Props) {
       cancelAnimationFrame(raf);
       viewer.dataSources.remove(ds, true);
       dsRef.current = null;
+      morphEntitiesRef.current = [];
     };
-  }, [viewer, simResult, visible]);
+  }, [viewer]);
 
+  // Sync: κάθε νέο simResult ενημερώνει τα entities (όχι το data source).
   useEffect(() => {
     const ds = dsRef.current;
     if (!ds) return;
     ds.entities.removeAll();
+    morphEntitiesRef.current = [];
     if (!simResult) return;
 
     morphStart.current = performance.now();
     const half = (CELL_SIZE_M / 2) * 1e-5 * 1.1;
     for (const cell of simResult.thermal.cells) {
       const [lng, lat] = cell.lngLat;
-      ds.entities.add({
+      const baseColor = tempColor(cell.baseC);
+      const targetColor = tempColor(cell.newC);
+      const entity = ds.entities.add({
         rectangle: {
           coordinates: Cesium.Rectangle.fromDegrees(
             lng - half,
@@ -62,14 +83,11 @@ export function ThermalLayer({ viewer }: Props) {
             lng + half,
             lat + half,
           ),
-          material: Cesium.Color.fromCssColorString(tempColor(cell.baseC)).withAlpha(0.35),
+          material: Cesium.Color.fromCssColorString(baseColor).withAlpha(0.35),
           height: 2,
         },
       });
-      // Αποθηκεύουμε target color σε custom property για το morph
-      const last = ds.entities.values[ds.entities.values.length - 1];
-      (last as unknown as { _targetColor: string })._targetColor = tempColor(cell.newC);
-      (last as unknown as { _baseColor: string })._baseColor = tempColor(cell.baseC);
+      morphEntitiesRef.current.push({ entity, baseColor, targetColor });
     }
     viewer?.scene.requestRender();
   }, [simResult, viewer]);
@@ -83,20 +101,9 @@ export function ThermalLayer({ viewer }: Props) {
   return null;
 }
 
-function updateAlpha(ds: Cesium.CustomDataSource, t: number) {
-  for (const ent of ds.entities.values) {
-    const base = (ent as unknown as { _baseColor?: string })._baseColor;
-    const target = (ent as unknown as { _targetColor?: string })._targetColor;
-    if (!base || !target || !ent.rectangle) continue;
-    const color = lerpColor(base, target, t);
-    ent.rectangle.material = new Cesium.ColorMaterialProperty(
-      Cesium.Color.fromCssColorString(color).withAlpha(0.42),
-    );
-  }
-}
-
 function tempColor(c: number): string {
-  // 24°C cool, 36°C hot — κλιμακώνουμε στο γνωστό cividis-ish palette
+  // Clamp στο [24, 40] ώστε extreme τιμές να μην πέφτουν εκτός παλέτας.
+  const x = Math.max(24, Math.min(40, c));
   const stops: Array<[number, [number, number, number]]> = [
     [24, [40, 100, 150]],
     [28, [80, 180, 170]],
@@ -107,12 +114,12 @@ function tempColor(c: number): string {
   for (let i = 0; i < stops.length - 1; i++) {
     const [t0, c0] = stops[i];
     const [t1, c1] = stops[i + 1];
-    if (c <= t1) {
-      const f = (c - t0) / (t1 - t0);
+    if (x <= t1) {
+      const f = (x - t0) / (t1 - t0);
       const r = Math.round(c0[0] + (c1[0] - c0[0]) * f);
       const g = Math.round(c0[1] + (c1[1] - c0[1]) * f);
-      const bl = Math.round(c0[2] + (c1[2] - c0[2]) * f);
-      return `rgb(${r}, ${g}, ${bl})`;
+      const b = Math.round(c0[2] + (c1[2] - c0[2]) * f);
+      return `rgb(${r}, ${g}, ${b})`;
     }
   }
   const last = stops[stops.length - 1][1];

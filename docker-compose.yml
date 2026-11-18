@@ -1,0 +1,93 @@
+# ATHENA OS — όλο το stack στο laptop του demo.
+#
+#   docker compose up -d                      postgres + gateway (sim/agent σε fallback/mock)
+#   docker compose --profile full up -d       + sim + agent (όταν υπάρχουν τα Dockerfile των Dev2/Dev3)
+#   docker compose --profile tunnel up -d     + Cloudflare tunnel (σταθερό https domain για τα κινητά)
+#
+# Το `make demo` (ή `python infra/demo.py`) διαλέγει μόνο του profiles και κάνει health checks.
+
+name: athena
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.5
+    environment:
+      POSTGRES_USER: athena
+      POSTGRES_PASSWORD: athena
+      POSTGRES_DB: athena
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # μέσω TCP: το init του image απαντά πρώτα μόνο στο unix socket
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U athena -d athena"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://athena:athena@postgres:5432/athena
+      DB_CONNECT_WAIT_S: "30"
+      SIM_URL: http://sim:8100
+      AGENT_URL: http://agent:8200
+      GATEWAY_URL: ${GATEWAY_URL:-http://localhost:8000}
+    ports:
+      - "${GATEWAY_BIND:-0.0.0.0}:${GATEWAY_PORT:-8000}:8000"
+    volumes:
+      - gateway-var:/repo/services/gateway/var
+      - ./demo:/repo/demo
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Dev2 — services/sim/Dockerfile (POST /simulate, GET /backtests, GET /health στο 8100)
+  sim:
+    profiles: ["full"]
+    build: services/sim
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "${SIM_PORT:-8100}:8100"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+
+  # Dev3 — services/agent/Dockerfile (POST /classify, /director/{beat}, /prompt, GET /health στο 8200)
+  agent:
+    profiles: ["full"]
+    build: services/agent
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      GATEWAY_URL: http://gateway:8000
+      SIM_URL: http://sim:8100
+    ports:
+      - "${AGENT_PORT:-8200}:8200"
+    restart: unless-stopped
+
+  # Named Cloudflare Tunnel → gateway:8000. Το token από το Cloudflare dashboard (Zero Trust → Tunnels).
+  tunnel:
+    profiles: ["tunnel"]
+    image: cloudflare/cloudflared:2026.10.7
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  gateway-var:

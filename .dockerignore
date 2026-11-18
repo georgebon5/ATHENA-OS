@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+services/gateway/var
+.git
+.env
+.env.*
+demo/media
+data/raw

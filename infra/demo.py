@@ -76,13 +76,15 @@ def main() -> int:
     t0 = time.monotonic()
     port = e.get("GATEWAY_PORT", "8000")
     gw = f"http://localhost:{port}"
-    full = (ROOT / "services/sim/Dockerfile").exists() and (ROOT / "services/agent/Dockerfile").exists()
+    # κάθε υπηρεσία ανεβαίνει μόλις υπάρξει το δικό της Dockerfile, ανεξάρτητα από τις άλλες
+    has = {s: (ROOT / f"services/{s}/Dockerfile").exists() for s in ("sim", "agent")}
     tunnel = bool(e.get("CLOUDFLARE_TUNNEL_TOKEN"))
 
     if not args.no_up:
         cmd = ["docker", "compose"]
-        if full:
-            cmd += ["--profile", "full"]
+        for s, ok in has.items():
+            if ok:
+                cmd += ["--profile", s]
         if tunnel:
             cmd += ["--profile", "tunnel"]
         cmd += ["up", "-d", "--build", "--wait"]
@@ -99,8 +101,8 @@ def main() -> int:
         check("database", health.get("db") == "postgres", f"{health.get('db')} (PostGIS={health.get('postgis')})", warn=True)
         check("MOCK", not health.get("mock"), "MOCK=1: όλα από fixtures" if health.get("mock") else "live", warn=True)
     sim_port, agent_port = e.get("SIM_PORT", "8100"), e.get("AGENT_PORT", "8200")
-    check("sim", wait_for(f"http://localhost:{sim_port}/health", 30 if full else 2), "" if full else "(δεν έχει Dockerfile ακόμα → fallback)", warn=not full)
-    check("agent", wait_for(f"http://localhost:{agent_port}/health", 30 if full else 2), "" if full else "(δεν έχει Dockerfile ακόμα → fallback)", warn=not full)
+    for s, p in (("sim", sim_port), ("agent", agent_port)):
+        check(s, wait_for(f"http://localhost:{p}/health", 30 if has[s] else 2), "" if has[s] else "(δεν έχει Dockerfile ακόμα → fallback)", warn=not has[s])
 
     print("→ prewarm", flush=True)
     status, live = http("GET", f"{gw}/api/city/live", timeout=40)

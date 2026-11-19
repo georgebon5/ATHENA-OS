@@ -1,7 +1,8 @@
 # ATHENA OS — όλο το stack στο laptop του demo.
 #
 #   docker compose up -d                      postgres + gateway (sim/agent σε fallback/mock)
-#   docker compose --profile full up -d       + sim + agent (όταν υπάρχουν τα Dockerfile των Dev2/Dev3)
+#   docker compose --profile sim up -d        + sim (Dev2)
+#   docker compose --profile full up -d       + sim + agent
 #   docker compose --profile tunnel up -d     + Cloudflare tunnel (σταθερό https domain για τα κινητά)
 #
 # Το `make demo` (ή `python infra/demo.py`) διαλέγει μόνο του profiles και κάνει health checks.
@@ -52,7 +53,7 @@ services:
 
   # Dev2 — services/sim/Dockerfile (POST /simulate, GET /backtests, GET /health στο 8100)
   sim:
-    profiles: ["full"]
+    profiles: ["full", "sim"]
     build: services/sim
     env_file:
       - path: .env
@@ -65,7 +66,7 @@ services:
 
   # Dev3 — services/agent/Dockerfile (POST /classify, /director/{beat}, /prompt, GET /health στο 8200)
   agent:
-    profiles: ["full"]
+    profiles: ["full", "agent"]
     build: services/agent
     env_file:
       - path: .env

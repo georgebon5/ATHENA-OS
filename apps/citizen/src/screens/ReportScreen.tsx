@@ -210,12 +210,14 @@ function SensorChips({ geo, heading }: { geo: GeoState; heading: number | null }
 
 function Done({ report, approximate, heading, onAgain }: { report: Report; approximate: boolean; heading: number | null; onAgain: () => void }) {
   const [current, setCurrent] = useState(report);
+  const [gaveUp, setGaveUp] = useState(false);
   useEffect(() => {
     if (current.classification) return;
     let stopped = false;
     const started = Date.now();
     const poll = async () => {
-      if (stopped || Date.now() - started > 45_000) return;
+      if (stopped) return;
+      if (Date.now() - started > 45_000) return setGaveUp(true);
       try {
         const r = await getReport(report.id);
         if (r.classification) return setCurrent(r);
@@ -255,6 +257,8 @@ function Done({ report, approximate, heading, onAgain }: { report: Report; appro
               Προς: <span className="font-semibold text-ink">{c.department}</span>
             </p>
           </>
+        ) : gaveUp ? (
+          <p className="text-[15px] text-muted">Η ταξινόμηση αργεί. Η αναφορά σου έχει ήδη καταχωρηθεί στον χάρτη.</p>
         ) : (
           <div className="flex items-center gap-3 text-[15px]">
             <Spinner className="text-athenaDeep" /> Η ATHENA αναλύει τη φωτογραφία…

@@ -32,7 +32,7 @@ log = logging.getLogger("athena.main")
 
 from agent.bus import bus
 from agent.constants import GATEWAY_URL, MOCK, PORT
-from agent.tools import get_city_state, get_report, open_consultation
+from agent.tools import get_city_state, get_report, open_consultation, render_before_after, draft_decision
 
 
 # ── Lifespan ───────────────────────────────────────────────────────────────
@@ -74,6 +74,29 @@ class ClassifyRequest(BaseModel):
 class ClassifyResponse(BaseModel):
     reportId: str
     classification: dict
+
+class ConsultRequest(BaseModel):
+    scenarioId: str
+    scenarioTitle: str = "Παρέμβαση στην Πειραιώς"
+    reportId: str | None = None
+    photoUrl: str | None = None
+    simResult: dict | None = None
+
+class ConsultResponse(BaseModel):
+    consultationId: str
+    publicUrl: str
+    eventsQueued: int = 0
+
+class DecisionRequest(BaseModel):
+    scenarioId: str
+    scenarioTitle: str = "Παρέμβαση στην Πειραιώς"
+    consultationId: str | None = None
+    simResult: dict | None = None
+    voteSummary: dict | None = None
+
+class DecisionResponse(BaseModel):
+    markdownEl: str
+    eventsQueued: int = 0
 
 
 # ── GET /health ────────────────────────────────────────────────────────────
@@ -279,6 +302,83 @@ async def voice(
     # Χρήση ίδιας λογικής με /command
     req = CommandRequest(textEl=text, beatHint=beat)
     return await command(req)
+
+
+# ── POST /consult ──────────────────────────────────────────────────────────
+
+@app.post("/consult", response_model=ConsultResponse)
+async def consult(req: ConsultRequest):
+    """
+    ENGAGE beat (3:00–4:00): δημιουργεί before/after + ανοίγει διαβούλευση με QR.
+    Broadcasts: consultation.opened → agent.say
+    """
+    t0 = time.perf_counter()
+    log.info("consult: scenarioId=%s reportId=%s", req.scenarioId, req.reportId)
+
+    # Before/after images
+    before_url, after_url = await render_before_after(req.photoUrl or "", req.scenarioTitle)
+
+    # Άνοιγμα διαβούλευσης στον gateway
+    consultation = await open_consultation(
+        scenario_id=req.scenarioId,
+        report_id=req.reportId,
+        before_url=before_url,
+        after_url=after_url,
+    )
+
+    # Event sequence
+    from agent.mock import engage_sequence
+    n = 0
+    for event_type, payload in engage_sequence(before_url, after_url, consultation):
+        if event_type == "agent.say":
+            from agent.tts import synthesize
+            audio_url = await synthesize(payload["textEl"], GATEWAY_URL)
+            if audio_url:
+                payload = {**payload, "audioUrl": audio_url}
+        await bus.emit(event_type, payload)
+        n += 1
+
+    log.info("consult done in %.1fs", time.perf_counter() - t0)
+    return ConsultResponse(
+        consultationId=consultation.get("id", "c-mock"),
+        publicUrl=consultation.get("publicUrl", f"{GATEWAY_URL}/c/mock"),
+        eventsQueued=n,
+    )
+
+
+# ── POST /decision ─────────────────────────────────────────────────────────
+
+@app.post("/decision", response_model=DecisionResponse)
+async def decision(req: DecisionRequest):
+    """
+    DECISION beat (4:00–4:30): γεννάει DecisionDraft και κάνει broadcast decision.ready.
+    Broadcasts: agent.thinking × 2 → decision.ready → agent.say
+    """
+    t0 = time.perf_counter()
+    log.info("decision: scenarioId=%s", req.scenarioId)
+
+    sim_result = req.simResult or {}
+    draft = await draft_decision(
+        scenario_id=req.scenarioId,
+        scenario_title=req.scenarioTitle,
+        sim_result=sim_result,
+        consultation_id=req.consultationId,
+        vote_summary=req.voteSummary,
+    )
+
+    from agent.mock import decision_sequence
+    n = 0
+    for event_type, payload in decision_sequence(draft):
+        if event_type == "agent.say":
+            from agent.tts import synthesize
+            audio_url = await synthesize(payload["textEl"], GATEWAY_URL)
+            if audio_url:
+                payload = {**payload, "audioUrl": audio_url}
+        await bus.emit(event_type, payload)
+        n += 1
+
+    log.info("decision done in %.1fs", time.perf_counter() - t0)
+    return DecisionResponse(markdownEl=draft["markdownEl"], eventsQueued=n)
 
 
 # ── POST /classify ─────────────────────────────────────────────────────────

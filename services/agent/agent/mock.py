@@ -191,6 +191,20 @@ def simulate_sequence(title: str, edits: list, sim_result: dict, variant_result:
     return events
 
 
+def decision_sequence(decision_draft: dict) -> list[tuple[str, dict]]:
+    """Events για το DECISION beat (4:00–4:30): typewriter στην οθόνη."""
+    return [
+        _think("Συντάσσω σχέδιο απόφασης Δημοτικού Συμβουλίου…"),
+        _think("Ελέγχω παραπομπές νομοθεσίας…"),
+        ("decision.ready", decision_draft),
+        _say(
+            "Ετοίμασα σχέδιο απόφασης για το Δημοτικό Συμβούλιο. "
+            "Είναι ακόμα σε στάδιο σχεδίου — χρειάζεται έγκριση.",
+            mood="proud",
+        ),
+    ]
+
+
 def engage_sequence(before_url: str, after_url: str, consultation: dict) -> list[tuple[str, dict]]:
     return [
         _think("Δημιουργώ εικόνα before/after…"),

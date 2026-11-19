@@ -171,6 +171,150 @@ async def open_consultation(scenario_id: str, report_id: str | None = None,
         return {**payload, "id": f"c-{uuid.uuid4().hex[:8]}", "publicUrl": f"{GATEWAY_URL}/c/mock"}
 
 
+# ── Tool: render_before_after ──────────────────────────────────────────────
+
+async def render_before_after(photo_url: str, scenario_title: str) -> tuple[str, str]:
+    """
+    Δημιουργεί before/after εικόνες για τη διαβούλευση.
+    Χωρίς IMAGE_EDIT_API_KEY επιστρέφει placeholder Unsplash URLs.
+    """
+    from .constants import IMAGE_EDIT_API_KEY
+    if not IMAGE_EDIT_API_KEY:
+        before = photo_url or "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1200"
+        after  = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200"
+        return before, after
+    # Placeholder — ο κάλογος image editing API πηγαίνει εδώ (π.χ. OpenAI edits)
+    before = photo_url or "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1200"
+    after  = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200"
+    return before, after
+
+
+# ── Tool: draft_decision ───────────────────────────────────────────────────
+
+def _mock_decision(
+    scenario_id: str,
+    scenario_title: str,
+    sim_result: dict,
+    consultation_id: str | None,
+    vote_summary: dict | None,
+) -> dict:
+    corridor = sim_result.get("traffic", {}).get("corridorTravelTimeDeltaPct", {})
+    hotspot  = sim_result.get("thermal", {}).get("hotspotDeltaC", {})
+    tt_p50   = round(abs(corridor.get("p50", 4.0)))
+    ht_p50   = round(abs(hotspot.get("p50", 2.3)), 1)
+
+    if vote_summary:
+        yes   = vote_summary.get("yes", 0)
+        no    = vote_summary.get("no", 0)
+        maybe = vote_summary.get("maybe", 0)
+        total = yes + no + maybe or 1
+        pct   = round(yes / total * 100)
+        votes_section = f"Διαδικτυακή διαβούλευση: {yes} ΝΑΙ / {no} ΟΧΙ / {maybe} ΙΣΩΣ ({total} συμμετοχές, {pct}% θετικό)."
+    elif consultation_id:
+        votes_section = f"Διαβούλευση υπ' αριθμ. {consultation_id} — αποτελέσματα εκκρεμούν."
+    else:
+        votes_section = "Εκκρεμεί διαβούλευση με τους κατοίκους."
+
+    markdown = f"""# ΣΧΕΔΙΟ ΑΠΟΦΑΣΗΣ — δεν έχει εγκριθεί
+
+## ΘΕΜΑ
+Έγκριση πιλοτικής εφαρμογής «{scenario_title}» στην οδό Πειραιώς (τμήμα Θησείο–Σεράφειο)
+
+## ΣΚΕΠΤΙΚΟ
+Η οδός Πειραιώς αποτελεί έναν από τους πιο θερμικά επιβαρυμένους αστικούς αξόνες του κέντρου. \
+Η παρούσα παρέμβαση αποσκοπεί στη βελτίωση της βιωσιμότητας του δημόσιου χώρου και στη μείωση \
+του φαινομένου της αστικής θερμικής νησίδας, σύμφωνα με τον Κλιματικό Νόμο 4936/2022.
+
+## ΔΕΔΟΜΕΝΑ
+Σύμφωνα με προσομοίωση του συστήματος ATHENA-OS *(εκτίμηση — δεν αποτελεί επίσημη μελέτη)*:
+- Αλλαγή χρόνου διαδρομής κορυφαίας ώρας: **−{tt_p50}%** (εύρος 90%: −{tt_p50 + 3}% έως −{max(0, tt_p50 - 3)}%)
+- Μεταβολή θερμοκρασίας επιφάνειας hotspot: **−{ht_p50}°C** (εύρος 90%: −{round(ht_p50 + 1.5, 1)}°C έως −{round(max(0.0, ht_p50 - 1.5), 1)}°C)
+
+## ΔΙΑΒΟΥΛΕΥΣΗ
+{votes_section}
+
+## ΑΠΟΦΑΣΙΖΕΙ
+1. Εγκρίνει πιλοτική εφαρμογή διάρκειας **3 μηνών** στην οδό Πειραιώς (τμήμα 500 μ. νότια του Σεραφείου).
+2. Αναθέτει στη Διεύθυνση Πρασίνου & Αστικής Πανίδας την εκτέλεση των εργασιών εντός 30 ημερών.
+3. Ορίζει επαναξιολόγηση μετά το πέρας του πιλότου με δεδομένα αισθητήρων και πολιτών."""
+
+    return {
+        "scenarioId": scenario_id,
+        "markdownEl": markdown,
+        "citations": [
+            {"label": "Κλιματικός Νόμος 4936/2022", "source": "ΦΕΚ 105Α/2022"},
+            {"label": "Προσομοίωση κυκλοφορίας", "source": "ATHENA-OS / Frank-Wolfe UE"},
+            {"label": "Θερμικό μοντέλο LST", "source": "ATHENA-OS / Physics LST"},
+        ],
+    }
+
+
+async def draft_decision(
+    scenario_id: str,
+    scenario_title: str,
+    sim_result: dict,
+    consultation_id: str | None = None,
+    vote_summary: dict | None = None,
+) -> dict:
+    """
+    Γεννάει DecisionDraft (ΘΕΜΑ/ΣΚΕΠΤΙΚΟ/ΔΕΔΟΜΕΝΑ/ΔΙΑΒΟΥΛΕΥΣΗ/ΑΠΟΦΑΣΙΖΕΙ).
+    MOCK=0 + LLM_API_KEY: Claude claude-opus-4-6 generates Greek municipal decision.
+    """
+    from .constants import LLM_API_KEY, LLM_MODEL, MOCK
+    if MOCK or not LLM_API_KEY:
+        return _mock_decision(scenario_id, scenario_title, sim_result, consultation_id, vote_summary)
+
+    try:
+        from anthropic import AsyncAnthropic
+
+        corridor = sim_result.get("traffic", {}).get("corridorTravelTimeDeltaPct", {})
+        hotspot  = sim_result.get("thermal", {}).get("hotspotDeltaC", {})
+        tt_p50   = round(corridor.get("p50", -4.0), 1)
+        ht_p50   = round(hotspot.get("p50", -2.3), 1)
+
+        votes_text = ""
+        if vote_summary:
+            yes   = vote_summary.get("yes", 0)
+            no    = vote_summary.get("no", 0)
+            maybe = vote_summary.get("maybe", 0)
+            total = yes + no + maybe or 1
+            votes_text = f"\nΔιαβούλευση: {yes} ΝΑΙ / {no} ΟΧΙ / {maybe} ΙΣΩΣ ({total} ψήφοι)"
+
+        prompt = (
+            f"Σενάριο: {scenario_title}\n"
+            f"Αλλαγή χρόνου διαδρομής: {tt_p50}%\n"
+            f"Μεταβολή θερμοκρασίας hotspot: {ht_p50}°C{votes_text}\n\n"
+            "Γράψε σχέδιο απόφασης Δημοτικού Συμβουλίου Αθηναίων με δομή:\n"
+            "# ΣΧΕΔΙΟ ΑΠΟΦΑΣΗΣ — δεν έχει εγκριθεί\n"
+            "## ΘΕΜΑ\n## ΣΚΕΠΤΙΚΟ\n## ΔΕΔΟΜΕΝΑ\n## ΔΙΑΒΟΥΛΕΥΣΗ\n## ΑΠΟΦΑΣΙΖΕΙ\n\n"
+            "Μέγιστο 300 λέξεις. Αριθμοί με εύρη αβεβαιότητας. Τόνος επίσημος/δημοτικός."
+        )
+
+        client = AsyncAnthropic(api_key=LLM_API_KEY)
+        resp = await client.messages.create(
+            model=LLM_MODEL,
+            max_tokens=700,
+            system=(
+                "Είσαι νομικός σύμβουλος του Δήμου Αθηναίων. "
+                "Γράφεις επίσημα διοικητικά κείμενα στα ελληνικά. "
+                "Επιστρέφεις ΜΟΝΟ το κείμενο της απόφασης, χωρίς εισαγωγές ή σχόλια."
+            ),
+            messages=[{"role": "user", "content": prompt}],
+        )
+        markdown = resp.content[0].text.strip()
+        return {
+            "scenarioId": scenario_id,
+            "markdownEl": markdown,
+            "citations": [
+                {"label": "Κλιματικός Νόμος 4936/2022", "source": "ΦΕΚ 105Α/2022"},
+                {"label": "Προσομοίωση ATHENA-OS", "source": "Frank-Wolfe UE + Physics LST"},
+            ],
+        }
+    except Exception as e:
+        log.warning("draft_decision LLM failed: %s — χρήση mock", e)
+        return _mock_decision(scenario_id, scenario_title, sim_result, consultation_id, vote_summary)
+
+
 # ── Tool schemas για το LLM ────────────────────────────────────────────────
 
 TOOL_SCHEMAS = [

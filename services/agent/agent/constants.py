@@ -7,12 +7,13 @@ PORT = int(os.getenv("PORT", "8200"))
 GATEWAY_URL = os.getenv("GATEWAY_URL", "http://localhost:8000")
 GATEWAY_WS = GATEWAY_URL.replace("http://", "ws://").replace("https://", "wss://") + "/ws?room=agent"
 
-LLM_API_KEY = os.getenv("LLM_API_KEY", "")
-LLM_MODEL   = os.getenv("LLM_MODEL", "claude-opus-4-6")
-STT_API_KEY = os.getenv("STT_API_KEY", "")
-TTS_API_KEY = os.getenv("TTS_API_KEY", "")
-TTS_PROVIDER = os.getenv("TTS_PROVIDER", "elevenlabs")
-TTS_VOICE_ID = os.getenv("TTS_VOICE_ID", "")
+LLM_API_KEY      = os.getenv("LLM_API_KEY", "")
+LLM_MODEL        = os.getenv("LLM_MODEL", "claude-opus-4-6")
+STT_API_KEY      = os.getenv("STT_API_KEY", "")
+TTS_API_KEY      = os.getenv("TTS_API_KEY", "")
+TTS_PROVIDER     = os.getenv("TTS_PROVIDER", "elevenlabs")
+TTS_VOICE_ID     = os.getenv("TTS_VOICE_ID", "")
+IMAGE_EDIT_API_KEY = os.getenv("IMAGE_EDIT_API_KEY", "")
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 FIXTURES_DIR = REPO_ROOT / "packages" / "contracts" / "fixtures"

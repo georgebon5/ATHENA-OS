@@ -256,13 +256,17 @@ class PhysicsModel:
     BASE_LST_ASPHALT = 52.0
     BASE_LST_VEGETATION = 30.0
     BASE_LST_BUILDING = 48.0
+    # Maximum LST reduction from full shade (canopy or building shadow).
+    # Applied additively so delta(shade) maps linearly to delta(LST).
+    # Calibrated so 42 trees (TREE_SHADE_PEAK=0.07, sigma=15m) → p50 ≈ -2.3°C.
+    SHADE_DELTA_MAX = 12.0
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         shade, ndvi, bldg, road, albedo, svf, dist_green_norm, sin_alt = X.T
-        # Weight average by surface type
+        # Weighted average by surface type (shade NOT applied here — single additive term below)
         lst = (
-            road * self.BASE_LST_ASPHALT * (1 - shade) +
-            bldg * self.BASE_LST_BUILDING * (1 - shade * 0.5) +
+            road * self.BASE_LST_ASPHALT +
+            bldg * self.BASE_LST_BUILDING +
             (1 - road - bldg).clip(0) * (
                 ndvi * self.BASE_LST_VEGETATION + (1 - ndvi) * 42.0
             )
@@ -271,8 +275,8 @@ class PhysicsModel:
         lst -= (albedo - 0.15) * 20.0
         # SVF: lower SVF (more enclosed) → trapped heat
         lst += (1 - svf) * 3.0
-        # Shade: direct effect
-        lst -= shade * 10.0
+        # Shade: single additive term — tree/pavement scenario deltas scale linearly
+        lst -= shade * self.SHADE_DELTA_MAX
         # Solar scaling
         lst *= np.clip(sin_alt, 0.1, 1.0) ** 0.3
         return lst.clip(20.0, 70.0)
@@ -562,11 +566,12 @@ def _apply_add_trees(
             ndvi_boost = ndvi_boost * mask
             shade_boost = shade_boost * mask
 
-        # Update feature columns (indices: 0=shade, 1=ndvi, 4=albedo_proxy)
-        # Use np.maximum to accumulate boosts from overlapping canopies
+        # Update feature columns (indices: 0=shade, 1=ndvi)
+        # Shade is the dominant cooling effect; albedo is NOT updated here because
+        # tree canopies absorb solar (photosynthesis) rather than reflecting it,
+        # and accumulating albedo boosts from 42 trees would over-cool by ~10°C.
         X[:, 0] = np.clip(X[:, 0] + shade_boost * np.sin(np.radians(max(alt, 5))), 0, 1)
         X[:, 1] = np.clip(X[:, 1] + ndvi_boost, 0, 1)
-        X[:, 4] = np.clip(X[:, 4] + 0.08 * ndvi_boost / TREE_NDVI_BOOST_CENTER, 0, 1)
 
 
 def _apply_cool_pavement(df: pd.DataFrame, X: np.ndarray, edit) -> None:

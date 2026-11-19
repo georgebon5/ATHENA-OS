@@ -7,12 +7,13 @@ import type {
   Report,
   Scenario,
   SimResult,
-  TrafficSegment,
-  Trip,
+  ThermalCell,
 } from "../src/types/contracts";
+// Shared canonical fixture — ίδιο ακριβώς JSON που βλέπει και ο sim του Dev2.
+// Οτιδήποτε αλλάξει στο SimResult πρέπει να γίνει στο packages/contracts.
+import sharedSimResult from "../../../packages/contracts/fixtures/sim_result.json";
 
-const SERAFIO: LngLat = [23.7108, 37.9787];
-// Παράδειγμα path της οδού Πειραιώς γύρω από το Σεράφειο
+// Παράδειγμα path της οδού Πειραιώς γύρω από το Σεράφειο (για buses animation)
 const PIRAIOS: LngLat[] = [
   [23.705, 37.974],
   [23.7065, 37.9755],
@@ -76,101 +77,34 @@ export const DEMO_SCENARIO: Scenario = {
   title: "Δέντρα και λωρίδα λεωφορείου στην Πειραιώς",
   edits: [
     { type: "add_trees", geometry: PIRAIOS, count: 42, side: "south" },
-    { type: "bus_lane", wayIds: [10045, 10046] },
+    { type: "bus_lane", wayIds: [100003, 100004] },
   ],
   when: new Date().toISOString(),
   origin: "user",
 };
 
-function makeSegments(scale: number): TrafficSegment[] {
-  const segs: TrafficSegment[] = [];
-  for (let i = 0; i < PIRAIOS.length - 1; i++) {
-    const a = PIRAIOS[i];
-    const b = PIRAIOS[i + 1];
-    segs.push({
-      wayId: 10000 + i,
-      baseFlow: 1200,
-      newFlow: Math.round(1200 * (1 - 0.12 * scale)),
-      baseTimeS: 65,
-      newTimeS: Math.round(65 * (1 - 0.1 * scale)),
-      path: [a, b],
-    });
-  }
-  return segs;
-}
-
-function makeTrips(count: number): Trip[] {
-  const out: Trip[] = [];
-  for (let i = 0; i < count; i++) {
-    const offsetLat = (Math.random() - 0.5) * 0.0004;
-    const offsetLng = (Math.random() - 0.5) * 0.0004;
-    const path: LngLat[] = PIRAIOS.map(
-      ([lng, lat]) => [lng + offsetLng, lat + offsetLat],
-    );
-    if (Math.random() < 0.5) path.reverse();
-    out.push({
-      path,
-      departS: Math.random() * 10,
-      durationS: 20 + Math.random() * 20,
-    });
-  }
-  return out;
-}
-
-function makeCells(deltaC: number) {
-  const cells = [];
-  const span = 0.006;
-  for (let dx = -3; dx <= 3; dx++) {
-    for (let dy = -3; dy <= 3; dy++) {
-      const lng = SERAFIO[0] + (dx / 6) * span;
-      const lat = SERAFIO[1] + (dy / 6) * span;
-      const d = Math.hypot(dx, dy);
-      const base = 36 - Math.max(0, d - 1) * 1.2;
-      cells.push({
-        lngLat: [lng, lat] as LngLat,
-        baseC: base,
-        newC: base + deltaC + (Math.random() - 0.5) * 0.2,
-      });
-    }
-  }
-  return cells;
-}
-
+// Βάση: το shared fixture του Dev2· κάνουμε μόνο override του scenarioId.
 export const DEMO_SIM_RESULT: SimResult = {
+  ...(sharedSimResult as SimResult),
   scenarioId: DEMO_SCENARIO.id,
-  status: "ok",
-  computeMs: 2100,
-  traffic: {
-    segments: makeSegments(1),
-    corridorTravelTimeDeltaPct: { p10: -6.5, p50: -3.8, p90: -1.1 },
-    vehicleKmDeltaPct: { p10: -5.1, p50: -2.4, p90: 0.3 },
-    trips: makeTrips(800),
-  },
-  thermal: {
-    when: new Date().toISOString(),
-    cells: makeCells(-2.2),
-    hotspotDeltaC: { p10: -3.1, p50: -2.2, p90: -0.9 },
-  },
-  emissions: { co2DeltaPct: { p10: -4.8, p50: -2.1, p90: 0.2 } },
-  notes: [
-    "Προσομοίωση με δεδομένα ΟΑΣΑ Πεμ 20/11, 08:00–10:00",
-    "Θερμικό πλέγμα 25m από Landsat 14/07/2025",
-    "Παραδοχή: 42 δέντρα, κάλυψη κόμης +18%",
-  ],
 };
 
+// Variant της ATHENA: ίδιο δίκτυο αλλά ισχυρότερη μείωση hotspot/χρόνου.
 export const DEMO_SIM_BEST: SimResult = {
   ...DEMO_SIM_RESULT,
   traffic: {
     ...DEMO_SIM_RESULT.traffic,
-    corridorTravelTimeDeltaPct: { p10: -9.0, p50: -6.3, p90: -3.2 },
+    corridorTravelTimeDeltaPct: { p10: -11.4, p50: -8.1, p90: -4.3 },
   },
   thermal: {
     ...DEMO_SIM_RESULT.thermal,
-    cells: makeCells(-3.4),
-    hotspotDeltaC: { p10: -4.6, p50: -3.4, p90: -1.9 },
+    cells: DEMO_SIM_RESULT.thermal.cells.map((c: ThermalCell) => ({
+      ...c,
+      newC: c.newC - 1.2,
+    })),
+    hotspotDeltaC: { p10: -5.8, p50: -4.5, p90: -2.4 },
   },
-  emissions: { co2DeltaPct: { p10: -6.0, p50: -3.4, p90: -0.9 } },
+  emissions: { co2DeltaPct: { p10: -7.2, p50: -4.6, p90: -1.3 } },
 };
 
 export const DEMO_CONSULTATION: Consultation = {
@@ -217,12 +151,13 @@ export const DEMO_DECISION: DecisionDraft = {
 Διαμόρφωση της οδού Πειραιώς στο ύψος του Σεραφείου με προσθήκη αστικού πρασίνου και αποκλειστικής λωρίδας λεωφορείου.
 
 ΣΚΕΠΤΙΚΟ
-Η προσομοίωση του ATHENA OS εκτίμησε μείωση χρόνου διαδρομής του άξονα κατά 6,3% (p10 -9,0%, p90 -3,2%) και μείωση θερμικού hotspot κατά 3,4°C (p10 -4,6°C, p90 -1,9°C).
+Η προσομοίωση του ATHENA OS εκτίμησε μείωση χρόνου διαδρομής του άξονα κατά 8,1% (p10 -11,4%, p90 -4,3%) και μείωση θερμικού hotspot κατά 4,5°C (p10 -5,8°C, p90 -2,4°C).
 
 ΔΕΔΟΜΕΝΑ
 · Κυκλοφοριακά ΟΑΣΑ 20/11/2026
 · Θερμικός χάρτης Landsat 14/07/2025
 · Αναφορές πολιτών μέσω ATHENA OS
+· Δίκτυο: packages/contracts/fixtures/network.geojson
 
 ΔΙΑΒΟΥΛΕΥΣΗ
 Από την ανοιχτή διαβούλευση συμμετείχαν πολίτες μέσω QR στην πλατφόρμα ATHENA.
@@ -230,7 +165,7 @@ export const DEMO_DECISION: DecisionDraft = {
 ΑΠΟΦΑΣΙΖΕΙ (ΣΧΕΔΙΟ)
 Η Επιτροπή Ποιότητας Ζωής εισηγείται στο Δημοτικό Συμβούλιο την έγκριση του σεναρίου, με επανεκτίμηση μετά από 6 μήνες πιλοτικής εφαρμογής.`,
   citations: [
-    { label: "Προσομοίωση κυκλοφορίας", source: "sim#s-demo-001/traffic" },
+    { label: "Προσομοίωση κυκλοφορίας", source: "sim#s-fixture-001/traffic" },
     { label: "Θερμικός χάρτης", source: "Landsat-8 · 14/07/2025" },
     { label: "Αναφορές πολιτών", source: "ATHENA Sense · 2026-11" },
     { label: "Αποτελέσματα διαβούλευσης", source: "ATHENA Engage · c-demo-001" },

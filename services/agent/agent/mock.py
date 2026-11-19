@@ -155,6 +155,7 @@ def simulate_sequence(title: str, edits: list, sim_result: dict, variant_result:
                                "when": "2026-07-15T13:00:00+03:00", "origin": "user"}),
         ("sim.progress", {"scenarioId": scenario_id, "pct": 60}),
         ("sim.result", sim_result),
+        ("backtest.show", {"model": "traffic"}),
         _say(
             f"Το σενάριο δείχνει βελτίωση περίπου {abs(round(p50_tt))} τοις εκατό στον χρόνο διαδρομής "
             f"και μείωση θερμοκρασίας περίπου {abs(round(p50_dt, 1))} βαθμών στο hotspot.",

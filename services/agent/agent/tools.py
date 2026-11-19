@@ -386,4 +386,29 @@ TOOL_SCHEMAS = [
             "required": ["scenario_id"],
         },
     },
+    {
+        "name": "draft_decision",
+        "description": (
+            "Συντάσσει σχέδιο απόφασης Δημοτικού Συμβουλίου για εγκεκριμένο σενάριο. "
+            "Καλείται ΜΕΤΑ το run_scenario και, αν υπάρχει, μετά το open_consultation."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "scenario_id": {"type": "string"},
+                "scenario_title": {"type": "string"},
+                "sim_result": {"type": "object", "description": "SimResult από run_scenario"},
+                "consultation_id": {"type": "string"},
+                "vote_summary": {
+                    "type": "object",
+                    "properties": {
+                        "yes": {"type": "integer"},
+                        "no": {"type": "integer"},
+                        "maybe": {"type": "integer"},
+                    },
+                },
+            },
+            "required": ["scenario_id", "scenario_title", "sim_result"],
+        },
+    },
 ]

@@ -13,7 +13,7 @@ from .bus import bus
 from .constants import LLM_API_KEY, LLM_MODEL, MAX_LOOP_STEPS, MOCK
 from .tools import (
     TOOL_SCHEMAS, get_city_state, get_report, run_scenario,
-    explore_variants, open_consultation,
+    explore_variants, open_consultation, draft_decision,
 )
 
 log = logging.getLogger("athena.loop")
@@ -58,6 +58,14 @@ async def _dispatch_tool(name: str, args: dict) -> Any:
             args.get("report_id"),
             args.get("before_url", ""),
             args.get("after_url", ""),
+        )
+    if name == "draft_decision":
+        return await draft_decision(
+            args["scenario_id"],
+            args["scenario_title"],
+            args.get("sim_result", {}),
+            args.get("consultation_id"),
+            args.get("vote_summary"),
         )
     return {"error": f"Άγνωστο εργαλείο: {name}"}
 
@@ -124,8 +132,15 @@ async def run(text_el: str) -> str:
             # Post-tool events
             if tu.name == "run_scenario" and isinstance(result, dict) and result.get("status") == "ok":
                 await bus.emit("sim.result", result)
+                await bus.emit("backtest.show", {"model": "traffic"})
             if tu.name == "explore_variants" and isinstance(result, dict) and result.get("best"):
-                pass  # variant.compare σταλεί από το caller
+                await bus.emit("variant.compare", {
+                    "base": result.get("best", {}),
+                    "best": result.get("best", {}),
+                    "reasonEl": result.get("reasonEl", ""),
+                })
+            if tu.name == "draft_decision" and isinstance(result, dict) and result.get("markdownEl"):
+                await bus.emit("decision.ready", result)
 
         messages.append({"role": "user", "content": tool_results})
 

@@ -104,7 +104,7 @@ COPERT_EMISSIONS_KG_KM: dict[int, float] = {
 
 # ── Frank-Wolfe ───────────────────────────────────────────────────────────────
 FW_N_ITER_BASE = 20           # reduced for demo speed (SSSP-batched, converges early)
-FW_N_ITER_SCENARIO = 8       # warm-start from base solution
+FW_N_ITER_SCENARIO = 4       # warm-start from base → converges in 2–4 iters
 FW_CONVERGENCE_GAP = 1e-3    # 0.1% gap — sufficient for demo
 
 # ── Monte Carlo ───────────────────────────────────────────────────────────────

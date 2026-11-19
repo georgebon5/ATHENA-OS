@@ -90,7 +90,7 @@ def main() -> int:
         cmd += ["up", "-d", "--build", "--wait"]
         print(f"→ {' '.join(cmd)}", flush=True)
         if subprocess.run(cmd, cwd=ROOT).returncode != 0:
-            print(f"{FAIL} docker compose απέτυχε (τρέχει το Docker Desktop; είναι ελεύθερο το port {port};)")
+            print(f"{FAIL} docker compose απέτυχε (τρέχει το Docker Desktop; είναι ελεύθερα τα ports {port} και {e.get('POSTGRES_PORT', '5432')}; αν όχι, άλλαξέ τα στο .env)")
             return 1
 
     print("→ health", flush=True)

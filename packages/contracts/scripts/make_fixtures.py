@@ -27,6 +27,9 @@ PIRAIOS = [
     (23.7130, 37.9800),
     (23.7155, 37.9815),
 ]
+# Πραγματικά OSM way ids της Πειραιώς (ίδια με demo/precompute.py του sim), για να τρέχουν και στον live sim
+PIRAIOS_WAY_IDS = [652510532, 734712545, 217698400]
+
 NOW = datetime(2026, 11, 21, 10, 0, tzinfo=timezone.utc)
 JULY = "2026-07-15T14:00:00+03:00"
 
@@ -240,7 +243,7 @@ def main() -> None:
         "title": "Δέντρα και λωρίδα λεωφορείου στην Πειραιώς",
         "edits": [
             {"type": "add_trees", "geometry": [list(p) for p in PIRAIOS], "count": 42, "side": "south"},
-            {"type": "bus_lane", "wayIds": [10001, 10002, 10003]},
+            {"type": "bus_lane", "wayIds": PIRAIOS_WAY_IDS},
         ],
         "when": iso(NOW),
         "origin": "user",
@@ -250,8 +253,8 @@ def main() -> None:
         "title": "Δέντρα και στις δύο πλευρές, ψυχρό οδόστρωμα και λωρίδα λεωφορείου",
         "edits": [
             {"type": "add_trees", "geometry": [list(p) for p in PIRAIOS], "count": 64, "side": "both"},
-            {"type": "cool_pavement", "wayIds": [10002, 10003]},
-            {"type": "bus_lane", "wayIds": [10001, 10002, 10003]},
+            {"type": "cool_pavement", "wayIds": PIRAIOS_WAY_IDS[1:]},
+            {"type": "bus_lane", "wayIds": PIRAIOS_WAY_IDS},
         ],
         "when": iso(NOW),
         "origin": "agent_variant",

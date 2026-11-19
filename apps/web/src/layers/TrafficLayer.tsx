@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import * as Cesium from "cesium";
 import { useStore } from "@/store/useStore";
-import type { SimResult, Trip } from "@/types/contracts";
+import type { LngLat, SimResult, Trip } from "@/types/contracts";
 
 interface Props {
   viewer: Cesium.Viewer | null;
@@ -21,6 +21,7 @@ export function TrafficLayer({ viewer }: Props) {
   const startRef = useRef<number>(0);
 
   const simResult = useStore((s) => s.simResult);
+  const networkWays = useStore((s) => s.networkWays);
   const visible = useStore((s) => s.layers.traffic);
 
   useEffect(() => {
@@ -60,7 +61,7 @@ export function TrafficLayer({ viewer }: Props) {
     tripsRef.current = [];
 
     if (!simResult) return;
-    renderSegments(ds, simResult);
+    renderSegments(ds, simResult, networkWays);
     tripsRef.current = simResult.traffic.trips.slice(0, MAX_TRIPS);
     startRef.current = performance.now();
     for (const _ of tripsRef.current) {
@@ -74,7 +75,7 @@ export function TrafficLayer({ viewer }: Props) {
       });
     }
     viewer?.scene.requestRender();
-  }, [simResult, viewer]);
+  }, [simResult, networkWays, viewer]);
 
   useEffect(() => {
     const ds = polylinesRef.current;
@@ -87,15 +88,21 @@ export function TrafficLayer({ viewer }: Props) {
   return null;
 }
 
-function renderSegments(ds: Cesium.CustomDataSource, sim: SimResult) {
+function renderSegments(
+  ds: Cesium.CustomDataSource,
+  sim: SimResult,
+  networkWays: Map<number, LngLat[]>,
+) {
   for (const seg of sim.traffic.segments) {
-    if (!seg.path || seg.path.length < 2) continue;
+    // Αν το sim δεν έστειλε inline path, το λύνουμε από το /network
+    const path = seg.path && seg.path.length >= 2 ? seg.path : networkWays.get(seg.wayId);
+    if (!path || path.length < 2) continue;
     const ratio = seg.baseFlow > 0 ? seg.newFlow / seg.baseFlow : 1;
     const color = flowColor(ratio);
     ds.entities.add({
       polyline: {
         positions: Cesium.Cartesian3.fromDegreesArray(
-          seg.path.flatMap(([lng, lat]) => [lng, lat]),
+          path.flatMap(([lng, lat]) => [lng, lat]),
         ),
         width: 6,
         material: Cesium.Color.fromCssColorString(color).withAlpha(0.9),

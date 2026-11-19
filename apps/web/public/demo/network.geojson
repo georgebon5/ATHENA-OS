@@ -1,0 +1,131 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "description": "Οδικό δίκτυο του demo bbox — άξονας Πειραιώς γύρω από Σεράφειο.",
+    "source": "Σωτήρης (Dev2), εκτομή OSM 2026-11-18",
+    "bbox": [23.700, 37.970, 23.730, 37.990],
+    "crs": "EPSG:4326"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "wayId": 100001,
+        "name": "Πειραιώς",
+        "highway": "primary",
+        "lanes": 3,
+        "oneway": false,
+        "maxspeed": 50
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[23.7055, 37.9740], [23.7075, 37.9758]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "wayId": 100002,
+        "name": "Πειραιώς",
+        "highway": "primary",
+        "lanes": 3,
+        "oneway": false,
+        "maxspeed": 50
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[23.7075, 37.9758], [23.7095, 37.9772]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "wayId": 100003,
+        "name": "Πειραιώς",
+        "highway": "primary",
+        "lanes": 3,
+        "oneway": false,
+        "maxspeed": 50
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[23.7095, 37.9772], [23.7108, 37.9787]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "wayId": 100004,
+        "name": "Πειραιώς",
+        "highway": "primary",
+        "lanes": 3,
+        "oneway": false,
+        "maxspeed": 50
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[23.7108, 37.9787], [23.7128, 37.9800]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "wayId": 100005,
+        "name": "Πειραιώς",
+        "highway": "primary",
+        "lanes": 3,
+        "oneway": false,
+        "maxspeed": 50
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[23.7128, 37.9800], [23.7148, 37.9815]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "wayId": 100006,
+        "name": "Πειραιώς",
+        "highway": "primary",
+        "lanes": 3,
+        "oneway": false,
+        "maxspeed": 50
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[23.7148, 37.9815], [23.7168, 37.9830]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "wayId": 200001,
+        "name": "Εχελιδών",
+        "highway": "residential",
+        "lanes": 1,
+        "oneway": true,
+        "maxspeed": 30
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[23.7108, 37.9787], [23.7096, 37.9790]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "wayId": 200002,
+        "name": "Κεραμεικού",
+        "highway": "residential",
+        "lanes": 1,
+        "oneway": false,
+        "maxspeed": 30
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[23.7128, 37.9800], [23.7140, 37.9793]]
+      }
+    }
+  ]
+}

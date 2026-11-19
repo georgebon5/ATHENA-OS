@@ -26,10 +26,12 @@ import { dispatchWs } from "./ws/dispatcher";
 import { useStore } from "./store/useStore";
 import { WS_URL } from "./cesium/cesium-config";
 import { ErrorBoundary } from "./ErrorBoundary";
+import { fetchNetwork } from "./network/networkClient";
 
 export default function App() {
   const [viewer, setViewer] = useState<Cesium.Viewer | null>(null);
   const setWsConnected = useStore((s) => s.setWsConnected);
+  const setNetworkWays = useStore((s) => s.setNetworkWays);
   const clientRef = useRef<WsClient | null>(null);
 
   useEffect(() => {
@@ -42,6 +44,10 @@ export default function App() {
     clientRef.current = client;
     return () => client.close();
   }, [setWsConnected]);
+
+  useEffect(() => {
+    void fetchNetwork().then(setNetworkWays);
+  }, [setNetworkWays]);
 
   return (
     <div className="fixed inset-0 bg-ink overflow-hidden">

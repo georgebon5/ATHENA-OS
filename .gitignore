@@ -1,0 +1,55 @@
+# ── Secrets ──────────────────────────────────────────────────────────────────
+.env
+.env.local
+*.env.local
+
+# ── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ── Data — raw και processed μεγάλα αρχεία ──────────────────────────────────
+# RAW: ποτέ στο git
+data/raw/
+
+# PROCESSED: μόνο αν < 50MB — μεγαλύτερα σε drive/release
+data/processed/*.tif
+data/processed/*.tiff
+data/processed/lst_scenes.parquet
+data/processed/ndvi.tif
+# OK να μπουν στο git (< 10MB):
+# data/processed/network.gpkg
+# data/processed/thermal_grid.parquet
+# data/processed/thermal_model.pkl
+# data/processed/backtests.json
+
+# ── Node / web ────────────────────────────────────────────────────────────────
+node_modules/
+dist/
+.next/
+.turbo/
+*.local
+
+# ── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE ──────────────────────────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+
+# ── Docker ───────────────────────────────────────────────────────────────────
+# (docker-compose.override.yml για local secrets)
+docker-compose.override.yml
+
+# ── osmnx / httpx HTTP cache (auto-generated, not committed) ─────────────────
+/cache/

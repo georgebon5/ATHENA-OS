@@ -1,0 +1,62 @@
+version: "3.9"
+
+# ATHENA-OS docker-compose
+# Owners:
+#   services/sim      → Dev 2 (Σωτήρης)
+#   services/gateway  → Dev 4 (Φρατζιάς)
+#   services/agent    → Dev 3 (Ledi)
+#   infra/            → Dev 4 (Φρατζιάς)
+
+services:
+  # ── Simulation service (Dev 2) ───────────────────────────────────────────
+  sim:
+    build:
+      context: ./services/sim
+      dockerfile: Dockerfile
+    ports:
+      - "8100:8100"
+    volumes:
+      - ./data:/data:ro
+      - ./demo/cache:/demo/cache
+    environment:
+      MOCK: "${MOCK:-1}"
+      DATA_PROCESSED_DIR: /data/processed
+      DEMO_CACHE_DIR: /demo/cache
+      PORT: "8100"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ── Gateway (Dev 4 — placeholder) ────────────────────────────────────────
+  # gateway:
+  #   build: ./services/gateway
+  #   ports: ["8000:8000"]
+  #   depends_on: [db, sim]
+  #   environment:
+  #     SIM_URL: http://sim:8100
+  #     DATABASE_URL: "${DATABASE_URL}"
+
+  # ── Agent (Dev 3 — placeholder) ──────────────────────────────────────────
+  # agent:
+  #   build: ./services/agent
+  #   ports: ["8200:8200"]
+  #   depends_on: [gateway]
+  #   environment:
+  #     GATEWAY_URL: http://gateway:8000
+  #     LLM_API_KEY: "${LLM_API_KEY}"
+
+  # ── Database (Dev 4) ──────────────────────────────────────────────────────
+  # db:
+  #   image: postgis/postgis:16-3.4
+  #   environment:
+  #     POSTGRES_DB: athena
+  #     POSTGRES_USER: athena
+  #     POSTGRES_PASSWORD: athena
+  #   ports: ["5432:5432"]
+  #   volumes: [pgdata:/var/lib/postgresql/data]
+
+# volumes:
+#   pgdata:

@@ -24,3 +24,19 @@ services/gateway/var/
 .DS_Store
 Thumbs.db
 .idea/
+.mypy_cache/
+venv/
+build/
+
+# Data (Dev2): raw ποτέ στο git, processed μόνο αν < 50MB
+data/raw/
+data/processed/*.tif
+data/processed/*.tiff
+data/processed/lst_scenes.parquet
+
+# osmnx / httpx HTTP cache
+/cache/
+
+# Local overrides
+docker-compose.override.yml
+.vscode/settings.json

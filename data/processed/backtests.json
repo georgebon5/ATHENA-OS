@@ -1,0 +1,169 @@
+[
+  {
+    "model": "traffic",
+    "metric": "MAPE",
+    "value": 16.5,
+    "heldOut": "βαθμονόμηση: EL.STAT 2023 urban road counts + ΥΠΕΚΑ mobility report",
+    "nSamples": 3,
+    "chart": [
+      {
+        "predicted": 1153.9,
+        "observed": 1200.0
+      },
+      {
+        "predicted": 704.0,
+        "observed": 800.0
+      },
+      {
+        "predicted": 261.5,
+        "observed": 300.0
+      }
+    ]
+  },
+  {
+    "model": "thermal",
+    "metric": "MAE_C",
+    "value": 1.87,
+    "heldOut": "MOCK — θα αντικατασταθεί με Landsat 9 (καλοκαίρι 2024/2025)",
+    "nSamples": 16,
+    "chart": [
+      {
+        "predicted": 29.02,
+        "observed": 28.0
+      },
+      {
+        "predicted": 28.6,
+        "observed": 30.0
+      },
+      {
+        "predicted": 34.2,
+        "observed": 32.0
+      },
+      {
+        "predicted": 33.24,
+        "observed": 34.0
+      },
+      {
+        "predicted": 36.33,
+        "observed": 36.0
+      },
+      {
+        "predicted": 35.89,
+        "observed": 38.0
+      },
+      {
+        "predicted": 38.77,
+        "observed": 40.0
+      },
+      {
+        "predicted": 42.86,
+        "observed": 42.0
+      },
+      {
+        "predicted": 45.28,
+        "observed": 44.0
+      },
+      {
+        "predicted": 46.06,
+        "observed": 46.0
+      },
+      {
+        "predicted": 50.34,
+        "observed": 48.0
+      },
+      {
+        "predicted": 49.85,
+        "observed": 50.0
+      },
+      {
+        "predicted": 48.04,
+        "observed": 52.0
+      },
+      {
+        "predicted": 54.96,
+        "observed": 54.0
+      },
+      {
+        "predicted": 51.89,
+        "observed": 56.0
+      },
+      {
+        "predicted": 54.79,
+        "observed": 58.0
+      }
+    ]
+  },
+  {
+    "model": "thermal",
+    "metric": "R2",
+    "value": 0.71,
+    "heldOut": "MOCK — θα αντικατασταθεί με Landsat 9 (καλοκαίρι 2024/2025)",
+    "nSamples": 16,
+    "chart": [
+      {
+        "predicted": 29.02,
+        "observed": 28.0
+      },
+      {
+        "predicted": 28.6,
+        "observed": 30.0
+      },
+      {
+        "predicted": 34.2,
+        "observed": 32.0
+      },
+      {
+        "predicted": 33.24,
+        "observed": 34.0
+      },
+      {
+        "predicted": 36.33,
+        "observed": 36.0
+      },
+      {
+        "predicted": 35.89,
+        "observed": 38.0
+      },
+      {
+        "predicted": 38.77,
+        "observed": 40.0
+      },
+      {
+        "predicted": 42.86,
+        "observed": 42.0
+      },
+      {
+        "predicted": 45.28,
+        "observed": 44.0
+      },
+      {
+        "predicted": 46.06,
+        "observed": 46.0
+      },
+      {
+        "predicted": 50.34,
+        "observed": 48.0
+      },
+      {
+        "predicted": 49.85,
+        "observed": 50.0
+      },
+      {
+        "predicted": 48.04,
+        "observed": 52.0
+      },
+      {
+        "predicted": 54.96,
+        "observed": 54.0
+      },
+      {
+        "predicted": 51.89,
+        "observed": 56.0
+      },
+      {
+        "predicted": 54.79,
+        "observed": 58.0
+      }
+    ]
+  }
+]

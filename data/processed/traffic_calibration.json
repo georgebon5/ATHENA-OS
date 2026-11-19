@@ -1,0 +1,24 @@
+{
+  "source": "EL.STAT 2023 urban road counts + ΥΠΕΚΑ mobility report",
+  "note": "No direct sensors found in bbox — calibrated to published averages",
+  "counts": [
+    {
+      "road": "Πειραιώς",
+      "type": "primary",
+      "veh_h_peak": 1200,
+      "direction": "both"
+    },
+    {
+      "road": "Ιερά Οδός",
+      "type": "secondary",
+      "veh_h_peak": 800,
+      "direction": "both"
+    },
+    {
+      "road": "Εχελιδών",
+      "type": "tertiary",
+      "veh_h_peak": 300,
+      "direction": "both"
+    }
+  ]
+}

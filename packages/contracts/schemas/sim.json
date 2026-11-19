@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "sim.json",
+  "definitions": {
+    "TrafficSegment": {
+      "title": "TrafficSegment",
+      "type": "object",
+      "required": ["wayId", "baseFlow", "newFlow", "baseTimeS", "newTimeS"],
+      "properties": {
+        "wayId": { "type": "integer" },
+        "baseFlow": { "type": "number" },
+        "newFlow": { "type": "number" },
+        "baseTimeS": { "type": "number" },
+        "newTimeS": { "type": "number" },
+        "path": {
+          "description": "Προαιρετικό geometry. Αν λείπει, ο client το αντιστοιχεί τοπικά.",
+          "type": "array",
+          "items": { "$ref": "geo.json#/definitions/LngLat" }
+        }
+      }
+    },
+    "Trip": {
+      "title": "Trip",
+      "type": "object",
+      "required": ["path", "departS", "durationS"],
+      "properties": {
+        "path": { "type": "array", "items": { "$ref": "geo.json#/definitions/LngLat" } },
+        "departS": { "type": "number" },
+        "durationS": { "type": "number" }
+      }
+    },
+    "ThermalCell": {
+      "title": "ThermalCell",
+      "type": "object",
+      "required": ["lngLat", "baseC", "newC"],
+      "properties": {
+        "lngLat": { "$ref": "geo.json#/definitions/LngLat" },
+        "baseC": { "type": "number" },
+        "newC": { "type": "number" }
+      }
+    },
+    "SimResult": {
+      "title": "SimResult",
+      "type": "object",
+      "required": ["scenarioId", "status", "computeMs", "traffic", "thermal", "emissions", "notes"],
+      "properties": {
+        "scenarioId": { "type": "string" },
+        "status": { "type": "string", "enum": ["ok", "error"] },
+        "computeMs": { "type": "number" },
+        "traffic": {
+          "type": "object",
+          "required": ["segments", "corridorTravelTimeDeltaPct", "vehicleKmDeltaPct", "trips"],
+          "properties": {
+            "segments": { "type": "array", "items": { "$ref": "sim.json#/definitions/TrafficSegment" } },
+            "corridorTravelTimeDeltaPct": { "$ref": "geo.json#/definitions/Range" },
+            "vehicleKmDeltaPct": { "$ref": "geo.json#/definitions/Range" },
+            "trips": {
+              "type": "array",
+              "items": { "$ref": "sim.json#/definitions/Trip" },
+              "maxItems": 3000
+            }
+          }
+        },
+        "thermal": {
+          "type": "object",
+          "required": ["when", "cells", "hotspotDeltaC"],
+          "properties": {
+            "when": { "type": "string" },
+            "cells": {
+              "description": "Πλέγμα ~20–30 m",
+              "type": "array",
+              "items": { "$ref": "sim.json#/definitions/ThermalCell" }
+            },
+            "hotspotDeltaC": { "$ref": "geo.json#/definitions/Range" }
+          }
+        },
+        "emissions": {
+          "type": "object",
+          "required": ["co2DeltaPct"],
+          "properties": {
+            "co2DeltaPct": { "$ref": "geo.json#/definitions/Range" }
+          }
+        },
+        "notes": {
+          "description": "Παραδοχές, στα ελληνικά",
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "Backtest": {
+      "title": "Backtest",
+      "type": "object",
+      "required": ["model", "metric", "value", "heldOut", "nSamples", "chart"],
+      "properties": {
+        "model": { "type": "string", "enum": ["traffic", "thermal"] },
+        "metric": { "type": "string", "enum": ["MAPE", "MAE_C", "R2"] },
+        "value": { "type": "number" },
+        "heldOut": { "type": "string", "description": "π.χ. «Τρίτη 17/11, 07:00–10:00» ή «Landsat 14/07/2025»" },
+        "nSamples": { "type": "integer" },
+        "chart": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["predicted", "observed"],
+            "properties": {
+              "predicted": { "type": "number" },
+              "observed": { "type": "number" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

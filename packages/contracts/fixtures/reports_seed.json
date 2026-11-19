@@ -1,0 +1,762 @@
+[
+  {
+    "id": "r-seed-038",
+    "createdAt": "2026-10-22T16:36:44Z",
+    "photoUrl": "/media/seed/r-seed-038.jpg",
+    "location": [
+      23.715075,
+      37.981178
+    ],
+    "heading": 122.9,
+    "accuracyM": 9.0,
+    "classification": {
+      "category": "sidewalk_damage",
+      "severity": 4,
+      "summaryEl": "Ανασηκωμένο πεζοδρόμιο από ρίζες δέντρου.",
+      "department": "Διεύθυνση Οδοποιίας",
+      "duplicates": [],
+      "confidence": 0.75
+    }
+  },
+  {
+    "id": "r-seed-001",
+    "createdAt": "2026-10-23T14:09:08Z",
+    "photoUrl": "/media/seed/r-seed-001.jpg",
+    "location": [
+      23.710346,
+      37.978419
+    ],
+    "heading": 57.7,
+    "accuracyM": 8.9,
+    "classification": {
+      "category": "accessibility",
+      "severity": 2,
+      "summaryEl": "Λείπει ο οδηγός τυφλών στη διάβαση.",
+      "department": "Γραφείο Προσβασιμότητας",
+      "duplicates": [],
+      "confidence": 0.82
+    }
+  },
+  {
+    "id": "r-seed-023",
+    "createdAt": "2026-10-24T13:34:20Z",
+    "photoUrl": "/media/seed/r-seed-023.jpg",
+    "location": [
+      23.714016,
+      37.980396
+    ],
+    "heading": 5.7,
+    "accuracyM": 16.8,
+    "classification": {
+      "category": "sidewalk_damage",
+      "severity": 5,
+      "summaryEl": "Ανασηκωμένο πεζοδρόμιο από ρίζες δέντρου.",
+      "department": "Διεύθυνση Οδοποιίας",
+      "duplicates": [],
+      "confidence": 0.78
+    }
+  },
+  {
+    "id": "r-seed-033",
+    "createdAt": "2026-10-25T15:45:05Z",
+    "photoUrl": "/media/seed/r-seed-033.jpg",
+    "location": [
+      23.719002,
+      37.982759
+    ],
+    "heading": 245.0,
+    "accuracyM": 6.3,
+    "classification": {
+      "category": "sidewalk_damage",
+      "severity": 1,
+      "summaryEl": "Ανασηκωμένο πεζοδρόμιο από ρίζες δέντρου.",
+      "department": "Διεύθυνση Οδοποιίας",
+      "duplicates": [],
+      "confidence": 0.75
+    }
+  },
+  {
+    "id": "r-seed-015",
+    "createdAt": "2026-10-25T22:25:15Z",
+    "photoUrl": "/media/seed/r-seed-015.jpg",
+    "location": [
+      23.705886,
+      37.974552
+    ],
+    "heading": 114.0,
+    "accuracyM": 8.2,
+    "classification": {
+      "category": "obstruction",
+      "severity": 2,
+      "summaryEl": "Εργοταξιακά υλικά στο πεζοδρόμιο.",
+      "department": "Δημοτική Αστυνομία",
+      "duplicates": [],
+      "confidence": 0.89
+    }
+  },
+  {
+    "id": "r-seed-012",
+    "createdAt": "2026-10-26T02:05:47Z",
+    "photoUrl": "/media/seed/r-seed-012.jpg",
+    "location": [
+      23.727205,
+      37.987205
+    ],
+    "heading": 75.3,
+    "accuracyM": 10.3,
+    "classification": {
+      "category": "obstruction",
+      "severity": 3,
+      "summaryEl": "Σταθμευμένο όχημα κλείνει τη ράμπα.",
+      "department": "Δημοτική Αστυνομία",
+      "duplicates": [],
+      "confidence": 0.92
+    }
+  },
+  {
+    "id": "r-seed-009",
+    "createdAt": "2026-10-26T09:46:02Z",
+    "photoUrl": "/media/seed/r-seed-009.jpg",
+    "location": [
+      23.722745,
+      37.9769
+    ],
+    "heading": 269.6,
+    "accuracyM": 4.9,
+    "classification": {
+      "category": "lighting",
+      "severity": 3,
+      "summaryEl": "Ο φωτισμός αναβοσβήνει όλη τη νύχτα.",
+      "department": "Τμήμα Ηλεκτροφωτισμού",
+      "duplicates": [],
+      "confidence": 0.74
+    }
+  },
+  {
+    "id": "r-seed-005",
+    "createdAt": "2026-10-28T02:28:48Z",
+    "photoUrl": "/media/seed/r-seed-005.jpg",
+    "location": [
+      23.70563,
+      37.975289
+    ],
+    "heading": 249.7,
+    "accuracyM": 9.5,
+    "classification": {
+      "category": "lighting",
+      "severity": 4,
+      "summaryEl": "Ο φωτισμός αναβοσβήνει όλη τη νύχτα.",
+      "department": "Τμήμα Ηλεκτροφωτισμού",
+      "duplicates": [],
+      "confidence": 0.97
+    }
+  },
+  {
+    "id": "r-seed-007",
+    "createdAt": "2026-10-31T17:56:02Z",
+    "photoUrl": "/media/seed/r-seed-007.jpg",
+    "location": [
+      23.713977,
+      37.980688
+    ],
+    "heading": 192.8,
+    "accuracyM": 10.7,
+    "classification": {
+      "category": "accessibility",
+      "severity": 4,
+      "summaryEl": "Ράμπα ΑμεΑ με απότομη κλίση.",
+      "department": "Γραφείο Προσβασιμότητας",
+      "duplicates": [],
+      "confidence": 0.93
+    }
+  },
+  {
+    "id": "r-seed-026",
+    "createdAt": "2026-10-31T18:53:52Z",
+    "photoUrl": "/media/seed/r-seed-026.jpg",
+    "location": [
+      23.710731,
+      37.979632
+    ],
+    "heading": 2.7,
+    "accuracyM": 6.5,
+    "classification": {
+      "category": "waste",
+      "severity": 3,
+      "summaryEl": "Ογκώδη αντικείμενα εγκαταλελειμμένα στο πεζοδρόμιο.",
+      "department": "Διεύθυνση Καθαριότητας & Ανακύκλωσης",
+      "duplicates": [],
+      "confidence": 0.82
+    }
+  },
+  {
+    "id": "r-seed-029",
+    "createdAt": "2026-11-02T03:40:55Z",
+    "photoUrl": "/media/seed/r-seed-029.jpg",
+    "location": [
+      23.713809,
+      37.981152
+    ],
+    "heading": 168.4,
+    "accuracyM": 17.3,
+    "classification": {
+      "category": "heat_exposure",
+      "severity": 3,
+      "summaryEl": "Στάση λεωφορείου χωρίς στέγαστρο και σκιά.",
+      "department": "Διεύθυνση Πρασίνου & Αστικής Πανίδας",
+      "duplicates": [],
+      "confidence": 0.83
+    }
+  },
+  {
+    "id": "r-seed-032",
+    "createdAt": "2026-11-04T00:32:22Z",
+    "photoUrl": "/media/seed/r-seed-032.jpg",
+    "location": [
+      23.703196,
+      37.986745
+    ],
+    "heading": 9.1,
+    "accuracyM": 14.6,
+    "classification": {
+      "category": "pothole",
+      "severity": 4,
+      "summaryEl": "Βαθιά λακκούβα κοντά σε διάβαση πεζών.",
+      "department": "Διεύθυνση Οδοποιίας",
+      "duplicates": [],
+      "confidence": 0.88
+    }
+  },
+  {
+    "id": "r-seed-028",
+    "createdAt": "2026-11-04T01:14:50Z",
+    "photoUrl": "/media/seed/r-seed-028.jpg",
+    "location": [
+      23.712253,
+      37.98003
+    ],
+    "heading": 176.8,
+    "accuracyM": 6.1,
+    "classification": {
+      "category": "pothole",
+      "severity": 4,
+      "summaryEl": "Λακκούβα στο οδόστρωμα, κίνδυνος για δικυκλιστές.",
+      "department": "Διεύθυνση Οδοποιίας",
+      "duplicates": [],
+      "confidence": 0.75
+    }
+  },
+  {
+    "id": "r-seed-013",
+    "createdAt": "2026-11-04T04:31:18Z",
+    "photoUrl": "/media/seed/r-seed-013.jpg",
+    "location": [
+      23.706256,
+      37.974927
+    ],
+    "heading": 63.5,
+    "accuracyM": 17.8,
+    "classification": {
+      "category": "other",
+      "severity": 3,
+      "summaryEl": "Σπασμένη πινακίδα σήμανσης.",
+      "department": "Κέντρο Εξυπηρέτησης Πολιτών",
+      "duplicates": [],
+      "confidence": 0.96
+    }
+  },
+  {
+    "id": "r-seed-014",
+    "createdAt": "2026-11-04T06:27:30Z",
+    "photoUrl": "/media/seed/r-seed-014.jpg",
+    "location": [
+      23.711961,
+      37.977981
+    ],
+    "heading": 50.2,
+    "accuracyM": 7.3,
+    "classification": {
+      "category": "sidewalk_damage",
+      "severity": 4,
+      "summaryEl": "Ανασηκωμένο πεζοδρόμιο από ρίζες δέντρου.",
+      "department": "Διεύθυνση Οδοποιίας",
+      "duplicates": [],
+      "confidence": 0.89
+    }
+  },
+  {
+    "id": "r-seed-036",
+    "createdAt": "2026-11-05T09:23:13Z",
+    "photoUrl": "/media/seed/r-seed-036.jpg",
+    "location": [
+      23.7088,
+      37.976884
+    ],
+    "heading": 85.6,
+    "accuracyM": 4.1,
+    "classification": {
+      "category": "sidewalk_damage",
+      "severity": 4,
+      "summaryEl": "Σπασμένες πλάκες στο πεζοδρόμιο.",
+      "department": "Διεύθυνση Οδοποιίας",
+      "duplicates": [],
+      "confidence": 0.82
+    }
+  },
+  {
+    "id": "r-seed-010",
+    "createdAt": "2026-11-05T10:16:04Z",
+    "photoUrl": "/media/seed/r-seed-010.jpg",
+    "location": [
+      23.71455,
+      37.980831
+    ],
+    "heading": 15.8,
+    "accuracyM": 6.8,
+    "classification": {
+      "category": "heat_exposure",
+      "severity": 3,
+      "summaryEl": "Πεζοδρόμιο χωρίς σκιά, υψηλή έκθεση στον ήλιο.",
+      "department": "Διεύθυνση Πρασίνου & Αστικής Πανίδας",
+      "duplicates": [],
+      "confidence": 0.76
+    }
+  },
+  {
+    "id": "r-seed-035",
+    "createdAt": "2026-11-05T11:56:53Z",
+    "photoUrl": "/media/seed/r-seed-035.jpg",
+    "location": [
+      23.717139,
+      37.986135
+    ],
+    "heading": 175.3,
+    "accuracyM": 14.8,
+    "classification": {
+      "category": "waste",
+      "severity": 1,
+      "summaryEl": "Ογκώδη αντικείμενα εγκαταλελειμμένα στο πεζοδρόμιο.",
+      "department": "Διεύθυνση Καθαριότητας & Ανακύκλωσης",
+      "duplicates": [],
+      "confidence": 0.93
+    }
+  },
+  {
+    "id": "r-seed-020",
+    "createdAt": "2026-11-05T21:39:04Z",
+    "photoUrl": "/media/seed/r-seed-020.jpg",
+    "location": [
+      23.704333,
+      37.973874
+    ],
+    "heading": 291.8,
+    "accuracyM": 7.6,
+    "classification": {
+      "category": "pothole",
+      "severity": 5,
+      "summaryEl": "Βαθιά λακκούβα κοντά σε διάβαση πεζών.",
+      "department": "Διεύθυνση Οδοποιίας",
+      "duplicates": [],
+      "confidence": 0.92
+    }
+  },
+  {
+    "id": "r-seed-018",
+    "createdAt": "2026-11-06T23:41:37Z",
+    "photoUrl": "/media/seed/r-seed-018.jpg",
+    "location": [
+      23.705312,
+      37.974679
+    ],
+    "heading": 221.5,
+    "accuracyM": 9.5,
+    "classification": {
+      "category": "obstruction",
+      "severity": 4,
+      "summaryEl": "Εργοταξιακά υλικά στο πεζοδρόμιο.",
+      "department": "Δημοτική Αστυνομία",
+      "duplicates": [],
+      "confidence": 0.81
+    }
+  },
+  {
+    "id": "r-seed-002",
+    "createdAt": "2026-11-07T05:52:43Z",
+    "photoUrl": "/media/seed/r-seed-002.jpg",
+    "location": [
+      23.708365,
+      37.986689
+    ],
+    "heading": 118.1,
+    "accuracyM": 5.3,
+    "classification": {
+      "category": "waste",
+      "severity": 3,
+      "summaryEl": "Ογκώδη αντικείμενα εγκαταλελειμμένα στο πεζοδρόμιο.",
+      "department": "Διεύθυνση Καθαριότητας & Ανακύκλωσης",
+      "duplicates": [],
+      "confidence": 0.72
+    }
+  },
+  {
+    "id": "r-seed-021",
+    "createdAt": "2026-11-07T13:00:44Z",
+    "photoUrl": "/media/seed/r-seed-021.jpg",
+    "location": [
+      23.707374,
+      37.983444
+    ],
+    "heading": 35.9,
+    "accuracyM": 4.7,
+    "classification": {
+      "category": "accessibility",
+      "severity": 3,
+      "summaryEl": "Ράμπα ΑμεΑ με απότομη κλίση.",
+      "department": "Γραφείο Προσβασιμότητας",
+      "duplicates": [],
+      "confidence": 0.84
+    }
+  },
+  {
+    "id": "r-seed-017",
+    "createdAt": "2026-11-08T15:24:58Z",
+    "photoUrl": "/media/seed/r-seed-017.jpg",
+    "location": [
+      23.706464,
+      37.976328
+    ],
+    "heading": 37.0,
+    "accuracyM": 8.5,
+    "classification": {
+      "category": "accessibility",
+      "severity": 4,
+      "summaryEl": "Λείπει ο οδηγός τυφλών στη διάβαση.",
+      "department": "Γραφείο Προσβασιμότητας",
+      "duplicates": [],
+      "confidence": 0.91
+    }
+  },
+  {
+    "id": "r-seed-027",
+    "createdAt": "2026-11-09T04:56:39Z",
+    "photoUrl": "/media/seed/r-seed-027.jpg",
+    "location": [
+      23.721391,
+      37.977761
+    ],
+    "heading": 341.2,
+    "accuracyM": 7.4,
+    "classification": {
+      "category": "sidewalk_damage",
+      "severity": 4,
+      "summaryEl": "Σπασμένες πλάκες στο πεζοδρόμιο.",
+      "department": "Διεύθυνση Οδοποιίας",
+      "duplicates": [],
+      "confidence": 0.86
+    }
+  },
+  {
+    "id": "r-seed-006",
+    "createdAt": "2026-11-10T01:30:42Z",
+    "photoUrl": "/media/seed/r-seed-006.jpg",
+    "location": [
+      23.71054,
+      37.979094
+    ],
+    "heading": 291.1,
+    "accuracyM": 8.3,
+    "classification": {
+      "category": "other",
+      "severity": 1,
+      "summaryEl": "Διαρροή νερού στο πεζοδρόμιο.",
+      "department": "Κέντρο Εξυπηρέτησης Πολιτών",
+      "duplicates": [],
+      "confidence": 0.95
+    }
+  },
+  {
+    "id": "r-seed-040",
+    "createdAt": "2026-11-10T11:51:29Z",
+    "photoUrl": "/media/seed/r-seed-040.jpg",
+    "location": [
+      23.727878,
+      37.982397
+    ],
+    "heading": 291.0,
+    "accuracyM": 14.0,
+    "classification": {
+      "category": "heat_exposure",
+      "severity": 4,
+      "summaryEl": "Στάση λεωφορείου χωρίς στέγαστρο και σκιά.",
+      "department": "Διεύθυνση Πρασίνου & Αστικής Πανίδας",
+      "duplicates": [],
+      "confidence": 0.8
+    }
+  },
+  {
+    "id": "r-seed-031",
+    "createdAt": "2026-11-11T04:30:23Z",
+    "photoUrl": "/media/seed/r-seed-031.jpg",
+    "location": [
+      23.709078,
+      37.977439
+    ],
+    "heading": 79.1,
+    "accuracyM": 15.2,
+    "classification": {
+      "category": "pothole",
+      "severity": 2,
+      "summaryEl": "Λακκούβα στο οδόστρωμα, κίνδυνος για δικυκλιστές.",
+      "department": "Διεύθυνση Οδοποιίας",
+      "duplicates": [],
+      "confidence": 0.74
+    }
+  },
+  {
+    "id": "r-seed-037",
+    "createdAt": "2026-11-11T08:05:46Z",
+    "photoUrl": "/media/seed/r-seed-037.jpg",
+    "location": [
+      23.711922,
+      37.986142
+    ],
+    "heading": 334.0,
+    "accuracyM": 14.4,
+    "classification": {
+      "category": "waste",
+      "severity": 3,
+      "summaryEl": "Ογκώδη αντικείμενα εγκαταλελειμμένα στο πεζοδρόμιο.",
+      "department": "Διεύθυνση Καθαριότητας & Ανακύκλωσης",
+      "duplicates": [],
+      "confidence": 0.88
+    }
+  },
+  {
+    "id": "r-seed-019",
+    "createdAt": "2026-11-11T23:39:30Z",
+    "photoUrl": "/media/seed/r-seed-019.jpg",
+    "location": [
+      23.710705,
+      37.987359
+    ],
+    "heading": 282.8,
+    "accuracyM": 6.9,
+    "classification": {
+      "category": "sidewalk_damage",
+      "severity": 3,
+      "summaryEl": "Ανασηκωμένο πεζοδρόμιο από ρίζες δέντρου.",
+      "department": "Διεύθυνση Οδοποιίας",
+      "duplicates": [],
+      "confidence": 0.85
+    }
+  },
+  {
+    "id": "r-seed-025",
+    "createdAt": "2026-11-12T06:56:03Z",
+    "photoUrl": "/media/seed/r-seed-025.jpg",
+    "location": [
+      23.712669,
+      37.983324
+    ],
+    "heading": 221.7,
+    "accuracyM": 6.5,
+    "classification": {
+      "category": "waste",
+      "severity": 2,
+      "summaryEl": "Υπερχειλισμένοι κάδοι απορριμμάτων.",
+      "department": "Διεύθυνση Καθαριότητας & Ανακύκλωσης",
+      "duplicates": [],
+      "confidence": 0.86
+    }
+  },
+  {
+    "id": "r-seed-011",
+    "createdAt": "2026-11-12T09:54:24Z",
+    "photoUrl": "/media/seed/r-seed-011.jpg",
+    "location": [
+      23.719852,
+      37.976751
+    ],
+    "heading": 62.5,
+    "accuracyM": 13.8,
+    "classification": {
+      "category": "accessibility",
+      "severity": 2,
+      "summaryEl": "Ράμπα ΑμεΑ με απότομη κλίση.",
+      "department": "Γραφείο Προσβασιμότητας",
+      "duplicates": [],
+      "confidence": 0.96
+    }
+  },
+  {
+    "id": "r-seed-004",
+    "createdAt": "2026-11-13T07:22:02Z",
+    "photoUrl": "/media/seed/r-seed-004.jpg",
+    "location": [
+      23.719183,
+      37.979348
+    ],
+    "heading": 7.1,
+    "accuracyM": 12.4,
+    "classification": {
+      "category": "waste",
+      "severity": 3,
+      "summaryEl": "Ογκώδη αντικείμενα εγκαταλελειμμένα στο πεζοδρόμιο.",
+      "department": "Διεύθυνση Καθαριότητας & Ανακύκλωσης",
+      "duplicates": [],
+      "confidence": 0.9
+    }
+  },
+  {
+    "id": "r-seed-022",
+    "createdAt": "2026-11-13T14:03:24Z",
+    "photoUrl": "/media/seed/r-seed-022.jpg",
+    "location": [
+      23.707182,
+      37.975966
+    ],
+    "heading": 344.8,
+    "accuracyM": 7.3,
+    "classification": {
+      "category": "accessibility",
+      "severity": 1,
+      "summaryEl": "Λείπει ο οδηγός τυφλών στη διάβαση.",
+      "department": "Γραφείο Προσβασιμότητας",
+      "duplicates": [],
+      "confidence": 0.95
+    }
+  },
+  {
+    "id": "r-seed-003",
+    "createdAt": "2026-11-14T17:42:55Z",
+    "photoUrl": "/media/seed/r-seed-003.jpg",
+    "location": [
+      23.72552,
+      37.978902
+    ],
+    "heading": 312.3,
+    "accuracyM": 6.5,
+    "classification": {
+      "category": "waste",
+      "severity": 3,
+      "summaryEl": "Ογκώδη αντικείμενα εγκαταλελειμμένα στο πεζοδρόμιο.",
+      "department": "Διεύθυνση Καθαριότητας & Ανακύκλωσης",
+      "duplicates": [],
+      "confidence": 0.94
+    }
+  },
+  {
+    "id": "r-seed-016",
+    "createdAt": "2026-11-16T00:27:52Z",
+    "photoUrl": "/media/seed/r-seed-016.jpg",
+    "location": [
+      23.713791,
+      37.980321
+    ],
+    "heading": 190.6,
+    "accuracyM": 13.0,
+    "classification": {
+      "category": "pothole",
+      "severity": 4,
+      "summaryEl": "Λακκούβα στο οδόστρωμα, κίνδυνος για δικυκλιστές.",
+      "department": "Διεύθυνση Οδοποιίας",
+      "duplicates": [],
+      "confidence": 0.92
+    }
+  },
+  {
+    "id": "r-seed-034",
+    "createdAt": "2026-11-16T18:31:26Z",
+    "photoUrl": "/media/seed/r-seed-034.jpg",
+    "location": [
+      23.714201,
+      37.981814
+    ],
+    "heading": 287.4,
+    "accuracyM": 7.5,
+    "classification": {
+      "category": "pothole",
+      "severity": 3,
+      "summaryEl": "Λακκούβα στο οδόστρωμα, κίνδυνος για δικυκλιστές.",
+      "department": "Διεύθυνση Οδοποιίας",
+      "duplicates": [],
+      "confidence": 0.92
+    }
+  },
+  {
+    "id": "r-seed-024",
+    "createdAt": "2026-11-17T23:43:30Z",
+    "photoUrl": "/media/seed/r-seed-024.jpg",
+    "location": [
+      23.712499,
+      37.984383
+    ],
+    "heading": 18.7,
+    "accuracyM": 13.9,
+    "classification": {
+      "category": "accessibility",
+      "severity": 5,
+      "summaryEl": "Ράμπα ΑμεΑ με απότομη κλίση.",
+      "department": "Γραφείο Προσβασιμότητας",
+      "duplicates": [],
+      "confidence": 0.74
+    }
+  },
+  {
+    "id": "r-seed-030",
+    "createdAt": "2026-11-18T11:28:49Z",
+    "photoUrl": "/media/seed/r-seed-030.jpg",
+    "location": [
+      23.719524,
+      37.979381
+    ],
+    "heading": 249.9,
+    "accuracyM": 12.5,
+    "classification": {
+      "category": "graffiti",
+      "severity": 3,
+      "summaryEl": "Graffiti σε στάση λεωφορείου.",
+      "department": "Διεύθυνση Καθαριότητας & Ανακύκλωσης",
+      "duplicates": [],
+      "confidence": 0.84
+    }
+  },
+  {
+    "id": "r-seed-039",
+    "createdAt": "2026-11-18T17:55:15Z",
+    "photoUrl": "/media/seed/r-seed-039.jpg",
+    "location": [
+      23.724271,
+      37.987262
+    ],
+    "heading": 265.3,
+    "accuracyM": 16.1,
+    "classification": {
+      "category": "heat_exposure",
+      "severity": 3,
+      "summaryEl": "Πεζοδρόμιο χωρίς σκιά, υψηλή έκθεση στον ήλιο.",
+      "department": "Διεύθυνση Πρασίνου & Αστικής Πανίδας",
+      "duplicates": [],
+      "confidence": 0.73
+    }
+  },
+  {
+    "id": "r-seed-008",
+    "createdAt": "2026-11-20T00:05:03Z",
+    "photoUrl": "/media/seed/r-seed-008.jpg",
+    "location": [
+      23.707615,
+      37.976703
+    ],
+    "heading": 215.3,
+    "accuracyM": 6.4,
+    "classification": {
+      "category": "waste",
+      "severity": 4,
+      "summaryEl": "Υπερχειλισμένοι κάδοι απορριμμάτων.",
+      "department": "Διεύθυνση Καθαριότητας & Ανακύκλωσης",
+      "duplicates": [],
+      "confidence": 0.84
+    }
+  }
+]

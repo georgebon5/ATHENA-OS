@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "report.json",
+  "definitions": {
+    "ReportCategory": {
+      "title": "ReportCategory",
+      "type": "string",
+      "enum": [
+        "pothole",
+        "sidewalk_damage",
+        "waste",
+        "lighting",
+        "obstruction",
+        "heat_exposure",
+        "graffiti",
+        "accessibility",
+        "other"
+      ]
+    },
+    "ReportClassification": {
+      "title": "ReportClassification",
+      "type": "object",
+      "required": ["category", "severity", "summaryEl", "department", "duplicates", "confidence"],
+      "properties": {
+        "category": { "$ref": "report.json#/definitions/ReportCategory" },
+        "severity": { "type": "integer", "enum": [1, 2, 3, 4, 5] },
+        "summaryEl": { "type": "string", "description": "Μία πρόταση στα ελληνικά" },
+        "department": { "type": "string", "description": "Αρμόδια υπηρεσία του Δήμου" },
+        "duplicates": { "type": "array", "items": { "type": "string" }, "description": "Report ids" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "Report": {
+      "title": "Report",
+      "type": "object",
+      "required": ["id", "createdAt", "photoUrl", "location", "heading", "accuracyM"],
+      "properties": {
+        "id": { "type": "string" },
+        "createdAt": { "type": "string", "description": "ISO 8601" },
+        "photoUrl": { "type": "string" },
+        "location": { "$ref": "geo.json#/definitions/LngLat" },
+        "heading": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 360,
+          "description": "Μοίρες 0–360 από πυξίδα (0 = βορράς, δεξιόστροφα)"
+        },
+        "accuracyM": { "type": ["number", "null"], "minimum": 0 },
+        "classification": { "$ref": "report.json#/definitions/ReportClassification" }
+      }
+    }
+  }
+}

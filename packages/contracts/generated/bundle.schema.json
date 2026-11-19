@@ -1,0 +1,1689 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "AUTO-GENERATED από packages/contracts/schemas — ΜΗΝ το αλλάξεις με το χέρι. Τρέξε `pnpm contracts:gen`.",
+  "title": "AthenaContracts",
+  "type": "object",
+  "properties": {},
+  "definitions": {
+    "Bus": {
+      "title": "Bus",
+      "type": "object",
+      "required": [
+        "id",
+        "line",
+        "lngLat",
+        "bearing"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Αριθμός οχήματος ΟΑΣΑ"
+        },
+        "line": {
+          "type": "string",
+          "description": "π.χ. 049, 914, Β18"
+        },
+        "lngLat": {
+          "$ref": "#/definitions/LngLat"
+        },
+        "bearing": {
+          "type": "number",
+          "description": "Μοίρες 0–360"
+        }
+      }
+    },
+    "DataSource": {
+      "title": "DataSource",
+      "description": "Από πού ήρθαν τα δεδομένα: live, replay ηχογράφησης, fixtures (mock) ή εκτός λειτουργίας",
+      "type": "string",
+      "enum": [
+        "live",
+        "replay",
+        "mock",
+        "down"
+      ]
+    },
+    "CityLive": {
+      "title": "CityLive",
+      "description": "GET /api/city/live — σύνοψη για να μιλήσει η ATHENA με live νούμερα",
+      "type": "object",
+      "required": [
+        "updatedAt",
+        "buses",
+        "weather",
+        "reports"
+      ],
+      "properties": {
+        "updatedAt": {
+          "type": "string"
+        },
+        "buses": {
+          "type": "object",
+          "required": [
+            "active",
+            "lines",
+            "source"
+          ],
+          "properties": {
+            "active": {
+              "type": "integer",
+              "description": "Λεωφορεία σε κίνηση μέσα στο bbox"
+            },
+            "lines": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "source": {
+              "$ref": "#/definitions/DataSource"
+            }
+          }
+        },
+        "weather": {
+          "type": "object",
+          "required": [
+            "temperatureC",
+            "apparentC",
+            "source"
+          ],
+          "properties": {
+            "temperatureC": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "apparentC": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "source": {
+              "type": "string",
+              "description": "π.χ. open-meteo"
+            }
+          }
+        },
+        "reports": {
+          "type": "object",
+          "required": [
+            "total",
+            "last24h",
+            "byCategory"
+          ],
+          "properties": {
+            "total": {
+              "type": "integer"
+            },
+            "last24h": {
+              "type": "integer"
+            },
+            "byCategory": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
+    "Consultation": {
+      "title": "Consultation",
+      "type": "object",
+      "required": [
+        "id",
+        "scenarioId",
+        "beforeUrl",
+        "afterUrl",
+        "questionEl",
+        "publicUrl"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "scenarioId": {
+          "type": "string"
+        },
+        "reportId": {
+          "type": "string"
+        },
+        "beforeUrl": {
+          "type": "string"
+        },
+        "afterUrl": {
+          "type": "string"
+        },
+        "questionEl": {
+          "type": "string"
+        },
+        "publicUrl": {
+          "type": "string",
+          "description": "Αυτό γίνεται QR"
+        }
+      }
+    },
+    "ConsultationCreate": {
+      "title": "ConsultationCreate",
+      "description": "Body του POST /api/consultations. Τα id και publicUrl τα βάζει ο gateway.",
+      "type": "object",
+      "required": [
+        "scenarioId",
+        "beforeUrl",
+        "afterUrl",
+        "questionEl"
+      ],
+      "properties": {
+        "scenarioId": {
+          "type": "string"
+        },
+        "reportId": {
+          "type": "string"
+        },
+        "beforeUrl": {
+          "type": "string"
+        },
+        "afterUrl": {
+          "type": "string"
+        },
+        "questionEl": {
+          "type": "string"
+        }
+      }
+    },
+    "VoteChoice": {
+      "title": "VoteChoice",
+      "type": "string",
+      "enum": [
+        "yes",
+        "no",
+        "maybe"
+      ]
+    },
+    "Vote": {
+      "title": "Vote",
+      "type": "object",
+      "required": [
+        "consultationId",
+        "choice"
+      ],
+      "properties": {
+        "consultationId": {
+          "type": "string"
+        },
+        "choice": {
+          "$ref": "#/definitions/VoteChoice"
+        },
+        "location": {
+          "$ref": "#/definitions/LngLat"
+        },
+        "comment": {
+          "type": "string",
+          "maxLength": 500
+        }
+      },
+      "description": "Body του POST /api/consultations/{id}/votes. location = προαιρετικά η γειτονιά του ψηφοφόρου."
+    },
+    "VotePoint": {
+      "title": "VotePoint",
+      "type": "object",
+      "required": [
+        "lngLat",
+        "choice"
+      ],
+      "properties": {
+        "lngLat": {
+          "$ref": "#/definitions/LngLat"
+        },
+        "choice": {
+          "$ref": "#/definitions/VoteChoice"
+        }
+      }
+    },
+    "VoteTally": {
+      "title": "VoteTally",
+      "type": "object",
+      "required": [
+        "consultationId",
+        "yes",
+        "no",
+        "maybe",
+        "points"
+      ],
+      "properties": {
+        "consultationId": {
+          "type": "string"
+        },
+        "yes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "no": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maybe": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VotePoint"
+          }
+        }
+      }
+    },
+    "Citation": {
+      "title": "Citation",
+      "type": "object",
+      "required": [
+        "label",
+        "source"
+      ],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        }
+      }
+    },
+    "DecisionDraft": {
+      "title": "DecisionDraft",
+      "type": "object",
+      "required": [
+        "scenarioId",
+        "markdownEl",
+        "citations"
+      ],
+      "properties": {
+        "scenarioId": {
+          "type": "string"
+        },
+        "markdownEl": {
+          "type": "string",
+          "description": "ΘΕΜΑ / ΣΚΕΠΤΙΚΟ / ΔΕΔΟΜΕΝΑ / ΔΙΑΒΟΥΛΕΥΣΗ / ΑΠΟΦΑΣΙΖΕΙ, με ένδειξη «ΣΧΕΔΙΟ»"
+        },
+        "citations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Citation"
+          }
+        }
+      }
+    },
+    "DemoBeat": {
+      "title": "DemoBeat",
+      "type": "string",
+      "enum": [
+        "INTRO",
+        "PITCH",
+        "SENSE",
+        "SIMULATE",
+        "ENGAGE",
+        "DECISION",
+        "CLOSE"
+      ]
+    },
+    "LayerKey": {
+      "title": "LayerKey",
+      "type": "string",
+      "enum": [
+        "traffic",
+        "thermal",
+        "reports",
+        "votes",
+        "buses"
+      ]
+    },
+    "AgentMood": {
+      "title": "AgentMood",
+      "type": "string",
+      "enum": [
+        "neutral",
+        "alert",
+        "proud"
+      ]
+    },
+    "BusesUpdatePayload": {
+      "title": "BusesUpdatePayload",
+      "type": "object",
+      "required": [
+        "buses"
+      ],
+      "properties": {
+        "buses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Bus"
+          }
+        }
+      }
+    },
+    "ReportHiddenPayload": {
+      "title": "ReportHiddenPayload",
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "description": "ΠΡΟΤΑΣΗ Dev4: ο director κρύβει ακατάλληλη φωτογραφία (moderation)"
+    },
+    "AgentSayPayload": {
+      "title": "AgentSayPayload",
+      "type": "object",
+      "required": [
+        "textEl"
+      ],
+      "properties": {
+        "textEl": {
+          "type": "string"
+        },
+        "audioUrl": {
+          "type": "string"
+        },
+        "mood": {
+          "$ref": "#/definitions/AgentMood"
+        }
+      }
+    },
+    "AgentThinkingPayload": {
+      "title": "AgentThinkingPayload",
+      "type": "object",
+      "required": [
+        "stepEl"
+      ],
+      "properties": {
+        "stepEl": {
+          "type": "string"
+        }
+      }
+    },
+    "CameraFlyToPayload": {
+      "title": "CameraFlyToPayload",
+      "type": "object",
+      "required": [
+        "lngLat",
+        "heightM",
+        "headingDeg",
+        "pitchDeg",
+        "durationS"
+      ],
+      "properties": {
+        "lngLat": {
+          "$ref": "#/definitions/LngLat"
+        },
+        "heightM": {
+          "type": "number"
+        },
+        "headingDeg": {
+          "type": "number"
+        },
+        "pitchDeg": {
+          "type": "number"
+        },
+        "durationS": {
+          "type": "number",
+          "minimum": 0
+        },
+        "shot": {
+          "type": "string",
+          "description": "Όνομα προκαθορισμένου πλάνου του web (π.χ. orbitSerafio)"
+        }
+      }
+    },
+    "LayerSetPayload": {
+      "title": "LayerSetPayload",
+      "type": "object",
+      "required": [
+        "layer",
+        "visible"
+      ],
+      "properties": {
+        "layer": {
+          "$ref": "#/definitions/LayerKey"
+        },
+        "visible": {
+          "type": "boolean"
+        }
+      }
+    },
+    "TimeSetPayload": {
+      "title": "TimeSetPayload",
+      "type": "object",
+      "required": [
+        "when"
+      ],
+      "properties": {
+        "when": {
+          "type": "string",
+          "description": "ISO 8601"
+        }
+      }
+    },
+    "SimProgressPayload": {
+      "title": "SimProgressPayload",
+      "type": "object",
+      "required": [
+        "scenarioId",
+        "pct"
+      ],
+      "properties": {
+        "scenarioId": {
+          "type": "string"
+        },
+        "pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Κλάσμα 0–1"
+        }
+      }
+    },
+    "VariantComparePayload": {
+      "title": "VariantComparePayload",
+      "type": "object",
+      "required": [
+        "base",
+        "best",
+        "reasonEl"
+      ],
+      "properties": {
+        "base": {
+          "$ref": "#/definitions/SimResult"
+        },
+        "best": {
+          "$ref": "#/definitions/SimResult"
+        },
+        "reasonEl": {
+          "type": "string"
+        }
+      }
+    },
+    "BacktestShowPayload": {
+      "title": "BacktestShowPayload",
+      "type": "object",
+      "required": [
+        "model"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "enum": [
+            "traffic",
+            "thermal"
+          ]
+        }
+      }
+    },
+    "DirectorBeatPayload": {
+      "title": "DirectorBeatPayload",
+      "type": "object",
+      "required": [
+        "beat"
+      ],
+      "properties": {
+        "beat": {
+          "$ref": "#/definitions/DemoBeat"
+        }
+      }
+    },
+    "ServiceState": {
+      "title": "ServiceState",
+      "type": "string",
+      "enum": [
+        "up",
+        "down",
+        "mock"
+      ]
+    },
+    "SystemStatus": {
+      "title": "SystemStatus",
+      "type": "object",
+      "required": [
+        "at",
+        "services",
+        "fallbacks"
+      ],
+      "properties": {
+        "at": {
+          "type": "string"
+        },
+        "services": {
+          "title": "SystemServices",
+          "type": "object",
+          "required": [
+            "db",
+            "sim",
+            "agent",
+            "oasa"
+          ],
+          "properties": {
+            "db": {
+              "type": "string",
+              "enum": [
+                "postgres",
+                "sqlite"
+              ]
+            },
+            "sim": {
+              "$ref": "#/definitions/ServiceState"
+            },
+            "agent": {
+              "$ref": "#/definitions/ServiceState"
+            },
+            "oasa": {
+              "$ref": "#/definitions/DataSource"
+            }
+          }
+        },
+        "fallbacks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Πρόσφατα fallbacks, στα ελληνικά. Δείχνονται ΜΟΝΟ στον director."
+        }
+      },
+      "description": "ΠΡΟΤΑΣΗ Dev4: κατάσταση υπηρεσιών. Το web το δείχνει μόνο στο director panel, ποτέ στο κοινό."
+    },
+    "StateResetPayload": {
+      "title": "StateResetPayload",
+      "type": "object",
+      "required": [],
+      "properties": {},
+      "description": "ΠΡΟΤΑΣΗ Dev4: ο director έκανε reset για νέα πρόβα. Ο client καθαρίζει σενάριο/ψήφους/απόφαση."
+    },
+    "BusesUpdateEvent": {
+      "title": "BusesUpdateEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "buses.update"
+        },
+        "payload": {
+          "$ref": "#/definitions/BusesUpdatePayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "ReportCreatedEvent": {
+      "title": "ReportCreatedEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "report.created"
+        },
+        "payload": {
+          "$ref": "#/definitions/Report"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "ReportClassifiedEvent": {
+      "title": "ReportClassifiedEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "report.classified"
+        },
+        "payload": {
+          "$ref": "#/definitions/Report"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "ReportHiddenEvent": {
+      "title": "ReportHiddenEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "report.hidden"
+        },
+        "payload": {
+          "$ref": "#/definitions/ReportHiddenPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "AgentSayEvent": {
+      "title": "AgentSayEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "agent.say"
+        },
+        "payload": {
+          "$ref": "#/definitions/AgentSayPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "AgentThinkingEvent": {
+      "title": "AgentThinkingEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "agent.thinking"
+        },
+        "payload": {
+          "$ref": "#/definitions/AgentThinkingPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "CameraFlyToEvent": {
+      "title": "CameraFlyToEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "camera.flyTo"
+        },
+        "payload": {
+          "$ref": "#/definitions/CameraFlyToPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "LayerSetEvent": {
+      "title": "LayerSetEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "layer.set"
+        },
+        "payload": {
+          "$ref": "#/definitions/LayerSetPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "TimeSetEvent": {
+      "title": "TimeSetEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "time.set"
+        },
+        "payload": {
+          "$ref": "#/definitions/TimeSetPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "ScenarioCreatedEvent": {
+      "title": "ScenarioCreatedEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "scenario.created"
+        },
+        "payload": {
+          "$ref": "#/definitions/Scenario"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "SimProgressEvent": {
+      "title": "SimProgressEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "sim.progress"
+        },
+        "payload": {
+          "$ref": "#/definitions/SimProgressPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "SimResultEvent": {
+      "title": "SimResultEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "sim.result"
+        },
+        "payload": {
+          "$ref": "#/definitions/SimResult"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "VariantCompareEvent": {
+      "title": "VariantCompareEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "variant.compare"
+        },
+        "payload": {
+          "$ref": "#/definitions/VariantComparePayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "BacktestShowEvent": {
+      "title": "BacktestShowEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "backtest.show"
+        },
+        "payload": {
+          "$ref": "#/definitions/BacktestShowPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "ConsultationOpenedEvent": {
+      "title": "ConsultationOpenedEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "consultation.opened"
+        },
+        "payload": {
+          "$ref": "#/definitions/Consultation"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "VoteTallyEvent": {
+      "title": "VoteTallyEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "vote.tally"
+        },
+        "payload": {
+          "$ref": "#/definitions/VoteTally"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "DecisionReadyEvent": {
+      "title": "DecisionReadyEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "decision.ready"
+        },
+        "payload": {
+          "$ref": "#/definitions/DecisionDraft"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "DirectorBeatEvent": {
+      "title": "DirectorBeatEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "director.beat"
+        },
+        "payload": {
+          "$ref": "#/definitions/DirectorBeatPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "SystemStatusEvent": {
+      "title": "SystemStatusEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "system.status"
+        },
+        "payload": {
+          "$ref": "#/definitions/SystemStatus"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "StateResetEvent": {
+      "title": "StateResetEvent",
+      "type": "object",
+      "required": [
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "type": {
+          "const": "state.reset"
+        },
+        "payload": {
+          "$ref": "#/definitions/StateResetPayload"
+        },
+        "replay": {
+          "type": "boolean",
+          "description": "true όταν ο gateway ξαναστέλνει την κατάσταση σε νέο client (χωρίς animation/ήχο)"
+        }
+      }
+    },
+    "WsEvent": {
+      "title": "WsEvent",
+      "description": "Κάθε μήνυμα στο /ws: { type, payload }",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/BusesUpdateEvent"
+        },
+        {
+          "$ref": "#/definitions/ReportCreatedEvent"
+        },
+        {
+          "$ref": "#/definitions/ReportClassifiedEvent"
+        },
+        {
+          "$ref": "#/definitions/ReportHiddenEvent"
+        },
+        {
+          "$ref": "#/definitions/AgentSayEvent"
+        },
+        {
+          "$ref": "#/definitions/AgentThinkingEvent"
+        },
+        {
+          "$ref": "#/definitions/CameraFlyToEvent"
+        },
+        {
+          "$ref": "#/definitions/LayerSetEvent"
+        },
+        {
+          "$ref": "#/definitions/TimeSetEvent"
+        },
+        {
+          "$ref": "#/definitions/ScenarioCreatedEvent"
+        },
+        {
+          "$ref": "#/definitions/SimProgressEvent"
+        },
+        {
+          "$ref": "#/definitions/SimResultEvent"
+        },
+        {
+          "$ref": "#/definitions/VariantCompareEvent"
+        },
+        {
+          "$ref": "#/definitions/BacktestShowEvent"
+        },
+        {
+          "$ref": "#/definitions/ConsultationOpenedEvent"
+        },
+        {
+          "$ref": "#/definitions/VoteTallyEvent"
+        },
+        {
+          "$ref": "#/definitions/DecisionReadyEvent"
+        },
+        {
+          "$ref": "#/definitions/DirectorBeatEvent"
+        },
+        {
+          "$ref": "#/definitions/SystemStatusEvent"
+        },
+        {
+          "$ref": "#/definitions/StateResetEvent"
+        }
+      ]
+    },
+    "LngLat": {
+      "title": "LngLat",
+      "description": "[lng, lat] σε WGS84",
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "Range": {
+      "title": "Range",
+      "description": "Εύρος αβεβαιότητας. Κανένα νούμερο στην οθόνη χωρίς εύρος.",
+      "type": "object",
+      "required": [
+        "p10",
+        "p50",
+        "p90"
+      ],
+      "properties": {
+        "p10": {
+          "type": "number"
+        },
+        "p50": {
+          "type": "number"
+        },
+        "p90": {
+          "type": "number"
+        }
+      }
+    },
+    "NearbyReport": {
+      "title": "NearbyReport",
+      "type": "object",
+      "required": [
+        "id",
+        "distanceM"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "distanceM": {
+          "type": "number"
+        },
+        "category": {
+          "$ref": "#/definitions/ReportCategory"
+        }
+      }
+    },
+    "ClassifyRequest": {
+      "title": "ClassifyRequest",
+      "description": "gateway → agent: POST {AGENT_URL}/classify. Απάντηση: ReportClassification.",
+      "type": "object",
+      "required": [
+        "report",
+        "imageBase64",
+        "mimeType",
+        "nearby"
+      ],
+      "properties": {
+        "report": {
+          "$ref": "#/definitions/Report"
+        },
+        "imageBase64": {
+          "type": "string",
+          "description": "Η φωτογραφία (ήδη resized ~1600px)"
+        },
+        "mimeType": {
+          "type": "string"
+        },
+        "nearby": {
+          "description": "Αναφορές σε ακτίνα 50 m (PostGIS), για να γεμίσει το duplicates",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NearbyReport"
+          }
+        }
+      }
+    },
+    "AgentPrompt": {
+      "title": "AgentPrompt",
+      "description": "web → gateway POST /api/agent/prompt → agent POST {AGENT_URL}/prompt",
+      "type": "object",
+      "required": [
+        "textEl"
+      ],
+      "properties": {
+        "textEl": {
+          "type": "string"
+        }
+      }
+    },
+    "MediaUploadResult": {
+      "title": "MediaUploadResult",
+      "description": "Απάντηση του POST /api/media (εικόνες after, audio του TTS)",
+      "type": "object",
+      "required": [
+        "url"
+      ],
+      "properties": {
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "ReportCategory": {
+      "title": "ReportCategory",
+      "type": "string",
+      "enum": [
+        "pothole",
+        "sidewalk_damage",
+        "waste",
+        "lighting",
+        "obstruction",
+        "heat_exposure",
+        "graffiti",
+        "accessibility",
+        "other"
+      ]
+    },
+    "ReportClassification": {
+      "title": "ReportClassification",
+      "type": "object",
+      "required": [
+        "category",
+        "severity",
+        "summaryEl",
+        "department",
+        "duplicates",
+        "confidence"
+      ],
+      "properties": {
+        "category": {
+          "$ref": "#/definitions/ReportCategory"
+        },
+        "severity": {
+          "type": "integer",
+          "enum": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        "summaryEl": {
+          "type": "string",
+          "description": "Μία πρόταση στα ελληνικά"
+        },
+        "department": {
+          "type": "string",
+          "description": "Αρμόδια υπηρεσία του Δήμου"
+        },
+        "duplicates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Report ids"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "Report": {
+      "title": "Report",
+      "type": "object",
+      "required": [
+        "id",
+        "createdAt",
+        "photoUrl",
+        "location",
+        "heading",
+        "accuracyM"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO 8601"
+        },
+        "photoUrl": {
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/definitions/LngLat"
+        },
+        "heading": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 360,
+          "description": "Μοίρες 0–360 από πυξίδα (0 = βορράς, δεξιόστροφα)"
+        },
+        "accuracyM": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "classification": {
+          "$ref": "#/definitions/ReportClassification"
+        }
+      }
+    },
+    "WayIds": {
+      "title": "WayIds",
+      "description": "OSM way ids",
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "CloseRoadEdit": {
+      "title": "CloseRoadEdit",
+      "type": "object",
+      "required": [
+        "type",
+        "wayIds"
+      ],
+      "properties": {
+        "type": {
+          "const": "close_road"
+        },
+        "wayIds": {
+          "$ref": "#/definitions/WayIds"
+        }
+      }
+    },
+    "BusLaneEdit": {
+      "title": "BusLaneEdit",
+      "description": "Αφαιρεί μία λωρίδα ΙΧ και τη δίνει στα λεωφορεία",
+      "type": "object",
+      "required": [
+        "type",
+        "wayIds"
+      ],
+      "properties": {
+        "type": {
+          "const": "bus_lane"
+        },
+        "wayIds": {
+          "$ref": "#/definitions/WayIds"
+        }
+      }
+    },
+    "RemoveLaneEdit": {
+      "title": "RemoveLaneEdit",
+      "type": "object",
+      "required": [
+        "type",
+        "wayIds"
+      ],
+      "properties": {
+        "type": {
+          "const": "remove_lane"
+        },
+        "wayIds": {
+          "$ref": "#/definitions/WayIds"
+        }
+      }
+    },
+    "AddTreesEdit": {
+      "title": "AddTreesEdit",
+      "type": "object",
+      "required": [
+        "type",
+        "geometry",
+        "count"
+      ],
+      "properties": {
+        "type": {
+          "const": "add_trees"
+        },
+        "geometry": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LngLat"
+          }
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "side": {
+          "type": "string",
+          "enum": [
+            "north",
+            "south",
+            "east",
+            "west",
+            "both"
+          ]
+        }
+      }
+    },
+    "CoolPavementEdit": {
+      "title": "CoolPavementEdit",
+      "type": "object",
+      "required": [
+        "type",
+        "wayIds"
+      ],
+      "properties": {
+        "type": {
+          "const": "cool_pavement"
+        },
+        "wayIds": {
+          "$ref": "#/definitions/WayIds"
+        }
+      }
+    },
+    "ScenarioEdit": {
+      "title": "ScenarioEdit",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/CloseRoadEdit"
+        },
+        {
+          "$ref": "#/definitions/BusLaneEdit"
+        },
+        {
+          "$ref": "#/definitions/RemoveLaneEdit"
+        },
+        {
+          "$ref": "#/definitions/AddTreesEdit"
+        },
+        {
+          "$ref": "#/definitions/CoolPavementEdit"
+        }
+      ]
+    },
+    "Scenario": {
+      "title": "Scenario",
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "edits",
+        "when",
+        "origin"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "description": "π.χ. «Δέντρα και λωρίδα λεωφορείου στην Πειραιώς»"
+        },
+        "edits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ScenarioEdit"
+          }
+        },
+        "when": {
+          "type": "string",
+          "description": "ISO 8601 — για θερμικό/ήλιο (slider)"
+        },
+        "origin": {
+          "type": "string",
+          "enum": [
+            "user",
+            "agent_variant"
+          ]
+        },
+        "parentId": {
+          "type": "string",
+          "description": "Για παραλλαγές του agent"
+        }
+      }
+    },
+    "TrafficSegment": {
+      "title": "TrafficSegment",
+      "type": "object",
+      "required": [
+        "wayId",
+        "baseFlow",
+        "newFlow",
+        "baseTimeS",
+        "newTimeS"
+      ],
+      "properties": {
+        "wayId": {
+          "type": "integer"
+        },
+        "baseFlow": {
+          "type": "number"
+        },
+        "newFlow": {
+          "type": "number"
+        },
+        "baseTimeS": {
+          "type": "number"
+        },
+        "newTimeS": {
+          "type": "number"
+        },
+        "path": {
+          "description": "Προαιρετικό geometry. Αν λείπει, ο client το αντιστοιχεί τοπικά.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LngLat"
+          }
+        }
+      }
+    },
+    "Trip": {
+      "title": "Trip",
+      "type": "object",
+      "required": [
+        "path",
+        "departS",
+        "durationS"
+      ],
+      "properties": {
+        "path": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LngLat"
+          }
+        },
+        "departS": {
+          "type": "number"
+        },
+        "durationS": {
+          "type": "number"
+        }
+      }
+    },
+    "ThermalCell": {
+      "title": "ThermalCell",
+      "type": "object",
+      "required": [
+        "lngLat",
+        "baseC",
+        "newC"
+      ],
+      "properties": {
+        "lngLat": {
+          "$ref": "#/definitions/LngLat"
+        },
+        "baseC": {
+          "type": "number"
+        },
+        "newC": {
+          "type": "number"
+        }
+      }
+    },
+    "SimResult": {
+      "title": "SimResult",
+      "type": "object",
+      "required": [
+        "scenarioId",
+        "status",
+        "computeMs",
+        "traffic",
+        "thermal",
+        "emissions",
+        "notes"
+      ],
+      "properties": {
+        "scenarioId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "error"
+          ]
+        },
+        "computeMs": {
+          "type": "number"
+        },
+        "traffic": {
+          "type": "object",
+          "required": [
+            "segments",
+            "corridorTravelTimeDeltaPct",
+            "vehicleKmDeltaPct",
+            "trips"
+          ],
+          "properties": {
+            "segments": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/TrafficSegment"
+              }
+            },
+            "corridorTravelTimeDeltaPct": {
+              "$ref": "#/definitions/Range"
+            },
+            "vehicleKmDeltaPct": {
+              "$ref": "#/definitions/Range"
+            },
+            "trips": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Trip"
+              },
+              "maxItems": 3000
+            }
+          }
+        },
+        "thermal": {
+          "type": "object",
+          "required": [
+            "when",
+            "cells",
+            "hotspotDeltaC"
+          ],
+          "properties": {
+            "when": {
+              "type": "string"
+            },
+            "cells": {
+              "description": "Πλέγμα ~20–30 m",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ThermalCell"
+              }
+            },
+            "hotspotDeltaC": {
+              "$ref": "#/definitions/Range"
+            }
+          }
+        },
+        "emissions": {
+          "type": "object",
+          "required": [
+            "co2DeltaPct"
+          ],
+          "properties": {
+            "co2DeltaPct": {
+              "$ref": "#/definitions/Range"
+            }
+          }
+        },
+        "notes": {
+          "description": "Παραδοχές, στα ελληνικά",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Backtest": {
+      "title": "Backtest",
+      "type": "object",
+      "required": [
+        "model",
+        "metric",
+        "value",
+        "heldOut",
+        "nSamples",
+        "chart"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "enum": [
+            "traffic",
+            "thermal"
+          ]
+        },
+        "metric": {
+          "type": "string",
+          "enum": [
+            "MAPE",
+            "MAE_C",
+            "R2"
+          ]
+        },
+        "value": {
+          "type": "number"
+        },
+        "heldOut": {
+          "type": "string",
+          "description": "π.χ. «Τρίτη 17/11, 07:00–10:00» ή «Landsat 14/07/2025»"
+        },
+        "nSamples": {
+          "type": "integer"
+        },
+        "chart": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "predicted",
+              "observed"
+            ],
+            "properties": {
+              "predicted": {
+                "type": "number"
+              },
+              "observed": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

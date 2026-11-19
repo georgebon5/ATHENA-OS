@@ -1,0 +1,21 @@
+{
+  "name": "@athena-os/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./generated/ts/index.ts",
+  "types": "./generated/ts/index.ts",
+  "exports": {
+    ".": "./generated/ts/index.ts",
+    "./fixtures/*": "./fixtures/*",
+    "./schema": "./generated/bundle.schema.json"
+  },
+  "scripts": {
+    "gen": "node scripts/gen.mjs",
+    "check": "node scripts/gen.mjs --check"
+  },
+  "devDependencies": {
+    "ajv": "8.17.1",
+    "json-schema-to-typescript": "15.0.4"
+  }
+}

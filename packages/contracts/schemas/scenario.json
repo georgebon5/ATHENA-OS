@@ -1,0 +1,174 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "scenario.json",
+  "definitions": {
+    "WayIds": {
+      "title": "WayIds",
+      "description": "OSM way ids",
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "CloseRoadEdit": {
+      "title": "CloseRoadEdit",
+      "type": "object",
+      "required": [
+        "type",
+        "wayIds"
+      ],
+      "properties": {
+        "type": {
+          "const": "close_road"
+        },
+        "wayIds": {
+          "$ref": "scenario.json#/definitions/WayIds"
+        }
+      }
+    },
+    "BusLaneEdit": {
+      "title": "BusLaneEdit",
+      "description": "Αφαιρεί μία λωρίδα ΙΧ και τη δίνει στα λεωφορεία",
+      "type": "object",
+      "required": [
+        "type",
+        "wayIds"
+      ],
+      "properties": {
+        "type": {
+          "const": "bus_lane"
+        },
+        "wayIds": {
+          "$ref": "scenario.json#/definitions/WayIds"
+        }
+      }
+    },
+    "RemoveLaneEdit": {
+      "title": "RemoveLaneEdit",
+      "type": "object",
+      "required": [
+        "type",
+        "wayIds"
+      ],
+      "properties": {
+        "type": {
+          "const": "remove_lane"
+        },
+        "wayIds": {
+          "$ref": "scenario.json#/definitions/WayIds"
+        }
+      }
+    },
+    "AddTreesEdit": {
+      "title": "AddTreesEdit",
+      "type": "object",
+      "required": [
+        "type",
+        "geometry",
+        "count"
+      ],
+      "properties": {
+        "type": {
+          "const": "add_trees"
+        },
+        "geometry": {
+          "type": "array",
+          "items": {
+            "$ref": "geo.json#/definitions/LngLat"
+          }
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "side": {
+          "type": "string",
+          "enum": [
+            "north",
+            "south",
+            "east",
+            "west",
+            "both"
+          ]
+        }
+      }
+    },
+    "CoolPavementEdit": {
+      "title": "CoolPavementEdit",
+      "type": "object",
+      "required": [
+        "type",
+        "wayIds"
+      ],
+      "properties": {
+        "type": {
+          "const": "cool_pavement"
+        },
+        "wayIds": {
+          "$ref": "scenario.json#/definitions/WayIds"
+        }
+      }
+    },
+    "ScenarioEdit": {
+      "title": "ScenarioEdit",
+      "oneOf": [
+        {
+          "$ref": "scenario.json#/definitions/CloseRoadEdit"
+        },
+        {
+          "$ref": "scenario.json#/definitions/BusLaneEdit"
+        },
+        {
+          "$ref": "scenario.json#/definitions/RemoveLaneEdit"
+        },
+        {
+          "$ref": "scenario.json#/definitions/AddTreesEdit"
+        },
+        {
+          "$ref": "scenario.json#/definitions/CoolPavementEdit"
+        }
+      ]
+    },
+    "Scenario": {
+      "title": "Scenario",
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "edits",
+        "when",
+        "origin"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "description": "π.χ. «Δέντρα και λωρίδα λεωφορείου στην Πειραιώς»"
+        },
+        "edits": {
+          "type": "array",
+          "items": {
+            "$ref": "scenario.json#/definitions/ScenarioEdit"
+          }
+        },
+        "when": {
+          "type": "string",
+          "description": "ISO 8601 — για θερμικό/ήλιο (slider)"
+        },
+        "origin": {
+          "type": "string",
+          "enum": [
+            "user",
+            "agent_variant"
+          ]
+        },
+        "parentId": {
+          "type": "string",
+          "description": "Για παραλλαγές του agent"
+        }
+      }
+    }
+  }
+}

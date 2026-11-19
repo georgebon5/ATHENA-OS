@@ -1,5 +1,7 @@
 # ── Secrets ──────────────────────────────────────────────────────────────────
 .env
+.env.*
+!.env.example
 .env.local
 *.env.local
 
@@ -18,26 +20,23 @@ build/
 .ruff_cache/
 
 # ── Data — raw και processed μεγάλα αρχεία ──────────────────────────────────
-# RAW: ποτέ στο git
 data/raw/
-
-# PROCESSED: μόνο αν < 50MB — μεγαλύτερα σε drive/release
 data/processed/*.tif
 data/processed/*.tiff
 data/processed/lst_scenes.parquet
 data/processed/ndvi.tif
-# OK να μπουν στο git (< 10MB):
-# data/processed/network.gpkg
-# data/processed/thermal_grid.parquet
-# data/processed/thermal_model.pkl
-# data/processed/backtests.json
 
 # ── Node / web ────────────────────────────────────────────────────────────────
 node_modules/
 dist/
 .next/
 .turbo/
+*.tsbuildinfo
+.vite/
 *.local
+
+# ── Runtime data (gateway db, uploaded media) ─────────────────────────────────
+services/gateway/var/
 
 # ── OS ───────────────────────────────────────────────────────────────────────
 .DS_Store
@@ -48,8 +47,7 @@ Thumbs.db
 .idea/
 
 # ── Docker ───────────────────────────────────────────────────────────────────
-# (docker-compose.override.yml για local secrets)
 docker-compose.override.yml
 
-# ── osmnx / httpx HTTP cache (auto-generated, not committed) ─────────────────
+# ── osmnx / httpx HTTP cache ─────────────────────────────────────────────────
 /cache/

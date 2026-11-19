@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "geo.json",
+  "definitions": {
+    "LngLat": {
+      "title": "LngLat",
+      "description": "[lng, lat] σε WGS84",
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "Range": {
+      "title": "Range",
+      "description": "Εύρος αβεβαιότητας. Κανένα νούμερο στην οθόνη χωρίς εύρος.",
+      "type": "object",
+      "required": ["p10", "p50", "p90"],
+      "properties": {
+        "p10": { "type": "number" },
+        "p50": { "type": "number" },
+        "p90": { "type": "number" }
+      }
+    }
+  }
+}

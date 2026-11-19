@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "city.json",
+  "definitions": {
+    "Bus": {
+      "title": "Bus",
+      "type": "object",
+      "required": ["id", "line", "lngLat", "bearing"],
+      "properties": {
+        "id": { "type": "string", "description": "Αριθμός οχήματος ΟΑΣΑ" },
+        "line": { "type": "string", "description": "π.χ. 049, 914, Β18" },
+        "lngLat": { "$ref": "geo.json#/definitions/LngLat" },
+        "bearing": { "type": "number", "description": "Μοίρες 0–360" }
+      }
+    },
+    "DataSource": {
+      "title": "DataSource",
+      "description": "Από πού ήρθαν τα δεδομένα: live, replay ηχογράφησης, fixtures (mock) ή εκτός λειτουργίας",
+      "type": "string",
+      "enum": ["live", "replay", "mock", "down"]
+    },
+    "CityLive": {
+      "title": "CityLive",
+      "description": "GET /api/city/live — σύνοψη για να μιλήσει η ATHENA με live νούμερα",
+      "type": "object",
+      "required": ["updatedAt", "buses", "weather", "reports"],
+      "properties": {
+        "updatedAt": { "type": "string" },
+        "buses": {
+          "type": "object",
+          "required": ["active", "lines", "source"],
+          "properties": {
+            "active": { "type": "integer", "description": "Λεωφορεία σε κίνηση μέσα στο bbox" },
+            "lines": { "type": "array", "items": { "type": "string" } },
+            "source": { "$ref": "city.json#/definitions/DataSource" }
+          }
+        },
+        "weather": {
+          "type": "object",
+          "required": ["temperatureC", "apparentC", "source"],
+          "properties": {
+            "temperatureC": { "type": ["number", "null"] },
+            "apparentC": { "type": ["number", "null"] },
+            "source": { "type": "string", "description": "π.χ. open-meteo" }
+          }
+        },
+        "reports": {
+          "type": "object",
+          "required": ["total", "last24h", "byCategory"],
+          "properties": {
+            "total": { "type": "integer" },
+            "last24h": { "type": "integer" },
+            "byCategory": {
+              "type": "object",
+              "additionalProperties": { "type": "integer" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

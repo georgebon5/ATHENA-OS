@@ -1,0 +1,22 @@
+{
+  "name": "athena-os",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter \"./apps/*\" run dev",
+    "dev:web": "pnpm --filter @athena-os/web run dev",
+    "dev:citizen": "pnpm --filter @athena-os/citizen run dev",
+    "gateway": "cd services/gateway && uv run python -m app --reload",
+    "gateway:mock": "cd services/gateway && uv run python -m app --mock --reload",
+    "demo": "uv run --no-project python infra/demo.py",
+    "reset": "uv run --no-project python -c \"import urllib.request as u; print(u.urlopen(u.Request('http://localhost:8000/api/director/reset', method='POST')).read().decode())\"",
+    "seed": "uv run --no-project python demo/seed.py",
+    "loadtest": "uv run --no-project --with httpx --with websockets python infra/loadtest_votes.py --n 50",
+    "build": "pnpm -r run build",
+    "contracts:gen": "pnpm --filter @athena-os/contracts run gen",
+    "contracts:check": "pnpm --filter @athena-os/contracts run check"
+  }
+}

@@ -11,10 +11,23 @@ interface Props {
 }
 
 /**
- * Το πυρήνας του demo — ένας Cesium viewer στην Πειραιώς με κινηματογραφική
- * αισθητική. Κρύβουμε όλο το default chrome μέσω CSS· εδώ ρυθμίζουμε
- * lighting, fog, atmosphere και το base imagery/terrain.
+ * ESRI World Imagery — δορυφορικό HD, χωρίς API key.
+ * Slight brightness/contrast boost για cinematic look.
  */
+function buildSatelliteLayer(): Cesium.ImageryLayer {
+  return new Cesium.ImageryLayer(
+    new Cesium.UrlTemplateImageryProvider({
+      url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      maximumLevel: 19,
+      credit: new Cesium.Credit(
+        "Esri, Maxar, Earthstar Geographics, and the GIS User Community",
+        false,
+      ),
+    }),
+    { brightness: 1.05, contrast: 1.1, saturation: 1.08 },
+  );
+}
+
 export function CesiumViewer({ onReady }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const viewerRef = useRef<Cesium.Viewer | null>(null);
@@ -40,61 +53,94 @@ export function CesiumViewer({ onReady }: Props) {
       selectionIndicator: false,
       infoBox: false,
       shouldAnimate: true,
-      skyBox: false,
+      skyBox: new Cesium.SkyBox({
+        sources: {
+          positiveX: "https://cesium.com/downloads/cesiumjs/releases/1.147/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_px.jpg",
+          negativeX: "https://cesium.com/downloads/cesiumjs/releases/1.147/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_mx.jpg",
+          positiveY: "https://cesium.com/downloads/cesiumjs/releases/1.147/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_py.jpg",
+          negativeY: "https://cesium.com/downloads/cesiumjs/releases/1.147/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_my.jpg",
+          positiveZ: "https://cesium.com/downloads/cesiumjs/releases/1.147/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_pz.jpg",
+          negativeZ: "https://cesium.com/downloads/cesiumjs/releases/1.147/Build/Cesium/Assets/Textures/SkyBox/tycho2t3_80_mz.jpg",
+        },
+      }),
       skyAtmosphere: new Cesium.SkyAtmosphere(),
-      // Default imagery = OSM (δεν θέλει token). Αν υπάρχει Google key,
-      // το Photorealistic 3D Tiles καλύπτει την πόλη από πάνω.
-      baseLayer: new Cesium.ImageryLayer(
-        new Cesium.OpenStreetMapImageryProvider({
-          url: "https://tile.openstreetmap.org/",
-        }),
-        {},
-      ),
+      baseLayer: buildSatelliteLayer(),
+      terrainProvider: new Cesium.EllipsoidTerrainProvider(),
     });
 
     viewerRef.current = viewer;
     const scene = viewer.scene;
+
+    // ── Φωτισμός & ατμόσφαιρα ─────────────────────────────────────────────
     scene.globe.enableLighting = true;
     scene.globe.dynamicAtmosphereLighting = true;
+    scene.globe.dynamicAtmosphereLightingFromSun = true;
     scene.globe.showGroundAtmosphere = true;
-    scene.fog.enabled = true;
-    scene.fog.density = 0.0008;
-    if (scene.skyAtmosphere) {
-      scene.skyAtmosphere.hueShift = -0.05;
-      scene.skyAtmosphere.saturationShift = 0.05;
-      scene.skyAtmosphere.brightnessShift = -0.08;
-    }
-    scene.globe.baseColor = Cesium.Color.fromCssColorString("#0b0f14");
-    scene.backgroundColor = Cesium.Color.fromCssColorString("#06090d");
+    scene.globe.atmosphereLightIntensity = 10.0;
 
-    // Αν υπάρχει κλειδί Google, βάλε Photorealistic 3D Tiles.
-    // Αλλιώς πέφτει σε Cesium OSM Buildings (μέσω Ion asset 96188).
+    scene.fog.enabled = true;
+    scene.fog.density = 0.0006;
+    scene.fog.minimumBrightness = 0.3;
+
+    if (scene.skyAtmosphere) {
+      scene.skyAtmosphere.hueShift = -0.03;
+      scene.skyAtmosphere.saturationShift = 0.1;
+      scene.skyAtmosphere.brightnessShift = 0.05;
+    }
+
+    // Σκιές ηλίου
+    viewer.shadows = true;
+    scene.shadowMap.enabled = true;
+    scene.shadowMap.softShadows = true;
+    scene.shadowMap.size = 2048;
+
+    // Anti-aliasing
+    scene.postProcessStages.fxaa.enabled = true;
+
+    // ── Overlay: ονόματα δρόμων (ESRI Reference) ─────────────────────────
+    const labelsLayer = viewer.imageryLayers.addImageryProvider(
+      new Cesium.UrlTemplateImageryProvider({
+        url: "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}",
+        maximumLevel: 19,
+        credit: new Cesium.Credit("Esri", false),
+      }),
+    );
+    labelsLayer.alpha = 0.5;
+
+    // ── 3D Assets (async, προαιρετικά) ───────────────────────────────────
     (async () => {
       try {
         if (GOOGLE_MAPS_API_KEY) {
+          // Google Photorealistic 3D Tiles — καλύπτει τα πάντα
           const tileset = await Cesium.createGooglePhotorealistic3DTileset({
             key: GOOGLE_MAPS_API_KEY,
           });
           scene.primitives.add(tileset);
+          // Με Google tiles κρύβουμε το satellite base (αντικαθίσταται)
+          viewer.imageryLayers.get(0).show = false;
         } else if (CESIUM_ION_TOKEN) {
-          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(96188);
-          scene.primitives.add(tileset);
+          const [buildings, terrain] = await Promise.allSettled([
+            Cesium.Cesium3DTileset.fromIonAssetId(96188),
+            Cesium.CesiumTerrainProvider.fromIonAssetId(1),
+          ]);
+          if (buildings.status === "fulfilled") scene.primitives.add(buildings.value);
+          if (terrain.status === "fulfilled") viewer.terrainProvider = terrain.value;
         }
       } catch (err) {
-        console.warn("[cesium] 3D tileset load failed, συνεχίζουμε με terrain", err);
+        console.warn("[cesium] optional asset load failed:", err);
       }
     })();
 
-    // Κινηματογραφική εισαγωγή: κοιτάμε στο Σεράφειο από ψηλά
+    // ── Αρχική κάμερα: Σεράφειο fly-in ───────────────────────────────────
     viewer.camera.setView({
       destination: Cesium.Cartesian3.fromDegrees(
         SERAFIO_LNGLAT[0],
-        SERAFIO_LNGLAT[1] - 0.004,
+        SERAFIO_LNGLAT[1] - 0.005,
         HEIGHT.overview,
       ),
       orientation: {
         heading: Cesium.Math.toRadians(0),
-        pitch: Cesium.Math.toRadians(-35),
+        pitch: Cesium.Math.toRadians(-40),
         roll: 0,
       },
     });

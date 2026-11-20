@@ -4,7 +4,7 @@ import { useStore } from "@/store/useStore";
 export function Subtitles() {
   const speech = useStore((s) => s.agentSpeech);
   return (
-    <div className="pointer-events-none fixed left-1/2 bottom-10 -translate-x-1/2 max-w-3xl w-full px-6">
+    <div className="pointer-events-none fixed left-1/2 bottom-28 -translate-x-1/2 max-w-3xl w-full px-6">
       <AnimatePresence mode="wait">
         {speech && (
           <motion.div

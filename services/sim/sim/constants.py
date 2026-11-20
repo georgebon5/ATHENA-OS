@@ -82,8 +82,8 @@ ATHENS_TZ = "Europe/Athens"
 
 # ── Tree canopy (add_trees scenario) ─────────────────────────────────────────
 TREE_CANOPY_RADIUS_M = 4.0        # 8 m diameter canopy
-TREE_NDVI_BOOST_CENTER = 0.35     # NDVI increase at canopy center
-TREE_SHADE_PEAK = 0.70            # max shade fraction under canopy
+TREE_NDVI_BOOST_CENTER = 0.028    # NDVI increase at 25m grid level (canopy 50m²/625m²=8%)
+TREE_SHADE_PEAK = 0.07            # per-tree shade peak; 42 trees accumulate ~0.15 mean delta → -2.3°C
 
 # ── Cool pavement (cool_pavement scenario) ───────────────────────────────────
 COOL_PAVEMENT_ALBEDO_BOOST = 0.15
@@ -104,7 +104,7 @@ COPERT_EMISSIONS_KG_KM: dict[int, float] = {
 
 # ── Frank-Wolfe ───────────────────────────────────────────────────────────────
 FW_N_ITER_BASE = 20           # reduced for demo speed (SSSP-batched, converges early)
-FW_N_ITER_SCENARIO = 8       # warm-start from base solution
+FW_N_ITER_SCENARIO = 4       # warm-start from base → converges in 2–4 iters
 FW_CONVERGENCE_GAP = 1e-3    # 0.1% gap — sufficient for demo
 
 # ── Monte Carlo ───────────────────────────────────────────────────────────────

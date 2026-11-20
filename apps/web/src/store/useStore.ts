@@ -78,6 +78,9 @@ export interface AthenaState {
   drawMode: boolean;
   drawPoints: LngLat[];
 
+  // road network (wayId → geometry) από GET /network — fallback για segments χωρίς inline path
+  networkWays: Map<number, LngLat[]>;
+
   // actions
   setWsConnected: (v: boolean, latencyMs?: number) => void;
   setBeat: (b: DemoBeat) => void;
@@ -101,6 +104,7 @@ export interface AthenaState {
   setDrawMode: (v: boolean) => void;
   pushDrawPoint: (p: LngLat) => void;
   clearDrawPoints: () => void;
+  setNetworkWays: (ways: Map<number, LngLat[]>) => void;
   reset: () => void;
 }
 
@@ -135,6 +139,7 @@ export const useStore = create<AthenaState>((set) => ({
   when: null,
   drawMode: false,
   drawPoints: [],
+  networkWays: new Map(),
 
   setWsConnected: (v, latencyMs) =>
     set({ wsConnected: v, wsLatencyMs: latencyMs ?? null }),
@@ -169,6 +174,7 @@ export const useStore = create<AthenaState>((set) => ({
   pushDrawPoint: (p) =>
     set((s) => ({ drawPoints: [...s.drawPoints, p] })),
   clearDrawPoints: () => set({ drawPoints: [] }),
+  setNetworkWays: (ways) => set({ networkWays: ways }),
   reset: () =>
     set({
       beat: "INTRO",

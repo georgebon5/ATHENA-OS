@@ -65,7 +65,7 @@ export function AgentOrb() {
   const color = MOOD_COLORS[speech?.mood ?? "neutral"];
 
   return (
-    <div className="pointer-events-none fixed left-1/2 bottom-28 -translate-x-1/2 flex flex-col items-center gap-3">
+    <div className="pointer-events-none fixed left-1/2 bottom-24 -translate-x-1/2 flex flex-col items-center gap-3">
       <motion.div
         className="relative w-24 h-24 rounded-full"
         animate={{ scale: 1 + intensity * 0.18 }}

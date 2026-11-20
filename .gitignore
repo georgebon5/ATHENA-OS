@@ -1,42 +1,53 @@
-# Secrets
+# ── Secrets ──────────────────────────────────────────────────────────────────
 .env
 .env.*
 !.env.example
+.env.local
+*.env.local
 
-# JS
-node_modules/
-dist/
-*.tsbuildinfo
-.vite/
-
-# Python
+# ── Python ───────────────────────────────────────────────────────────────────
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
 .venv/
-.pytest_cache/
-.ruff_cache/
-*.egg-info/
-
-# Runtime data (gateway db, uploaded media)
-services/gateway/var/
-
-# OS / editors
-.DS_Store
-Thumbs.db
-.idea/
-.mypy_cache/
 venv/
+env/
+*.egg-info/
+dist/
 build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
-# Data (Dev2): raw ποτέ στο git, processed μόνο αν < 50MB
+# ── Data — raw και processed μεγάλα αρχεία ──────────────────────────────────
 data/raw/
 data/processed/*.tif
 data/processed/*.tiff
 data/processed/lst_scenes.parquet
+data/processed/ndvi.tif
 
-# osmnx / httpx HTTP cache
-/cache/
+# ── Node / web ────────────────────────────────────────────────────────────────
+node_modules/
+dist/
+.next/
+.turbo/
+*.tsbuildinfo
+.vite/
+*.local
 
-# Local overrides
-docker-compose.override.yml
+# ── Runtime data (gateway db, uploaded media) ─────────────────────────────────
+services/gateway/var/
+
+# ── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE ──────────────────────────────────────────────────────────────────────
 .vscode/settings.json
+.idea/
+
+# ── Docker ───────────────────────────────────────────────────────────────────
+docker-compose.override.yml
+
+# ── osmnx / httpx HTTP cache ─────────────────────────────────────────────────
+/cache/

@@ -74,8 +74,13 @@ services:
     environment:
       GATEWAY_URL: http://gateway:8000
       SIM_URL: http://sim:8100
+      FIXTURES_DIR: /repo/packages/contracts/fixtures
+      DEMO_CACHE_DIR: /repo/demo/cache
     ports:
       - "${AGENT_PORT:-8200}:8200"
+    volumes:
+      - ./packages/contracts/fixtures:/repo/packages/contracts/fixtures:ro
+      - ./demo:/repo/demo:ro
     restart: unless-stopped
 
   # Named Cloudflare Tunnel → gateway:8000. Το token από το Cloudflare dashboard (Zero Trust → Tunnels).

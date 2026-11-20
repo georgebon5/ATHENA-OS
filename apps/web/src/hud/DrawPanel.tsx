@@ -1,90 +1,155 @@
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useStore } from "@/store/useStore";
-import { dispatchWs } from "@/ws/dispatcher";
-import type { Scenario } from "@/types/contracts";
+import { submitScenario, DEMO_PRESETS } from "@/director/scenarioApi";
 
 /**
- * Pill κουμπί κάτω αριστερά για να ανοίξει draw mode. Όταν είναι
- * ενεργό, εμφανίζεται ένα panel με counter και «Υπολόγισε».
- * Το commit φτιάχνει τοπικά ένα Scenario και το στέλνει στο store
- * μέσω του ίδιου dispatcher όπως το WS — ώστε η ροή είναι ίδια
- * με το κανονικό live demo.
+ * Panel κάτω αριστερά — δύο modes:
+ * 1. Preset buttons: Πειραιώς (δέντρα / bus lane / δροσερό / κλείσιμο)
+ * 2. Draw mode: ο χρήστης κλικάρει σημεία για custom add_trees
  */
 export function DrawPanel() {
   const drawMode = useStore((s) => s.drawMode);
   const setDrawMode = useStore((s) => s.setDrawMode);
   const points = useStore((s) => s.drawPoints);
   const clear = useStore((s) => s.clearDrawPoints);
+  const activeScenario = useStore((s) => s.activeScenario);
+  const setActiveScenario = useStore((s) => s.setActiveScenario);
+  const [loading, setLoading] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
 
-  const commit = () => {
+  const runPreset = async (presetId: string) => {
+    const preset = DEMO_PRESETS.find((p) => p.id === presetId);
+    if (!preset) return;
+    setLoading(presetId);
+    try {
+      await submitScenario(preset.titleEl, preset.edits(), preset.when);
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const commitDraw = async () => {
     if (points.length === 0) return;
-    const scenario: Scenario = {
-      id: `s-draw-${Date.now()}`,
-      title: `Σχεδιασμένο σενάριο — ${points.length} δέντρα`,
-      edits: [
-        {
-          type: "add_trees",
-          geometry: [...points],
-          count: points.length,
-        },
-      ],
-      when: new Date().toISOString(),
-      origin: "user",
-    };
-    dispatchWs({ type: "scenario.created", payload: scenario });
+    setLoading("draw");
+    try {
+      await submitScenario(
+        `Σχεδιασμένο σενάριο — ${points.length} δέντρα`,
+        [{ type: "add_trees", geometry: [...points], count: points.length }],
+      );
+    } finally {
+      setLoading(null);
+    }
     setDrawMode(false);
     clear();
   };
 
+  const clearAll = () => {
+    setActiveScenario(null);
+    clear();
+    setDrawMode(false);
+  };
+
   return (
-    <div className="pointer-events-auto fixed left-6 bottom-20 flex flex-col gap-2">
+    <div className="pointer-events-auto fixed left-6 bottom-6 flex flex-col gap-2 items-start">
+      {/* Trigger pill */}
       <button
-        onClick={() => setDrawMode(!drawMode)}
-        className={`glass rounded-full px-4 py-2 text-sm flex items-center gap-2 transition ${
-          drawMode ? "ring-2 ring-athena shadow-glow" : ""
+        onClick={() => setOpen((v) => !v)}
+        className={`glass rounded-full px-4 py-2 text-sm flex items-center gap-2 transition-all ${
+          open ? "ring-2 ring-athena" : ""
         }`}
       >
-        <span
-          className={`w-2 h-2 rounded-full ${
-            drawMode ? "bg-athena animate-breathe" : "bg-chalk/40"
-          }`}
-        />
-        {drawMode ? "Σχεδιάζεις… πάτα στον χάρτη" : "Σχεδίασε σενάριο"}
+        <span className="text-base">🗺</span>
+        <span>Σενάρια Πειραιώς</span>
+        <span className="text-chalk/50 text-xs">{open ? "▲" : "▼"}</span>
       </button>
 
       <AnimatePresence>
-        {drawMode && (
+        {open && (
           <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 6 }}
-            className="glass-strong rounded-xl p-3 text-sm w-72"
+            initial={{ opacity: 0, y: 8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+            transition={{ duration: 0.18 }}
+            className="glass-strong rounded-2xl p-4 w-72"
           >
-            <div className="text-chalk/70 text-xs uppercase tracking-widest">
-              Νέο σενάριο
+            <div className="text-[11px] uppercase tracking-widest text-chalk/50 mb-3">
+              Γρήγορα σενάρια demo
             </div>
-            <div className="mt-1 text-lg font-semibold text-athena">
-              {points.length} δέντρα
+
+            {/* Preset buttons */}
+            <div className="grid grid-cols-2 gap-2">
+              {DEMO_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => runPreset(p.id)}
+                  disabled={loading !== null}
+                  className={`rounded-xl px-3 py-2.5 text-sm font-medium text-left transition-all
+                    ${activeScenario?.title === p.titleEl
+                      ? "bg-athena/20 ring-1 ring-athena text-athena"
+                      : "bg-rail hover:bg-rail/70 text-chalk"
+                    } disabled:opacity-50`}
+                >
+                  {loading === p.id ? (
+                    <span className="animate-pulse">…</span>
+                  ) : (
+                    p.labelEl
+                  )}
+                </button>
+              ))}
             </div>
-            <div className="mt-2 text-xs text-chalk/60">
-              Κάνε κλικ στα σημεία που θέλεις δέντρα. Μετά πάτα «Υπολόγισε».
-            </div>
-            <div className="mt-3 flex gap-2">
+
+            {/* Divider */}
+            <div className="border-t border-chalk/10 my-3" />
+
+            {/* Draw mode */}
+            {!drawMode ? (
               <button
-                onClick={clear}
-                disabled={points.length === 0}
-                className="flex-1 rounded-lg bg-rail px-3 py-1.5 text-xs text-chalk/80 disabled:opacity-40"
+                onClick={() => setDrawMode(true)}
+                className="w-full rounded-xl bg-rail hover:bg-rail/70 px-3 py-2 text-sm text-chalk/80 text-left"
               >
-                Καθάρισε
+                ✏️ Σχεδίασε custom σημεία
               </button>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-athena">
+                  <span className="w-2 h-2 rounded-full bg-athena animate-breathe" />
+                  {points.length} σημεία — κλικ στον χάρτη
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={clear}
+                    disabled={points.length === 0}
+                    className="flex-1 rounded-lg bg-rail px-3 py-1.5 text-xs text-chalk/80 disabled:opacity-40"
+                  >
+                    Καθάρισε
+                  </button>
+                  <button
+                    onClick={commitDraw}
+                    disabled={points.length === 0 || loading !== null}
+                    className="flex-1 rounded-lg bg-athena text-ink font-medium px-3 py-1.5 text-xs disabled:opacity-40"
+                  >
+                    {loading === "draw" ? "…" : "Υπολόγισε"}
+                  </button>
+                </div>
+                <button
+                  onClick={() => { setDrawMode(false); clear(); }}
+                  className="text-xs text-chalk/40 hover:text-chalk/70 mt-1"
+                >
+                  ✕ Άκυρο
+                </button>
+              </div>
+            )}
+
+            {/* Clear active scenario */}
+            {activeScenario && !drawMode && (
               <button
-                onClick={commit}
-                disabled={points.length === 0}
-                className="flex-1 rounded-lg bg-athena text-ink font-medium px-3 py-1.5 text-xs disabled:opacity-40"
+                onClick={clearAll}
+                className="mt-3 text-xs text-chalk/40 hover:text-chalk/70 w-full text-left"
               >
-                Υπολόγισε
+                ✕ Καθάρισε τρέχον σενάριο
               </button>
-            </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

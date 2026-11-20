@@ -7,6 +7,7 @@ import { TrafficLayer } from "./layers/TrafficLayer";
 import { ThermalLayer } from "./layers/ThermalLayer";
 import { VotesLayer } from "./layers/VotesLayer";
 import { DrawLayer } from "./layers/DrawLayer";
+import { ScenarioLayer } from "./layers/ScenarioLayer";
 import { AgentOrb } from "./hud/AgentOrb";
 import { Subtitles } from "./hud/Subtitles";
 import { ThinkingCard } from "./hud/ThinkingCard";
@@ -21,6 +22,7 @@ import { FPSOverlay } from "./hud/FPSOverlay";
 import { VoteCounter } from "./hud/VoteCounter";
 import { Minimap } from "./hud/Minimap";
 import { DrawPanel } from "./hud/DrawPanel";
+import { CommandBar } from "./hud/CommandBar";
 import { WsClient } from "./ws/client";
 import { dispatchWs } from "./ws/dispatcher";
 import { useStore } from "./store/useStore";
@@ -58,6 +60,7 @@ export default function App() {
       <ErrorBoundary name="thermal"><ThermalLayer viewer={viewer} /></ErrorBoundary>
       <ErrorBoundary name="votes"><VotesLayer viewer={viewer} /></ErrorBoundary>
       <ErrorBoundary name="draw"><DrawLayer viewer={viewer} /></ErrorBoundary>
+      <ErrorBoundary name="scenario"><ScenarioLayer viewer={viewer} /></ErrorBoundary>
 
       <ErrorBoundary name="time"><TimeSlider /></ErrorBoundary>
       <ErrorBoundary name="minimap"><Minimap /></ErrorBoundary>
@@ -71,6 +74,7 @@ export default function App() {
       <ErrorBoundary name="engage"><EngagePanel /></ErrorBoundary>
       <ErrorBoundary name="backtest"><BacktestPanel /></ErrorBoundary>
       <ErrorBoundary name="decision"><DecisionPanel /></ErrorBoundary>
+      <ErrorBoundary name="command"><CommandBar /></ErrorBoundary>
       <ErrorBoundary name="director"><DirectorBar /></ErrorBoundary>
       <ErrorBoundary name="fps"><FPSOverlay /></ErrorBoundary>
     </div>

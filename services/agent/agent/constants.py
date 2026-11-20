@@ -15,9 +15,17 @@ TTS_PROVIDER     = os.getenv("TTS_PROVIDER", "elevenlabs")
 TTS_VOICE_ID     = os.getenv("TTS_VOICE_ID", "")
 IMAGE_EDIT_API_KEY = os.getenv("IMAGE_EDIT_API_KEY", "")
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-FIXTURES_DIR = REPO_ROOT / "packages" / "contracts" / "fixtures"
-DEMO_CACHE_DIR = REPO_ROOT / "demo" / "cache"
+def _find_repo_root() -> Path:
+    """Walk up from this file looking for CLAUDE.md (repo root marker)."""
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        if (parent / "CLAUDE.md").exists():
+            return parent
+    return here.parents[1]  # fallback: /app in Docker
+
+REPO_ROOT    = Path(os.getenv("REPO_ROOT",    str(_find_repo_root())))
+FIXTURES_DIR = Path(os.getenv("FIXTURES_DIR", str(REPO_ROOT / "packages" / "contracts" / "fixtures")))
+DEMO_CACHE_DIR = Path(os.getenv("DEMO_CACHE_DIR", str(REPO_ROOT / "demo" / "cache")))
 
 # Σεράφειο — πρωταρχικό σημείο demo
 SERAFIO_LNGLAT = (23.7108, 37.9787)

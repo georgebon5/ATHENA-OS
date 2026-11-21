@@ -13,7 +13,7 @@ export interface VisitorRecord {
   source: "live" | "fixture";
 }
 
-const CKAN_BASE = "https://opendata.athens.gr/api/3/action";
+const CKAN_BASE = "https://opendata.cityofathens.gr/api/3/action";
 
 /**
  * All known stations — Σεπόλια, Κολωνός, Βοτανικός, Λαρίσης, Κυψέλη, Εξάρχεια…

@@ -1,0 +1,33 @@
+{
+  "_note": "Fallback fixture — real values fetched 2026-11-21T09:00 from opendata.cityofathens.gr",
+  "stations": [
+    {
+      "stationId": 78,
+      "stationName": "Γηπεδάκι Σεπολίων",
+      "neighbourhood": "ΣΕΠΟΛΙΑ",
+      "timestamp": "2026-11-21T09:00:00Z",
+      "temperature": 22.15,
+      "humidity": null,
+      "aqi": 2,
+      "co": 321.4,
+      "no2": 12.3,
+      "o3": 73.3,
+      "pm2_5": 9.3,
+      "source": "fixture"
+    },
+    {
+      "stationId": 76,
+      "stationName": "Βοτανικός Κήπος",
+      "neighbourhood": "ΒΟΤΑΝΙΚΟΣ",
+      "timestamp": "2026-11-21T09:00:00Z",
+      "temperature": 20.03,
+      "humidity": null,
+      "aqi": 6,
+      "co": 237.3,
+      "no2": 1.6,
+      "o3": null,
+      "pm2_5": null,
+      "source": "fixture"
+    }
+  ]
+}

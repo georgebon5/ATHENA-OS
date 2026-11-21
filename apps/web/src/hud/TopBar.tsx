@@ -3,6 +3,7 @@ import { useStore } from "@/store/useStore";
 import type { DemoBeat } from "@/types/contracts";
 import { LogoMark } from "./Logo";
 import { TimeSlider } from "./TimeSlider";
+import { useFootfall } from "@/opendata/useFootfall";
 
 const BEATS: { key: DemoBeat; label: string }[] = [
   { key: "INTRO", label: "Intro" },
@@ -35,6 +36,7 @@ export function TopBar() {
   const beat = useStore((s) => s.beat);
   const buses = useStore((s) => s.buses.length);
   const reports = useStore((s) => Object.keys(s.reports).length);
+  const { total: footfall, loading: footfallLoading, source: footfallSource } = useFootfall();
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -71,6 +73,7 @@ export function TopBar() {
           <div className="flex items-center gap-4">
             <Stat label="λεωφορεία" value={buses} />
             <Stat label="αναφορές" value={reports} />
+            <FootfallStat total={footfall} loading={footfallLoading} live={footfallSource === "live"} />
             <div className="text-right leading-none">
               <div className="data text-[26px] font-medium text-chalk">{clockFmt.format(now)}</div>
               <div className="mt-1 hud-label text-[10px] text-chalk/50">{dateFmt.format(now)}</div>
@@ -89,6 +92,24 @@ function Stat({ label, value }: { label: string; value: number }) {
     <div className="text-right leading-none">
       <div className="data text-[20px] text-holo">{String(value).padStart(2, "0")}</div>
       <div className="mt-1 hud-label text-[9px] text-chalk/45">{label}</div>
+    </div>
+  );
+}
+
+function FootfallStat({ total, loading, live }: { total: number; loading: boolean; live: boolean }) {
+  return (
+    <div className="text-right leading-none" title={live ? "Δεδομένα WiFi Έξυπνης Γειτονιάς — live" : "Δεδομένα WiFi Έξυπνης Γειτονιάς — cache"}>
+      <div className="data text-[20px] text-holo">
+        {loading ? "—" : total.toLocaleString("el-GR")}
+      </div>
+      <div className="mt-1 flex items-center justify-end gap-1">
+        <span className="hud-label text-[9px] text-chalk/45">πολίτες σήμερα</span>
+        {!loading && (
+          <span className={`hud-label text-[8px] ${live ? "text-aurora/60" : "text-chalk/25"}`}>
+            {live ? "●" : "○"}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

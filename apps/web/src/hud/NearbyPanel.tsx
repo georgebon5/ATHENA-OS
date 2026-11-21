@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as Cesium from "cesium";
+import { useStore } from "@/store/useStore";
 import { cameraController } from "@/cesium/cameraShots";
-import { SERAFIO_LNGLAT } from "@/cesium/constants";
+import { HEIGHT, SERAFIO_LNGLAT } from "@/cesium/constants";
 import { GATEWAY_URL } from "@/director/directorApi";
 import type { LngLat } from "@/types/contracts";
 
@@ -18,20 +19,48 @@ interface Votable {
 }
 
 const KIND: Record<Votable["kind"], { label: string; color: string }> = {
-  consultation: { label: "Διαβούλευση", color: "#ff5fb8" },
-  report: { label: "Αναφορά", color: "#ffa043" },
-  project: { label: "Έργο", color: "#2ee6c9" },
+  consultation: { label: "Διαβούλευση", color: "#79b7e4" },
+  report: { label: "Αναφορά", color: "#ffffff" },
+  project: { label: "Έργο", color: "#1a73e8" },
 };
 // Η θέση του laptop έρχεται από Wi‑Fi και καμιά φορά είναι άλλη πόλη: εκτός Αττικής → Σεράφειο
 const ATTICA = { w: 23.3, s: 37.6, e: 24.2, n: 38.4 };
 
 const distance = (m: number) => (m < 1000 ? `${m} m` : `${(m / 1000).toFixed(1).replace(".", ",")} km`);
 
-/** Με το άνοιγμα: η θέση μου στον χάρτη + popup με ό,τι ψηφίζεται κοντά. Κλικ → 3D close-up εκεί. */
+/**
+ * Με το άνοιγμα: η θέση μου στον χάρτη + popup με ό,τι ψηφίζεται κοντά.
+ * Κλικ → 3D close-up εκεί και οι φωτογραφίες του: αναφορά (+ ίδιο συμβάν από άλλους), διαβούλευση (πριν/μετά).
+ */
 export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
   const [here, setHere] = useState<LngLat | null>(null);
   const [items, setItems] = useState<Votable[]>([]);
   const [open, setOpen] = useState(true);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<string[] | null>(null);
+  const selectedRef = useRef<string | null>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const reports = useStore((s) => s.reports);
+
+  const pick = (i: Votable) => {
+    cameraController.closeUp(Cesium.Cartesian3.fromDegrees(i.lngLat[0], i.lngLat[1], 0));
+    const id = selected === i.id ? null : i.id;
+    selectedRef.current = id;
+    setSelected(id);
+    setPhotos(null);
+    if (!id) return;
+    // Κάθε item ψηφίζεται σαν διαβούλευση, άρα εκεί είναι και οι εικόνες του (τα έργα δεν έχουν)
+    fetch(`${GATEWAY_URL}/api/consultations/${encodeURIComponent(id)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((c: { beforeUrl?: string; afterUrl?: string; reportId?: string } | null) => {
+        if (selectedRef.current !== id) return;
+        const dupes = (c?.reportId && reports[c.reportId]?.classification?.duplicates) || [];
+        const urls = [c?.beforeUrl, c?.afterUrl, ...dupes.map((d) => reports[d]?.photoUrl)];
+        setPhotos([...new Set(urls.filter((u): u is string => !!u))]);
+      })
+      .catch(() => selectedRef.current === id && setPhotos([]));
+  };
 
   useEffect(() => {
     if (!viewer) return;
@@ -39,7 +68,7 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
       const inAttica = at[0] > ATTICA.w && at[0] < ATTICA.e && at[1] > ATTICA.s && at[1] < ATTICA.n;
       const where = inAttica ? at : SERAFIO_LNGLAT;
       setHere(where);
-      cameraController.flyTo({ lngLat: where, heightM: 2500, headingDeg: 0, pitchDeg: -90, durationS: 3 });
+      cameraController.flyTo({ lngLat: where, heightM: HEIGHT.nearby, headingDeg: 0, pitchDeg: -90, durationS: 3 });
     };
     if (!("geolocation" in navigator)) return done(SERAFIO_LNGLAT);
     navigator.geolocation.getCurrentPosition(
@@ -91,32 +120,81 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
     return () => window.clearInterval(t);
   }, [here]);
 
+  // Μετακίνηση από την κεφαλίδα· μέχρι το πρώτο drag μένει δεξιά (right/bottom των classes)
+  const startDrag = (e: React.PointerEvent) => {
+    const box = boxRef.current;
+    if (!box || e.button !== 0) return;
+    const r = box.getBoundingClientRect();
+    const dx = e.clientX - r.left;
+    const dy = e.clientY - r.top;
+    const move = (ev: PointerEvent) =>
+      setPos({
+        x: Math.min(Math.max(0, ev.clientX - dx), window.innerWidth - 120),
+        y: Math.min(Math.max(0, ev.clientY - dy), window.innerHeight - 48),
+      });
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
+
   if (!open || items.length === 0) return null;
   return (
-    <div className="glass pointer-events-auto fixed bottom-20 left-6 z-10 w-[340px] p-3">
-      <div className="mb-1.5 flex items-center justify-between px-1">
-        <span className="hud-label text-[10px]">Ψηφίζεται κοντά σου · {items.length}</span>
-        <button type="button" onClick={() => setOpen(false)} className="px-1 text-chalk/50 hover:text-chalk" aria-label="Κλείσιμο">
+    // Δεξιά, πάνω από το minimap. Σέρνεται από την κεφαλίδα, αλλάζει μέγεθος από την κάτω-δεξιά γωνία (CSS resize)
+    <div
+      ref={boxRef}
+      className="glass pointer-events-auto fixed bottom-[210px] right-6 z-10 flex h-[460px] w-[440px] min-h-[180px] min-w-[300px] max-h-[90vh] max-w-[90vw] resize flex-col overflow-hidden"
+      style={pos ? { left: pos.x, top: pos.y, right: "auto", bottom: "auto" } : undefined}
+    >
+      <div
+        onPointerDown={startDrag}
+        className="flex cursor-move touch-none select-none items-center justify-between border-b border-white/5 px-4 py-2.5"
+      >
+        <span className="hud-label text-[11px]">
+          <span className="mr-2 text-chalk/30">⠿</span>Ψηφίζεται κοντά σου · {items.length}
+        </span>
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => setOpen(false)}
+          className="px-1 text-[18px] leading-none text-chalk/50 hover:text-chalk"
+          aria-label="Κλείσιμο"
+        >
           ×
         </button>
       </div>
-      <ul className="space-y-0.5">
-        {items.slice(0, 6).map((i) => (
+      <ul className="flex-1 space-y-0.5 overflow-y-auto p-2">
+        {items.map((i) => (
           <li key={i.id}>
             <button
               type="button"
-              onClick={() => cameraController.closeUp(Cesium.Cartesian3.fromDegrees(i.lngLat[0], i.lngLat[1], 0))}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left hover:bg-white/5"
+              onClick={() => pick(i)}
+              className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left hover:bg-white/5 ${selected === i.id ? "bg-white/5" : ""}`}
             >
-              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: KIND[i.kind].color }} />
+              <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: KIND[i.kind].color }} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] text-chalk">{i.titleEl}</span>
-                <span className="block text-[11px] text-chalk/50">
+                <span className="block truncate text-[15px] text-chalk">{i.titleEl}</span>
+                <span className="block text-[12px] text-chalk/50">
                   {KIND[i.kind].label} · {distance(i.distanceM)}
                 </span>
               </span>
-              <span className="text-[11px] tabular-nums text-chalk/50">{i.yes + i.no + i.maybe} ψήφοι</span>
+              <span className="text-[12px] tabular-nums text-chalk/50">{i.yes + i.no + i.maybe} ψήφοι</span>
             </button>
+            {selected === i.id &&
+              (photos === null ? (
+                <div className="mx-2.5 my-2 aspect-[4/3] animate-pulse rounded-lg bg-white/5" />
+              ) : photos.length ? (
+                // Οι φωτογραφίες μεγαλώνουν μαζί με το παράθυρο
+                <div className="mx-2.5 my-2 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-2">
+                  {photos.map((u) => (
+                    <img key={u} src={u} alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
+                  ))}
+                </div>
+              ) : (
+                <p className="mx-2.5 my-2 text-[12px] text-chalk/50">Δεν υπάρχουν φωτογραφίες για αυτό.</p>
+              ))}
           </li>
         ))}
       </ul>

@@ -71,6 +71,7 @@ export function CesiumViewer({ onReady }: Props) {
     if (CESIUM_ION_TOKEN) {
       Cesium.Ion.defaultAccessToken = CESIUM_ION_TOKEN;
     }
+    // Τα Google tiles έρχονται με HTTP/2: αντέχουν πολλά παράλληλα αιτήματα (Cesium default: 18/server, 50 σύνολο)
 
     const viewer = new Cesium.Viewer(containerRef.current, {
       baseLayerPicker: false,
@@ -185,6 +186,7 @@ export function CesiumViewer({ onReady }: Props) {
 
     // ── Αρχική κάμερα: κάθετα από πάνω, η πόλη σαν επίπεδος χάρτης (2D look) ──
     viewer.camera.setView({
+      // Κατευθείαν στο ύψος του «κοντά σου» (όχι 6 km και μετά πτήση): φορτώνει μόνο τα tiles της τελικής λήψης
       destination: Cesium.Cartesian3.fromDegrees(SERAFIO_LNGLAT[0], SERAFIO_LNGLAT[1], HEIGHT.map),
       orientation: { heading: 0, pitch: Cesium.Math.toRadians(-90), roll: 0 },
     });

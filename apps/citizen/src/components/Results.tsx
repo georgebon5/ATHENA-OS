@@ -32,7 +32,7 @@ export function Results({ tally, mine }: { tally: VoteTally; mine: VoteChoice | 
                   <span className="text-chalk">{pct}%</span> · {n}
                 </span>
               </div>
-              <div className="h-3 overflow-hidden rounded-full bg-paper shadow-[inset_0_0_0_1px_rgba(255,95,184,0.12)]">
+              <div className="h-3 overflow-hidden rounded-full bg-paper shadow-[inset_0_0_0_1px_rgba(121, 183, 228,0.12)]">
                 <div
                   className={`h-full rounded-full ${c.tone} transition-[width] duration-700 ease-out`}
                   style={{ width: `${pct}%`, boxShadow: "0 0 12px currentColor" }}

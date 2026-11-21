@@ -33,7 +33,7 @@ export function BeforeAfter({ before, after }: { before: string; after: string }
           onLoad={() => setLoaded((n) => n + 1)}
         />
         {loaded < 2 && <div className="absolute inset-0 animate-pulse bg-slab" />}
-        <div className="absolute inset-y-0 w-[3px] bg-holo shadow-[0_0_18px_#ff5fb8]" style={{ left: `calc(${split}% - 1.5px)` }}>
+        <div className="absolute inset-y-0 w-[3px] bg-holo shadow-[0_0_18px_#79b7e4]" style={{ left: `calc(${split}% - 1.5px)` }}>
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full border-2 border-holo bg-void/85 text-holo shadow-glow text-lg font-bold">
             ⇆
           </div>

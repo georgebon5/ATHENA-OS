@@ -1,23 +1,23 @@
 /** @type {import('tailwindcss').Config} */
 // Ίδια ταυτότητα «golden hour» με την κεντρική οθόνη (apps/web). Σκούρο φόντο με υψηλή αντίθεση:
-// κείμενο #fff1ea πάνω σε #0c0614, και σκούρο κείμενο πάνω στα φωτεινά κουμπιά.
+// κείμενο #ffffff πάνω σε #031b35, και σκούρο κείμενο πάνω στα φωτεινά κουμπιά.
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        void: "#0c0614",
-        ink: "#0c0614",
-        slab: "#150b20",
-        card: "#1a0f26",
-        paper: "#160c22",
-        line: "#3a2148",
-        chalk: "#fff1ea",
-        muted: "#cfb0c4",
-        holo: "#ff5fb8",
-        plasma: "#ffa043",
-        athena: "#ff5fb8",
-        athenaDeep: "#ff5fb8",
+        void: "#031b35",
+        ink: "#031b35",
+        slab: "#052648",
+        card: "#072c52",
+        paper: "#06284c",
+        line: "#1b4d80",
+        chalk: "#ffffff",
+        muted: "#a9c7e3",
+        holo: "#79b7e4",
+        plasma: "#ffffff",
+        athena: "#79b7e4",
+        athenaDeep: "#79b7e4",
         yes: "#2ee6c9",
         no: "#ff4b3e",
         maybe: "#ffd84d",
@@ -30,8 +30,8 @@ export default {
         mono: ["JetBrains Mono", "ui-monospace", "monospace"],
       },
       boxShadow: {
-        card: "0 0 0 1px rgba(255,95,184,0.14) inset, 0 18px 50px -20px rgba(0,0,0,0.9)",
-        glow: "0 0 24px rgba(255,95,184,0.45)",
+        card: "0 0 0 1px rgba(121, 183, 228,0.14) inset, 0 18px 50px -20px rgba(0,0,0,0.9)",
+        glow: "0 0 24px rgba(121, 183, 228,0.45)",
       },
       keyframes: {
         pulseRing: {

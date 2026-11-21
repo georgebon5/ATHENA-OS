@@ -86,7 +86,7 @@ export function DirectorBar() {
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="π.χ. Τι θα γίνει αν αφαιρέσουμε μία λωρίδα στην Πειραιώς;"
-              className="mt-3 w-full rounded-xl bg-void/70 px-4 py-3 text-base text-chalk outline-none shadow-[inset_0_0_0_1px_rgba(255,95,184,0.2)] focus:shadow-[inset_0_0_0_1px_rgba(255,95,184,0.7)]"
+              className="mt-3 w-full rounded-xl bg-void/70 px-4 py-3 text-base text-chalk outline-none shadow-[inset_0_0_0_1px_rgba(121, 183, 228,0.2)] focus:shadow-[inset_0_0_0_1px_rgba(121, 183, 228,0.7)]"
             />
             <div className="mt-4 flex justify-end gap-2">
               <button type="button" onClick={closePrompt} className="btn-ghost">
@@ -108,7 +108,7 @@ function Svc({ name, state, extra }: { name: string; state: string; extra?: stri
   const warn = ["mock", "replay", "sqlite"].includes(state);
   const tone = warn ? "text-solar bg-solar" : ok ? "text-aurora bg-aurora" : "text-flare bg-flare";
   return (
-    <div className="flex items-center gap-1.5 rounded-lg bg-holo/[0.04] px-2 py-1 shadow-[inset_0_0_0_1px_rgba(255,95,184,0.1)]">
+    <div className="flex items-center gap-1.5 rounded-lg bg-holo/[0.04] px-2 py-1 shadow-[inset_0_0_0_1px_rgba(121, 183, 228,0.1)]">
       <span className={`h-1.5 w-1.5 rounded-full ${tone.split(" ")[1]}`} />
       <span className="hud-label text-[9px] !text-chalk/60">{name}</span>
       <span className={`data ml-auto text-[10px] ${tone.split(" ")[0]}`}>{extra ?? state}</span>

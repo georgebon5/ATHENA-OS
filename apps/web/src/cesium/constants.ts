@@ -12,7 +12,8 @@ export const DEMO_BBOX = {
 
 // Κινηματογραφικά υψόμετρα
 export const HEIGHT = {
-  map: 6000, // top-down «χάρτης» (2D look) του map lookup
+  map: 6000, // top-down «χάρτης» (2D look) του map lookup (Esc)
+  nearby: 2500, // αρχική λήψη + «κοντά σου»: λιγότερα tiles από τα 6 km → γρηγορότερο άνοιγμα
   overview: 900,
   flyover: 500,
   street: 120,

@@ -144,7 +144,7 @@ function Start({ onPick, onTap }: { onPick: (f: File | undefined) => void; onTap
     <div className="space-y-6 animate-rise">
       <div className="pt-4">
         <Viewfinder />
-        <div className="hud-label mt-6 !text-solar">Αναφορά · Sense</div>
+        <div className="hud-label mt-6 !text-holo">Αναφορά · Sense</div>
         <h1 className="mt-2 text-[32px] font-bold leading-[1.1]">
           Είδες κάτι να φτιάξουμε <span className="holo-text">στον δρόμο;</span>
         </h1>
@@ -290,20 +290,20 @@ function Done({ report, approximate, heading, onAgain }: { report: Report; appro
 function Viewfinder() {
   const cols = [176, 186, 196, 206, 216, 226, 236];
   return (
-    <div className="relative mx-auto mt-2 aspect-[16/10] w-full overflow-hidden rounded-2xl ring-1 ring-holo/30 shadow-[0_20px_60px_-20px_rgba(255,95,184,0.6)]" aria-hidden>
+    <div className="relative mx-auto mt-2 aspect-[16/10] w-full overflow-hidden rounded-2xl ring-1 ring-holo/30 shadow-[0_20px_60px_-20px_rgba(121, 183, 228,0.6)]" aria-hidden>
       <svg viewBox="0 0 320 200" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid slice">
         <defs>
           <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#2b0b4a" />
-            <stop offset="0.4" stopColor="#8a1f7a" />
-            <stop offset="0.62" stopColor="#ff5f8f" />
-            <stop offset="0.8" stopColor="#ffa043" />
-            <stop offset="1" stopColor="#ffd84d" />
+            <stop offset="0" stopColor="#021a33" />
+            <stop offset="0.4" stopColor="#0a51a0" />
+            <stop offset="0.62" stopColor="#79b7e4" />
+            <stop offset="0.8" stopColor="#ffffff" />
+            <stop offset="1" stopColor="#79b7e4" />
           </linearGradient>
           <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#fff3b0" />
-            <stop offset="0.5" stopColor="#ffd84d" />
-            <stop offset="1" stopColor="#ff5fb8" />
+            <stop offset="0" stopColor="#e5f4ff" />
+            <stop offset="0.5" stopColor="#ffffff" />
+            <stop offset="1" stopColor="#79b7e4" />
           </linearGradient>
           <mask id="sun-stripes">
             <rect width="320" height="200" fill="#fff" />
@@ -312,34 +312,34 @@ function Viewfinder() {
             ))}
           </mask>
           <linearGradient id="road" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#2a0f30" />
-            <stop offset="1" stopColor="#0c0614" />
+            <stop offset="0" stopColor="#04213f" />
+            <stop offset="1" stopColor="#031b35" />
           </linearGradient>
         </defs>
         <rect width="320" height="132" fill="url(#sky)" />
         {/* ήλιος με «ρίγες» */}
         <circle cx="206" cy="80" r="44" fill="url(#sun)" mask="url(#sun-stripes)" />
         {/* βράχος της Ακρόπολης + Παρθενώνας σε σιλουέτα */}
-        <path d="M108 132 C130 104 150 96 166 94 L258 94 C276 98 292 112 312 132 Z" fill="#1b0a26" />
-        <path d="M170 90 H244 V94 H170 Z M168 64 H246 V68 H168 Z M168 64 L207 52 L246 64 Z" fill="#1b0a26" />
+        <path d="M108 132 C130 104 150 96 166 94 L258 94 C276 98 292 112 312 132 Z" fill="#04213f" />
+        <path d="M170 90 H244 V94 H170 Z M168 64 H246 V68 H168 Z M168 64 L207 52 L246 64 Z" fill="#04213f" />
         {cols.map((x) => (
-          <rect key={x} x={x - 2} y="68" width="4" height="22" fill="#1b0a26" />
+          <rect key={x} x={x - 2} y="68" width="4" height="22" fill="#04213f" />
         ))}
         {/* πόλη στο πρώτο πλάνο */}
-        <path d="M0 132 V108 H22 V98 H40 V114 H58 V102 H80 V120 H96 V110 H112 V132 Z M258 132 V116 H272 V104 H290 V118 H304 V100 H320 V132 Z" fill="#12081c" />
-        <path d="M0 132 H320" stroke="#ffa043" strokeWidth="1.5" strokeOpacity="0.9" />
+        <path d="M0 132 V108 H22 V98 H40 V114 H58 V102 H80 V120 H96 V110 H112 V132 Z M258 132 V116 H272 V104 H290 V118 H304 V100 H320 V132 Z" fill="#041f3b" />
+        <path d="M0 132 H320" stroke="#ffffff" strokeWidth="1.5" strokeOpacity="0.9" />
         {/* δρόμος */}
         <rect y="132" width="320" height="68" fill="url(#road)" />
-        <path d="M150 132 L60 200 M170 132 L260 200" stroke="#ff5fb8" strokeWidth="2.5" style={{ filter: "drop-shadow(0 0 4px #ff5fb8)" }} />
-        <path d="M160 136 V142 M160 150 V160 M160 170 V186" stroke="#ffd84d" strokeWidth="2.5" />
+        <path d="M150 132 L60 200 M170 132 L260 200" stroke="#79b7e4" strokeWidth="2.5" style={{ filter: "drop-shadow(0 0 4px #79b7e4)" }} />
+        <path d="M160 136 V142 M160 150 V160 M160 170 V186" stroke="#e5f4ff" strokeWidth="2.5" />
         {/* στόχος: λακκούβα */}
         <ellipse cx="186" cy="176" rx="20" ry="6" fill="#ff4b3e" fillOpacity="0.35" stroke="#ff4b3e" />
-        <g stroke="#fff1ea" strokeWidth="2.5" fill="none" strokeLinecap="round">
+        <g stroke="#ffffff" strokeWidth="2.5" fill="none" strokeLinecap="round">
           <path d="M158 160 h-8 v8 M214 160 h8 v8 M158 192 h-8 v-8 M214 192 h8 v-8" />
         </g>
         <g transform="translate(222 146) skewX(-10)">
           <rect width="86" height="18" rx="3" fill="#ff4b3e" />
-          <text x="7" y="13" fill="#0c0614" fontSize="11" fontWeight="900" fontFamily="Fira Sans Extra Condensed">ΛΑΚΚΟΥΒΑ · 4/5</text>
+          <text x="7" y="13" fill="#031b35" fontSize="11" fontWeight="900" fontFamily="Fira Sans Extra Condensed">ΛΑΚΚΟΥΒΑ · 4/5</text>
         </g>
       </svg>
       <div className="absolute bottom-2.5 left-3 flex items-center gap-1.5 font-display text-[12px] font-extrabold italic tracking-wider text-chalk [text-shadow:0_1px_4px_#000]">
@@ -352,7 +352,7 @@ function Viewfinder() {
 function Corners() {
   return (
     <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 75" preserveAspectRatio="none" aria-hidden>
-      <g stroke="#ff5fb8" strokeWidth="0.8" fill="none" vectorEffect="non-scaling-stroke">
+      <g stroke="#79b7e4" strokeWidth="0.8" fill="none" vectorEffect="non-scaling-stroke">
         <path d="M3 9 V3 H9 M91 3 H97 V9 M3 66 V72 H9 M91 72 H97 V66" vectorEffect="non-scaling-stroke" />
       </g>
     </svg>
@@ -365,7 +365,7 @@ function SeverityMeter({ level }: { level: number }) {
     <span className="flex items-center gap-2 rounded-full bg-paper px-3 py-1 ring-1 ring-holo/20">
       <span className="flex gap-0.5">
         {colors.map((c, i) => (
-          <span key={c} className="h-3 w-1.5 rounded-sm" style={{ background: i < level ? c : "#3a2148", boxShadow: i < level ? `0 0 6px ${c}` : undefined }} />
+          <span key={c} className="h-3 w-1.5 rounded-sm" style={{ background: i < level ? c : "#1b4d80", boxShadow: i < level ? `0 0 6px ${c}` : undefined }} />
         ))}
       </span>
       <span className="font-mono text-[13px] font-semibold">{level}/5</span>

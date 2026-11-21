@@ -38,7 +38,7 @@ export function DecisionPanel() {
     if (!node || !decision) return;
     setExporting(true);
     try {
-      const canvas = await html2canvas(node, { backgroundColor: "#120a1c", scale: 2 });
+      const canvas = await html2canvas(node, { backgroundColor: "#041f3b", scale: 2 });
       const img = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const pageW = pdf.internal.pageSize.getWidth();
@@ -84,7 +84,7 @@ export function DecisionPanel() {
               </div>
             </div>
             <div className="mt-4 overflow-y-auto pr-1">
-              <div ref={docRef} className="relative rounded-xl bg-[#120a1c] p-8 shadow-[inset_0_0_0_1px_rgba(255,95,184,0.18)]">
+              <div ref={docRef} className="relative rounded-xl bg-[#041f3b] p-8 shadow-[inset_0_0_0_1px_rgba(121, 183, 228,0.18)]">
                 <motion.div
                   initial={{ scale: 2.2, opacity: 0, rotate: -30 }}
                   animate={{ scale: 1, opacity: 1, rotate: -14 }}
@@ -95,7 +95,7 @@ export function DecisionPanel() {
                 </motion.div>
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-holo to-plasma p-[2px]">
-                    <div className="grid h-full w-full place-items-center rounded-full bg-[#120a1c] text-[11px] font-bold text-holo">ΔΑ</div>
+                    <div className="grid h-full w-full place-items-center rounded-full bg-[#041f3b] text-[11px] font-bold text-holo">ΔΑ</div>
                   </div>
                   <div className="leading-tight">
                     <div className="hud-label text-[10px] text-chalk/60">Δήμος Αθηναίων</div>

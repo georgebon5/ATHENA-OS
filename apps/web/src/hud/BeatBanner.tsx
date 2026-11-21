@@ -64,7 +64,7 @@ export function BeatBanner() {
                 initial={{ opacity: 0, x: -60, skewX: -12 }}
                 animate={{ opacity: 1, x: 0, skewX: -8 }}
                 transition={{ delay: 0.25, type: "spring", stiffness: 140, damping: 16 }}
-                className="hud-title mt-1 text-[150px] leading-[0.9] holo-text drop-shadow-[0_8px_40px_rgba(255,95,184,0.45)]"
+                className="hud-title mt-1 text-[150px] leading-[0.9] holo-text drop-shadow-[0_8px_40px_rgba(121, 183, 228,0.45)]"
               >
                 {shown}
               </motion.h1>

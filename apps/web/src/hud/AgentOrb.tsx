@@ -3,9 +3,9 @@ import { motion } from "framer-motion";
 import { useStore } from "@/store/useStore";
 
 const MOOD_COLORS: Record<string, [string, string]> = {
-  neutral: ["#ff5fb8", "#ffa043"],
+  neutral: ["#79b7e4", "#ffffff"],
   alert: ["#ffd84d", "#ff4b3e"],
-  proud: ["#2ee6c9", "#ff5fb8"],
+  proud: ["#2ee6c9", "#79b7e4"],
 };
 
 const BARS = 28;
@@ -111,7 +111,7 @@ export function AgentOrb() {
         animate={{ scale: 1 + energy * 0.25 }}
         transition={{ type: "spring", stiffness: 220, damping: 14 }}
         style={{
-          background: `radial-gradient(circle at 35% 30%, #ffffff 0%, ${c1} 22%, ${c2} 62%, #0c0614 100%)`,
+          background: `radial-gradient(circle at 35% 30%, #ffffff 0%, ${c1} 22%, ${c2} 62%, #031b35 100%)`,
           boxShadow: `0 0 ${26 + energy * 50}px ${c1}, 0 0 ${60 + energy * 80}px ${c2}66`,
         }}
       >

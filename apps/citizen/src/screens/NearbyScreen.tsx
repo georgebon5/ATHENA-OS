@@ -6,9 +6,9 @@ import { getVotables, type Votable } from "../lib/api";
 import { SERAFIO } from "../lib/sensors";
 
 const KIND: Record<Votable["kind"], { label: string; color: string }> = {
-  consultation: { label: "Διαβούλευση", color: "#ff5fb8" },
-  report: { label: "Αναφορά πολίτη", color: "#ffa043" },
-  project: { label: "Δημοτικό έργο", color: "#2ee6c9" },
+  consultation: { label: "Διαβούλευση", color: "#79b7e4" },
+  report: { label: "Αναφορά πολίτη", color: "#ffffff" },
+  project: { label: "Δημοτικό έργο", color: "#1a73e8" },
 };
 
 interface Here {

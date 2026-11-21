@@ -66,6 +66,8 @@ export function CesiumViewer({ onReady }: Props) {
       skyAtmosphere: new Cesium.SkyAtmosphere(),
       baseLayer: buildSatelliteLayer(),
       terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+      // Native ανάλυση σε HiDPI οθόνες (Windows 125–150%) αντί για upscale από CSS pixels
+      useBrowserRecommendedResolution: false,
     });
 
     viewerRef.current = viewer;
@@ -109,26 +111,38 @@ export function CesiumViewer({ onReady }: Props) {
 
     // ── 3D Assets (async, προαιρετικά) ───────────────────────────────────
     (async () => {
+      // 16 (default) → 8: ένα επίπεδο λεπτομέρειας πάνω. Χαμηλότερο = πιο καθαρό αλλά περισσότερα tiles/FPS κόστος
+      const detail = { maximumScreenSpaceError: 8 };
       try {
-        if (GOOGLE_MAPS_API_KEY) {
-          // Google Photorealistic 3D Tiles — καλύπτει τα πάντα
-          const tileset = await Cesium.createGooglePhotorealistic3DTileset({
-            key: GOOGLE_MAPS_API_KEY,
-          });
+        if (GOOGLE_MAPS_API_KEY || CESIUM_ION_TOKEN) {
+          // Google Photorealistic 3D Tiles — με δικό μας key, αλλιώς μέσω Cesium ion (asset 2275207).
+          // Τα EEA Google projects παίρνουν 403 απευθείας, άρα στην Ελλάδα δουλεύει μόνο το ion.
+          // fromIonAssetId και όχι createGooglePhotorealistic3DTileset χωρίς key: εκείνο μοιράζεται ένα cached
+          // Resource και το διπλό mount του StrictMode σκάει με «The Resource is already being fetched».
+          const tileset = GOOGLE_MAPS_API_KEY
+            ? await Cesium.createGooglePhotorealistic3DTileset({ key: GOOGLE_MAPS_API_KEY }, detail)
+            : await Cesium.Cesium3DTileset.fromIonAssetId(2275207, detail);
+          if (viewer.isDestroyed()) {
+            tileset.destroy();
+            return;
+          }
           scene.primitives.add(tileset);
           // Με Google tiles κρύβουμε το satellite base (αντικαθίσταται)
           viewer.imageryLayers.get(0).show = false;
-        } else if (CESIUM_ION_TOKEN) {
-          const [buildings, terrain] = await Promise.allSettled([
-            Cesium.Cesium3DTileset.fromIonAssetId(96188),
-            Cesium.CesiumTerrainProvider.fromIonAssetId(1),
-          ]);
-          if (buildings.status === "fulfilled") scene.primitives.add(buildings.value);
-          if (terrain.status === "fulfilled") viewer.terrainProvider = terrain.value;
+          return;
         }
       } catch (err) {
-        console.warn("[cesium] optional asset load failed:", err);
+        console.warn("[cesium] Google 3D tiles failed, fallback σε OSM Buildings:", err);
       }
+      if (!CESIUM_ION_TOKEN) return;
+      // Fallback: OSM Buildings (γκρι, χωρίς textures) + terrain
+      const [buildings, terrain] = await Promise.allSettled([
+        Cesium.Cesium3DTileset.fromIonAssetId(96188),
+        Cesium.CesiumTerrainProvider.fromIonAssetId(1),
+      ]);
+      if (viewer.isDestroyed()) return;
+      if (buildings.status === "fulfilled") scene.primitives.add(buildings.value);
+      if (terrain.status === "fulfilled") viewer.terrainProvider = terrain.value;
     })();
 
     // ── Αρχική κάμερα: Σεράφειο fly-in ───────────────────────────────────

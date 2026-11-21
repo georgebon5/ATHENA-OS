@@ -1,5 +1,21 @@
 [
   {
+    "id": "r-seed-access-01",
+    "createdAt": "2026-11-21T08:30:00Z",
+    "photoUrl": "/media/seed/r-seed-access-01.jpg",
+    "location": [23.7108, 37.9789],
+    "heading": 180.0,
+    "accuracyM": 4.0,
+    "classification": {
+      "category": "accessibility",
+      "severity": 4,
+      "summaryEl": "Απουσία ράμπας ΑΜΕΑ στην είσοδο του Σεραφείου — αδύνατη πρόσβαση με αναπηρικό αμαξίδιο.",
+      "department": "Διεύθυνση Κοινωνικής Πολιτικής & Υγείας",
+      "duplicates": [],
+      "confidence": 0.91
+    }
+  },
+  {
     "id": "r-seed-038",
     "createdAt": "2026-10-22T16:36:44Z",
     "photoUrl": "/media/seed/r-seed-038.jpg",

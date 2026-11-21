@@ -24,7 +24,7 @@ import { DirectorBar } from "./hud/DirectorBar";
 import { FPSOverlay } from "./hud/FPSOverlay";
 import { VoteCounter } from "./hud/VoteCounter";
 import { Minimap } from "./hud/Minimap";
-import { DrawPanel } from "./hud/DrawPanel";
+import { SunClock } from "./hud/SunClock";
 import { CommandBar } from "./hud/CommandBar";
 import { WsClient } from "./ws/client";
 import { dispatchWs } from "./ws/dispatcher";
@@ -99,9 +99,7 @@ export default function App() {
         </div>
       </div>
 
-      <div className="pointer-events-none fixed bottom-14 left-6 z-10">
-        <ErrorBoundary name="draw-panel"><DrawPanel /></ErrorBoundary>
-      </div>
+      <SunClock />
       <div className="pointer-events-none fixed bottom-6 right-6 z-10">
         <ErrorBoundary name="minimap"><Minimap /></ErrorBoundary>
       </div>

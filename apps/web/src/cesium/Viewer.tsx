@@ -11,6 +11,25 @@ interface Props {
 }
 
 /**
+ * Τα layers (θερμικό 2 m, δέντρα σεναρίου, κάμερα «close» 50 m…) υποθέτουν έδαφος στο 0 m του ellipsoid,
+ * αλλά στα 3D tiles ο δρόμος στο Σεράφειο είναι ~72 m (median 25 σημείων άξονα δρόμων σε ακτίνα 300 m,
+ * sampleHeightMostDetailed 21/11). Κατεβάζουμε όλο το tileset τόσο, ώστε ο δρόμος να πέσει στο ~0.
+ * ponytail: ένα offset για όλη την περιοχή: ±5 m γύρω από το Σεράφειο, ±20 m στις άκρες του bbox (λόφοι).
+ * Για ακρίβεια παντού: ύψη σχετικά με το έδαφος (heightReference) σε κάθε layer.
+ */
+const TILES_GROUND_M = 72;
+
+function lowerToStreetLevel(tileset: Cesium.Cesium3DTileset) {
+  const up = Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(
+    Cesium.Cartesian3.fromDegrees(SERAFIO_LNGLAT[0], SERAFIO_LNGLAT[1]),
+    new Cesium.Cartesian3(),
+  );
+  tileset.modelMatrix = Cesium.Matrix4.fromTranslation(
+    Cesium.Cartesian3.multiplyByScalar(up, -TILES_GROUND_M, up),
+  );
+}
+
+/**
  * ESRI World Imagery — δορυφορικό HD, χωρίς API key.
  * Σκοτεινότερο, λιγότερο κορεσμένο: τα ολογραφικά layers (κυκλοφορία, θερμικό, ψήφοι) «λάμπουν» από πάνω.
  */
@@ -66,8 +85,6 @@ export function CesiumViewer({ onReady }: Props) {
       skyAtmosphere: new Cesium.SkyAtmosphere(),
       baseLayer: buildSatelliteLayer(),
       terrainProvider: new Cesium.EllipsoidTerrainProvider(),
-      // Native ανάλυση σε HiDPI οθόνες (Windows 125–150%) αντί για upscale από CSS pixels
-      useBrowserRecommendedResolution: false,
     });
 
     viewerRef.current = viewer;
@@ -90,10 +107,11 @@ export function CesiumViewer({ onReady }: Props) {
       scene.skyAtmosphere.brightnessShift = 0.05;
     }
 
-    // Σκιές ηλίου
-    viewer.shadows = true;
-    scene.shadowMap.enabled = true;
-    scene.shadowMap.softShadows = true;
+    // Σκιές ηλίου: κλειστές by default (το shadow pass ξαναζωγραφίζει όλα τα 3D tiles κάθε frame).
+    // Τις ανάβει το SunClock μόλις έρθει time.set (π.χ. «καύσωνας Ιουλίου»). Χωρίς soft = φθηνότερες.
+    viewer.shadows = false;
+    scene.shadowMap.enabled = false;
+    scene.shadowMap.softShadows = false;
     scene.shadowMap.size = 2048;
 
     // Anti-aliasing
@@ -111,10 +129,10 @@ export function CesiumViewer({ onReady }: Props) {
 
     // ── 3D Assets (async, προαιρετικά) ───────────────────────────────────
     (async () => {
-      // 16 (default) → 8: ένα επίπεδο λεπτομέρειας πάνω. Χαμηλότερο = πιο καθαρό αλλά περισσότερα tiles/FPS κόστος
+      // 16 = default Cesium. 8 = ένα επίπεδο λεπτομέρειας πάνω, αλλά περισσότερα tiles/FPS κόστος
       // + cache/collision που βάζει το createGooglePhotorealistic3DTileset και χάνονται στο fromIonAssetId
       const detail = {
-        maximumScreenSpaceError: 8,
+        maximumScreenSpaceError: 16,
         cacheBytes: 1536 * 1024 * 1024,
         maximumCacheOverflowBytes: 1024 * 1024 * 1024,
         enableCollision: true,
@@ -132,23 +150,23 @@ export function CesiumViewer({ onReady }: Props) {
             tileset.destroy();
             return;
           }
+          lowerToStreetLevel(tileset);
           scene.primitives.add(tileset);
-          // Με Google tiles κρύβουμε το satellite base (αντικαθίσταται)
-          viewer.imageryLayers.get(0).show = false;
+          // Τα Google tiles έχουν δικό τους έδαφος: κρύβουμε όλη τη σφαίρα (satellite + labels), όπως
+          // προτείνει το Cesium — αλλιώς ζωγραφίζεται και κατεβαίνει imagery κάτω από τα tiles χωρίς να φαίνεται
+          scene.globe.show = false;
           return;
         }
       } catch (err) {
         console.warn("[cesium] Google 3D tiles failed, fallback σε OSM Buildings:", err);
       }
       if (!CESIUM_ION_TOKEN) return;
-      // Fallback: OSM Buildings (γκρι, χωρίς textures) + terrain
-      const [buildings, terrain] = await Promise.allSettled([
-        Cesium.Cesium3DTileset.fromIonAssetId(96188),
-        Cesium.CesiumTerrainProvider.fromIonAssetId(1),
-      ]);
-      if (viewer.isDestroyed()) return;
-      if (buildings.status === "fulfilled") scene.primitives.add(buildings.value);
-      if (terrain.status === "fulfilled") viewer.terrainProvider = terrain.value;
+      // Fallback: OSM Buildings (γκρι, χωρίς textures). Χωρίς World Terrain: όπως και τα Google tiles,
+      // κατεβαίνουν στο επίπεδο του δρόμου ώστε τα layers να κάθονται στο 0 m της επίπεδης σφαίρας.
+      const buildings = await Cesium.Cesium3DTileset.fromIonAssetId(96188).catch(() => null);
+      if (viewer.isDestroyed() || !buildings) return;
+      lowerToStreetLevel(buildings);
+      scene.primitives.add(buildings);
     })();
 
     // ── Αρχική κάμερα: Σεράφειο fly-in ───────────────────────────────────

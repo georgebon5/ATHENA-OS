@@ -15,12 +15,18 @@ const SEVERITY_COLOR: Record<number, string> = {
   5: "#ff4b3e",
 };
 
+const PULSE_COLOR = Cesium.Color.fromCssColorString("#ff5fb8");
+/** Κάρτα φωτογραφίας μόνο για τις πιο πρόσφατες (π.χ. του κριτή)· οι υπόλοιπες είναι κουκκίδα σοβαρότητας. */
+const PHOTO_CARDS = 3;
+/** Pulse μόνο για φρέσκες αναφορές, όχι για τις ιστορικές του seed (43 pulses μαζί στην εκκίνηση). */
+const PULSE_IF_YOUNGER_MS = 60_000;
+
 /**
- * Σχεδιάζει κάθε αναφορά πολίτη ως 3D billboard της φωτογραφίας στο
- * σημείο GPS, προσανατολισμένη κατά το heading της πυξίδας. Όταν έρχεται
- * νέα αναφορά (`report.created`), εμφανίζεται ένα pulse ring. Μόλις ο
- * agent στείλει `report.classified`, πάνω της μπαίνει ένα badge με
- * κατηγορία και σοβαρότητα.
+ * Σχεδιάζει τις αναφορές πολιτών στο σημείο GPS: οι PHOTO_CARDS πιο πρόσφατες
+ * ως billboard της φωτογραφίας με badge κατηγορίας/σοβαρότητας (μόλις έρθει
+ * `report.classified`), οι υπόλοιπες ως μικρή κουκκίδα στο χρώμα της σοβαρότητας.
+ * Νέα αναφορά (`report.created`) → pulse ring. Ύψη σχετικά με το έδαφος:
+ * η Πειραιώς είναι ~70 m πάνω από το ellipsoid στα Google 3D tiles.
  */
 export function ReportsLayer({ viewer }: Props) {
   const entities = useRef<Map<string, Cesium.Entity>>(new Map());
@@ -46,14 +52,9 @@ export function ReportsLayer({ viewer }: Props) {
           pulses.current.delete(id);
           continue;
         }
-        const radius = 4 + age * 18;
-        const alpha = 0.9 * (1 - age);
-        p.entity.ellipse = new Cesium.EllipseGraphics({
-          semiMajorAxis: radius,
-          semiMinorAxis: radius,
-          material: Cesium.Color.fromCssColorString("#ff5fb8").withAlpha(alpha),
-          height: 1,
-        });
+        // Δαχτυλίδι σε pixels: φθηνό point αντί για ellipse geometry που ξαναχτιζόταν κάθε frame
+        p.entity.point!.pixelSize = new Cesium.ConstantProperty(12 + age * 60);
+        p.entity.point!.outlineColor = new Cesium.ConstantProperty(PULSE_COLOR.withAlpha(0.9 * (1 - age)));
       }
       viewer.scene.requestRender();
       raf = requestAnimationFrame(tick);
@@ -75,8 +76,15 @@ export function ReportsLayer({ viewer }: Props) {
       | undefined;
     if (!ds) return;
 
-    for (const r of Object.values(reports)) {
-      upsertReportEntity(ds, entities.current, pulses.current, r);
+    const all = Object.values(reports);
+    const photoIds = new Set(
+      [...all]
+        .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+        .slice(0, PHOTO_CARDS)
+        .map((r) => r.id),
+    );
+    for (const r of all) {
+      upsertReportEntity(ds, entities.current, pulses.current, r, photoIds.has(r.id));
     }
     viewer.scene.requestRender();
   }, [reports, viewer]);
@@ -96,12 +104,13 @@ function upsertReportEntity(
   entities: Map<string, Cesium.Entity>,
   pulses: Map<string, { entity: Cesium.Entity; start: number }>,
   r: Report,
+  photo: boolean,
 ) {
   const pos = Cesium.Cartesian3.fromDegrees(r.location[0], r.location[1], 8);
   let ent = entities.get(r.id);
 
   const severity = r.classification?.severity ?? 3;
-  const color = SEVERITY_COLOR[severity] ?? "#ff5fb8";
+  const color = Cesium.Color.fromCssColorString(SEVERITY_COLOR[severity] ?? "#ff5fb8");
   const labelText = r.classification
     ? `${categoryLabel(r.classification.category)} · Σ${severity}`
     : "Νέα αναφορά";
@@ -110,48 +119,70 @@ function upsertReportEntity(
     ent = ds.entities.add({
       id: `report-${r.id}`,
       position: pos,
-      billboard: {
-        image: r.photoUrl,
-        width: 120,
-        height: 90,
-        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-        heightReference: Cesium.HeightReference.NONE,
-        disableDepthTestDistance: Number.POSITIVE_INFINITY,
-        color: Cesium.Color.WHITE,
-      },
-      label: {
-        text: labelText,
-        font: "600 11px Inter, sans-serif",
-        fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.fromCssColorString(color),
-        outlineWidth: 3,
-        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-        verticalOrigin: Cesium.VerticalOrigin.TOP,
-        pixelOffset: new Cesium.Cartesian2(0, 6),
-        showBackground: true,
-        backgroundColor: Cesium.Color.fromCssColorString("#0c0614").withAlpha(0.85),
-        backgroundPadding: new Cesium.Cartesian2(6, 4),
+      point: {
+        pixelSize: 9,
+        color,
+        outlineColor: Cesium.Color.fromCssColorString("#0c0614"),
+        outlineWidth: 1.5,
+        heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
       },
     });
     entities.set(r.id, ent);
 
     // Pulse ring για νέες αναφορές
-    const pulse = ds.entities.add({
-      id: `report-pulse-${r.id}`,
-      position: Cesium.Cartesian3.fromDegrees(r.location[0], r.location[1], 0.5),
-    });
-    pulses.set(r.id, { entity: pulse, start: performance.now() });
-  } else {
-    ent.position = new Cesium.ConstantPositionProperty(pos);
-    if (ent.billboard) ent.billboard.image = new Cesium.ConstantProperty(r.photoUrl);
-    if (ent.label) {
-      ent.label.text = new Cesium.ConstantProperty(labelText);
-      ent.label.outlineColor = new Cesium.ConstantProperty(
-        Cesium.Color.fromCssColorString(color),
-      );
+    if (Date.now() - Date.parse(r.createdAt) < PULSE_IF_YOUNGER_MS) {
+      const pulse = ds.entities.add({
+        id: `report-pulse-${r.id}`,
+        position: Cesium.Cartesian3.fromDegrees(r.location[0], r.location[1], 0.5),
+        point: {
+          pixelSize: 12,
+          color: Cesium.Color.TRANSPARENT,
+          outlineColor: PULSE_COLOR,
+          outlineWidth: 3,
+          heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        },
+      });
+      pulses.set(r.id, { entity: pulse, start: performance.now() });
     }
   }
+
+  ent.position = new Cesium.ConstantPositionProperty(pos);
+  ent.point!.color = new Cesium.ConstantProperty(color);
+  ent.point!.show = new Cesium.ConstantProperty(!photo);
+  if (!photo) {
+    // Χωρίς billboard δεν φορτώνεται καν η εικόνα
+    ent.billboard = undefined;
+    ent.label = undefined;
+    return;
+  }
+  if (!ent.billboard) {
+    ent.billboard = new Cesium.BillboardGraphics({
+      width: 120,
+      height: 90,
+      verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+      heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
+      color: Cesium.Color.WHITE,
+    });
+    ent.label = new Cesium.LabelGraphics({
+      font: "600 11px Inter, sans-serif",
+      fillColor: Cesium.Color.WHITE,
+      outlineWidth: 3,
+      style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+      verticalOrigin: Cesium.VerticalOrigin.TOP,
+      heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+      pixelOffset: new Cesium.Cartesian2(0, 6),
+      showBackground: true,
+      backgroundColor: Cesium.Color.fromCssColorString("#0c0614").withAlpha(0.85),
+      backgroundPadding: new Cesium.Cartesian2(6, 4),
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    });
+  }
+  ent.billboard.image = new Cesium.ConstantProperty(r.photoUrl);
+  ent.label!.text = new Cesium.ConstantProperty(labelText);
+  ent.label!.outlineColor = new Cesium.ConstantProperty(color);
 }
 
 export function categoryLabel(c: ReportCategory): string {

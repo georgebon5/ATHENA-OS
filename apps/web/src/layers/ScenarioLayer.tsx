@@ -176,8 +176,8 @@ function renderWayOverlay(
           taperPower: 0.9,
           color: Cesium.Color.fromCssColorString(opts.color).withAlpha(opts.alpha),
         }),
+        // Default (BOTH): με τα Google 3D tiles η σφαίρα/terrain είναι κρυμμένη, άρα TERRAIN = αόρατο
         clampToGround: true,
-        classificationType: Cesium.ClassificationType.TERRAIN,
       },
     });
 

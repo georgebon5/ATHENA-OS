@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useStore } from "@/store/useStore";
 import type { DemoBeat } from "@/types/contracts";
 import { LogoMark } from "./Logo";
-import { TimeSlider } from "./TimeSlider";
 import { useFootfall } from "@/opendata/useFootfall";
 import { useEnvSensors } from "@/opendata/useEnvSensors";
 import type { EnvReading } from "@/opendata/athensEnvClient";
@@ -64,11 +63,6 @@ export function TopBar() {
               Αθήνα · Πειραιώς 144 · Σεράφειο
             </div>
           </div>
-        </div>
-
-        {/* Χρόνος προσομοίωσης */}
-        <div className="pointer-events-auto mt-1">
-          <TimeSlider />
         </div>
 
         {/* Ζωντανή κατάσταση */}

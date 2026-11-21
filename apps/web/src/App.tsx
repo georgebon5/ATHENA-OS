@@ -11,7 +11,9 @@ import { ScenarioLayer } from "./layers/ScenarioLayer";
 import { ProjectsLayer } from "./layers/ProjectsLayer";
 import { PoisLayer } from "./layers/PoisLayer";
 import { EventsLayer } from "./layers/EventsLayer";
+import { AgentOrb } from "./hud/AgentOrb";
 import { Subtitles } from "./hud/Subtitles";
+import { CommandBar } from "./hud/CommandBar";
 import { ThinkingCard } from "./hud/ThinkingCard";
 import { ResultsCard } from "./hud/ResultsCard";
 import { TopBar } from "./hud/TopBar";
@@ -23,6 +25,7 @@ import { BacktestPanel } from "./hud/BacktestPanel";
 import { DecisionPanel } from "./hud/DecisionPanel";
 import { DirectorBar } from "./hud/DirectorBar";
 import { FPSOverlay } from "./hud/FPSOverlay";
+import { IntroPills } from "./hud/IntroPills";
 import { VoteCounter } from "./hud/VoteCounter";
 import { Minimap } from "./hud/Minimap";
 import { SunClock } from "./hud/SunClock";
@@ -109,6 +112,7 @@ export default function App() {
 
       {/* ── HUD ── */}
       <ErrorBoundary name="topbar"><TopBar /></ErrorBoundary>
+      <ErrorBoundary name="intro-pills"><IntroPills /></ErrorBoundary>
 
       <aside className={`pointer-events-none fixed left-6 ${DOCK_TOP} z-10 flex w-[340px] flex-col gap-3`}>
         <ErrorBoundary name="director"><DirectorBar /></ErrorBoundary>
@@ -127,13 +131,13 @@ export default function App() {
 
       <div className="pointer-events-none fixed inset-x-0 bottom-6 z-10 flex flex-col items-center gap-3 px-6">
         <ErrorBoundary name="subtitles"><Subtitles /></ErrorBoundary>
+        <div className="flex w-full max-w-2xl items-center gap-3">
+          <ErrorBoundary name="command"><CommandBar /></ErrorBoundary>
+        </div>
       </div>
 
       <SunClock />
       <ErrorBoundary name="nearby"><NearbyPanel viewer={viewer} /></ErrorBoundary>
-      <div className="pointer-events-none fixed bottom-6 right-6 z-10">
-        <ErrorBoundary name="minimap"><Minimap /></ErrorBoundary>
-      </div>
 
       {/* ── full-screen στιγμές ── */}
       <ErrorBoundary name="beat-banner"><BeatBanner /></ErrorBoundary>

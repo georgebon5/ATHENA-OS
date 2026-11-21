@@ -15,7 +15,7 @@ const SEVERITY_COLOR: Record<number, string> = {
   5: "#ff4b3e",
 };
 
-const PULSE_COLOR = Cesium.Color.fromCssColorString("#ff5fb8");
+const PULSE_COLOR = Cesium.Color.fromCssColorString("#79b7e4");
 /** Κάρτα φωτογραφίας μόνο για τις πιο πρόσφατες (π.χ. του κριτή)· οι υπόλοιπες είναι κουκκίδα σοβαρότητας. */
 const PHOTO_CARDS = 3;
 /** Pulse μόνο για φρέσκες αναφορές, όχι για τις ιστορικές του seed (43 pulses μαζί στην εκκίνηση). */
@@ -110,7 +110,7 @@ function upsertReportEntity(
   let ent = entities.get(r.id);
 
   const severity = r.classification?.severity ?? 3;
-  const color = Cesium.Color.fromCssColorString(SEVERITY_COLOR[severity] ?? "#ff5fb8");
+  const color = Cesium.Color.fromCssColorString(SEVERITY_COLOR[severity] ?? "#79b7e4");
   const labelText = r.classification
     ? `${categoryLabel(r.classification.category)} · Σ${severity}`
     : "Νέα αναφορά";

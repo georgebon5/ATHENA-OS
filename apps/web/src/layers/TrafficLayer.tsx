@@ -67,7 +67,7 @@ export function TrafficLayer({ viewer }: Props) {
     for (const _ of tripsRef.current) {
       coll.add({
         position: Cesium.Cartesian3.fromDegrees(0, 0, 0),
-        color: Cesium.Color.fromCssColorString("#ffd3ec"),
+        color: Cesium.Color.fromCssColorString("#e5f4ff"),
         pixelSize: 4,
         outlineColor: Cesium.Color.BLACK.withAlpha(0.6),
         outlineWidth: 1,

@@ -28,6 +28,31 @@ const ATTICA = { w: 23.3, s: 37.6, e: 24.2, n: 38.4 };
 
 const distance = (m: number) => (m < 1000 ? `${m} m` : `${(m / 1000).toFixed(1).replace(".", ",")} km`);
 
+// Ενδεικτικές φωτογραφίες (Unsplash, ελεύθερη άδεια, ελεγμένες μία-μία) για ό,τι δεν έχει πραγματική:
+// τα έργα και οι ιστορικές αναφορές του seed (εκείνες έχουν generated placeholder). Οι αληθινές δεν αντικαθίστανται.
+const U = (id: string) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=900&q=70`;
+const MOCK: Record<string, string[]> = {
+  pothole: [U("1657811146442-0d66d65dbe92"), U("1560782205-4dd83ceb0270")],
+  sidewalk_damage: [U("1717185691293-4ecd7072b847"), U("1777985075988-efde43fbcc78")],
+  waste: [U("1759401654832-ab2e73a14336"), U("1739569482726-511824b03679")],
+  lighting: [U("1565199975350-a723a63c053f"), U("1543518360-68b9612a7c8c")],
+  obstruction: [U("1774686251372-33e8fae4faef"), U("1786391756547-89c6c69b140c")],
+  graffiti: [U("1765230182334-e29feea9e49e"), U("1571446390594-87abc6667406")],
+  accessibility: [U("1653701888795-a23335d9aee2"), U("1699170551757-348ed5a52e48")],
+  street: [U("1655548624089-18e789cd3245"), U("1602769247692-126fdf1f1da6")],
+  roadworks: [U("1529792083865-d23889753466"), U("1503708928676-1cb796a0891e")],
+  park: [U("1641357441057-e798d0af9ed8"), U("1668009219418-4ece0d9e36c4")],
+};
+
+function mockPhotos(i: Votable, category?: string): string[] {
+  if (i.kind === "project") {
+    if (/φύτευ|πάρκ|πρασιν|δέντρ/i.test(i.titleEl)) return MOCK.park;
+    if (/λεωφορ|ποδηλατ|λωρίδ/i.test(i.titleEl)) return MOCK.street;
+    return MOCK.roadworks;
+  }
+  return MOCK[category ?? ""] ?? MOCK.street;
+}
+
 /**
  * Με το άνοιγμα: η θέση μου στον χάρτη + popup με ό,τι ψηφίζεται κοντά.
  * Κλικ → 3D close-up εκεί και οι φωτογραφίες του: αναφορά (+ ίδιο συμβάν από άλλους), διαβούλευση (πριν/μετά).
@@ -38,6 +63,7 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
   const [open, setOpen] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
   const [photos, setPhotos] = useState<string[] | null>(null);
+  const [mock, setMock] = useState(false);
   const selectedRef = useRef<string | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
@@ -57,9 +83,16 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
         if (selectedRef.current !== id) return;
         const dupes = (c?.reportId && reports[c.reportId]?.classification?.duplicates) || [];
         const urls = [c?.beforeUrl, c?.afterUrl, ...dupes.map((d) => reports[d]?.photoUrl)];
-        setPhotos([...new Set(urls.filter((u): u is string => !!u))]);
+        const seeded = !!c?.reportId?.startsWith("r-seed-"); // generated placeholder, όχι φωτογραφία
+        const real = seeded ? [] : [...new Set(urls.filter((u): u is string => !!u))];
+        setMock(real.length === 0);
+        setPhotos(real.length ? real : mockPhotos(i, c?.reportId && reports[c.reportId]?.classification?.category));
       })
-      .catch(() => selectedRef.current === id && setPhotos([]));
+      .catch(() => {
+        if (selectedRef.current !== id) return;
+        setMock(true);
+        setPhotos(mockPhotos(i));
+      });
   };
 
   useEffect(() => {
@@ -191,6 +224,7 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
                   {photos.map((u) => (
                     <img key={u} src={u} alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
                   ))}
+                  {mock && <p className="col-span-full -mt-1 text-[11px] text-chalk/40">Ενδεικτικές φωτογραφίες</p>}
                 </div>
               ) : (
                 <p className="mx-2.5 my-2 text-[12px] text-chalk/50">Δεν υπάρχουν φωτογραφίες για αυτό.</p>

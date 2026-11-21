@@ -11,7 +11,7 @@ const CATEGORY_COLOR: Record<string, string> = {
   park:      "#4ade80",
   culture:   "#a78bfa",
   sport:     "#38bdf8",
-  health:    "#f472b6",
+  health:    "#1a73e8",
   education: "#fbbf24",
 };
 

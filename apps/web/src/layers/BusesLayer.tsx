@@ -7,7 +7,7 @@ interface Props {
   viewer: Cesium.Viewer | null;
 }
 
-const BUS_COLOR = Cesium.Color.fromCssColorString("#ff5fb8");
+const BUS_COLOR = Cesium.Color.fromCssColorString("#79b7e4");
 /** ~130 km/h: πιο γρήγορη «μετακίνηση» ανάμεσα σε δύο fixes είναι GPS glitch, όχι λεωφορείο. */
 const MAX_BUS_MPS = 36;
 /** Ουρά: ένα σημείο ανά δευτερόλεπτο, τα τελευταία ~20 s. Με τον ίδιο ρυθμό ξαναμετράμε το έδαφος. */
@@ -149,7 +149,7 @@ export function BusesLayer({ viewer }: Props) {
             dimensions: new Cesium.Cartesian3(12, 3.5, 3),
             material: BUS_COLOR.withAlpha(0.95),
             outline: true,
-            outlineColor: Cesium.Color.fromCssColorString("#ffd3ec"),
+            outlineColor: Cesium.Color.fromCssColorString("#e5f4ff"),
           },
           polyline: {
             positions: new Cesium.CallbackProperty(() => trail.slice(), false),

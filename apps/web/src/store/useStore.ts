@@ -130,6 +130,8 @@ const initialLayers: Visibility = {
   votes: false,
   buses: true,
   projects: true,
+  pois: false,
+  events: false,
 };
 
 export const useStore = create<AthenaState>((set) => ({

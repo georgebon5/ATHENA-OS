@@ -114,3 +114,95 @@ export async function fetchProjects(): Promise<CityProject[]> {
   if (live !== null && live.length > 0) return live;
   return loadFixture();
 }
+
+// ── POIs & Events ──────────────────────────────────────────────────────────
+
+export interface CityPoi {
+  id: string;
+  name: string;
+  category: string;
+  coordinates: [number, number];
+}
+
+export interface CityEvent {
+  id: string;
+  title: string;
+  startDate: string;
+  coordinates: [number, number];
+}
+
+// Demo bbox: Πειραιώς / Γκάζι / Κεραμεικός / Θησείο
+const DEMO_BBOX = { lngMin: 23.695, lngMax: 23.735, latMin: 37.965, latMax: 37.995 };
+
+function inDemoBbox(lng: number, lat: number): boolean {
+  return lng >= DEMO_BBOX.lngMin && lng <= DEMO_BBOX.lngMax
+    && lat >= DEMO_BBOX.latMin && lat <= DEMO_BBOX.latMax;
+}
+
+function extractCoords(item: Record<string, unknown>): [number, number] | null {
+  const geom = item["geometry"] as GeoJSONGeometry | undefined;
+  if (geom?.type === "Point") {
+    const c = geom.coordinates as number[];
+    return [c[0], c[1]];
+  }
+  const lat = typeof item["lat"] === "number" ? item["lat"]
+    : typeof item["latitude"] === "number" ? item["latitude"] : null;
+  const lng = typeof item["lng"] === "number" ? item["lng"]
+    : typeof item["lon"] === "number" ? item["lon"]
+    : typeof item["longitude"] === "number" ? item["longitude"] : null;
+  if (lat != null && lng != null) return [lng, lat];
+  return null;
+}
+
+async function fetchSandbox(path: string): Promise<Record<string, unknown>[] | null> {
+  if (!API_KEY) return null;
+  try {
+    const res = await fetch(`${SANDBOX_BASE}${path}`, {
+      headers: { "X-API-Key": API_KEY },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as unknown;
+    return Array.isArray(data)
+      ? (data as Record<string, unknown>[])
+      : ((data as { features?: unknown[] }).features ?? []) as Record<string, unknown>[];
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchPois(): Promise<CityPoi[]> {
+  const items = await fetchSandbox("/v1/pois");
+  if (!items) return [];
+  return items
+    .map((item, i): CityPoi | null => {
+      const props = (item["properties"] as Record<string, unknown> | undefined) ?? item;
+      const coords = extractCoords(item);
+      if (!coords || !inDemoBbox(coords[0], coords[1])) return null;
+      return {
+        id: String(item["id"] ?? props["id"] ?? `poi-${i}`),
+        name: String(props["name"] ?? props["title"] ?? "Σημείο Ενδιαφέροντος"),
+        category: String(props["category"] ?? props["type"] ?? "Γενικό"),
+        coordinates: coords,
+      };
+    })
+    .filter((p): p is CityPoi => p !== null);
+}
+
+export async function fetchEvents(): Promise<CityEvent[]> {
+  const items = await fetchSandbox("/v1/events");
+  if (!items) return [];
+  return items
+    .map((item, i): CityEvent | null => {
+      const props = (item["properties"] as Record<string, unknown> | undefined) ?? item;
+      const coords = extractCoords(item);
+      if (!coords || !inDemoBbox(coords[0], coords[1])) return null;
+      return {
+        id: String(item["id"] ?? props["id"] ?? `event-${i}`),
+        title: String(props["title"] ?? props["name"] ?? "Εκδήλωση"),
+        startDate: String(props["startDate"] ?? props["start_date"] ?? props["date"] ?? ""),
+        coordinates: coords,
+      };
+    })
+    .filter((e): e is CityEvent => e !== null);
+}

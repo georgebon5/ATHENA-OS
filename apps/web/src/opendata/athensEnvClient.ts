@@ -1,4 +1,4 @@
-const CKAN_BASE = "https://opendata.cityofathens.gr/api/3/action";
+const CKAN_BASE = "/ckan-proxy/api/3/action";
 
 export interface EnvReading {
   stationId: number;

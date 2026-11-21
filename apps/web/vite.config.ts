@@ -28,6 +28,14 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    proxy: {
+      "/ckan-proxy": {
+        target: "https://opendata.cityofathens.gr",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/ckan-proxy/, ""),
+        secure: true,
+      },
+    },
   },
   build: {
     chunkSizeWarningLimit: 4096,

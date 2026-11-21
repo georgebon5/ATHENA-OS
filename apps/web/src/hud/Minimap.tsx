@@ -27,11 +27,12 @@ export function Minimap() {
     let raf = 0;
     const bindWhenReady = () => {
       const v = cameraController.viewerRef;
-      if (!v) {
+      if (!v || v.isDestroyed()) {
         raf = requestAnimationFrame(bindWhenReady);
         return;
       }
       const listener = () => {
+        if (v.isDestroyed()) return;
         const carto = v.camera.positionCartographic;
         setCam({
           lng: Cesium.Math.toDegrees(carto.longitude),
@@ -40,7 +41,9 @@ export function Minimap() {
         });
       };
       v.scene.postRender.addEventListener(listener);
-      cleanupRef.current = () => v.scene.postRender.removeEventListener(listener);
+      cleanupRef.current = () => {
+        if (!v.isDestroyed()) v.scene.postRender.removeEventListener(listener);
+      };
     };
     bindWhenReady();
     return () => {

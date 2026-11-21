@@ -20,7 +20,7 @@
       "payload": {
         "id": "r-fallback-001",
         "createdAt": "2026-11-21T10:12:00Z",
-        "photoUrl": "https://images.unsplash.com/photo-1518709268805-4e9042af2176?auto=format&fit=crop&w=600&q=70",
+        "photoUrl": "https://images.unsplash.com/photo-1742036953041-613dd835ee82?auto=format&fit=crop&w=600&q=75",
         "location": [23.7111, 37.9789],
         "heading": 48,
         "accuracyM": 6
@@ -44,7 +44,7 @@
       "payload": {
         "id": "r-fallback-001",
         "createdAt": "2026-11-21T10:12:00Z",
-        "photoUrl": "https://images.unsplash.com/photo-1518709268805-4e9042af2176?auto=format&fit=crop&w=600&q=70",
+        "photoUrl": "https://images.unsplash.com/photo-1742036953041-613dd835ee82?auto=format&fit=crop&w=600&q=75",
         "location": [23.7111, 37.9789],
         "heading": 48,
         "accuracyM": 6,

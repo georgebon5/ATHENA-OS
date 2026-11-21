@@ -39,6 +39,8 @@ export default function App() {
   const [viewer, setViewer] = useState<Cesium.Viewer | null>(null);
   const setWsConnected = useStore((s) => s.setWsConnected);
   const setNetworkWays = useStore((s) => s.setNetworkWays);
+  const sensorMode = useStore((s) => s.sensorMode);
+  const setSensorMode = useStore((s) => s.setSensorMode);
   const clientRef = useRef<WsClient | null>(null);
 
   useEffect(() => {
@@ -55,6 +57,16 @@ export default function App() {
   useEffect(() => {
     void fetchNetwork().then(setNetworkWays);
   }, [setNetworkWays]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === "f" || e.key === "F") setSensorMode(sensorMode === "flir" ? "normal" : "flir");
+      if (e.key === "n" || e.key === "N") setSensorMode(sensorMode === "nvg"  ? "normal" : "nvg");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [sensorMode, setSensorMode]);
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-ink">

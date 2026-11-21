@@ -16,6 +16,7 @@ import type {
 } from "@/types/contracts";
 
 export type Visibility = Record<LayerKey, boolean>;
+export type SensorMode = "normal" | "flir" | "nvg";
 
 export interface AgentSpeech {
   textEl: string;
@@ -87,6 +88,9 @@ export interface AthenaState {
   // υγεία υπηρεσιών + fallbacks (system.status, μόνο για τον director)
   systemStatus: SystemStatus | null;
 
+  // sensor mode (FLIR / NVG / normal)
+  sensorMode: SensorMode;
+
   // actions
   setWsConnected: (v: boolean, latencyMs?: number) => void;
   setBeat: (b: DemoBeat) => void;
@@ -115,6 +119,7 @@ export interface AthenaState {
   clearDrawPoints: () => void;
   setNetworkWays: (ways: Map<number, LngLat[][]>) => void;
   setSystemStatus: (st: SystemStatus) => void;
+  setSensorMode: (m: SensorMode) => void;
   reset: () => void;
 }
 
@@ -154,6 +159,7 @@ export const useStore = create<AthenaState>((set) => ({
   drawPoints: [],
   networkWays: new Map(),
   systemStatus: null,
+  sensorMode: "normal",
 
   setWsConnected: (v, latencyMs) =>
     set({ wsConnected: v, wsLatencyMs: latencyMs ?? null }),
@@ -198,6 +204,7 @@ export const useStore = create<AthenaState>((set) => ({
   clearDrawPoints: () => set({ drawPoints: [] }),
   setNetworkWays: (ways) => set({ networkWays: ways }),
   setSystemStatus: (st) => set({ systemStatus: st }),
+  setSensorMode: (m) => set({ sensorMode: m }),
   reset: () =>
     set({
       beat: "INTRO",

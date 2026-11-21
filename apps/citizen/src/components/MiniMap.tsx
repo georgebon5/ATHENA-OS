@@ -32,10 +32,6 @@ const AREAS: { name: string; at: LngLat }[] = [
   { name: "ΡΟΥΦ", at: [23.703, 37.9745] },
 ];
 
-function project([lng, lat]: LngLat): [number, number] {
-  return [((lng - BBOX.w) / (BBOX.e - BBOX.w)) * W, ((BBOX.n - lat) / (BBOX.n - BBOX.s)) * H];
-}
-
 export function MiniMap({
   at,
   heading,

@@ -18,7 +18,7 @@ export function ThermalLayer({ viewer }: Props) {
   const dsRef = useRef<Cesium.CustomDataSource | null>(null);
   const morphStart = useRef<number>(0);
 
-  const simResult = useStore((s) => s.simResult);
+  const simResult = useStore((s) => s.simResult ?? s.liveSimResult);
   const visible = useStore((s) => s.layers.thermal);
 
   // Create-once effect με tick για το morph.

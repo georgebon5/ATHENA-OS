@@ -90,6 +90,7 @@ export interface AthenaState {
 
   // sensor mode (FLIR / NVG / normal)
   sensorMode: SensorMode;
+  liveSimResult: SimResult | null;
 
   // actions
   setWsConnected: (v: boolean, latencyMs?: number) => void;
@@ -120,6 +121,7 @@ export interface AthenaState {
   setNetworkWays: (ways: Map<number, LngLat[][]>) => void;
   setSystemStatus: (st: SystemStatus) => void;
   setSensorMode: (m: SensorMode) => void;
+  setLiveSimResult: (r: SimResult | null) => void;
   reset: () => void;
 }
 
@@ -162,6 +164,7 @@ export const useStore = create<AthenaState>((set) => ({
   networkWays: new Map(),
   systemStatus: null,
   sensorMode: "normal",
+  liveSimResult: null,
 
   setWsConnected: (v, latencyMs) =>
     set({ wsConnected: v, wsLatencyMs: latencyMs ?? null }),
@@ -207,6 +210,7 @@ export const useStore = create<AthenaState>((set) => ({
   setNetworkWays: (ways) => set({ networkWays: ways }),
   setSystemStatus: (st) => set({ systemStatus: st }),
   setSensorMode: (m) => set({ sensorMode: m }),
+  setLiveSimResult: (r) => set({ liveSimResult: r }),
   reset: () =>
     set({
       beat: "INTRO",

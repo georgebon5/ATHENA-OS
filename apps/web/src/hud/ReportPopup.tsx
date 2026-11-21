@@ -79,9 +79,9 @@ export function ReportPopup() {
   };
 
   return (
-    <div className="pointer-events-auto fixed bottom-[100px] right-[300px] z-20 animate-fadeUp">
+    <div className="pointer-events-auto fixed bottom-16 left-2 z-20 animate-fadeUp">
       <div
-        className="glass-strong w-[320px] max-w-[92vw] overflow-hidden rounded-2xl shadow-glowStrong"
+        className="glass-strong w-[304px] max-w-[92vw] overflow-hidden rounded-2xl shadow-glowStrong"
         style={{ borderColor: sevColor, borderWidth: 1 }}
       >
         {/* Photo — only if real */}

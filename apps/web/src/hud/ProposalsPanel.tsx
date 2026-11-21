@@ -32,7 +32,7 @@ export function ProposalsPanel() {
   const selected = selectedId ? PROPOSALS.find((p) => p.id === selectedId) : null;
 
   return (
-    <div className="pointer-events-auto fixed top-[103px] left-6 z-10">
+    <div className="pointer-events-auto fixed bottom-[330px] left-2 z-10">
       {/* Collapsed pill */}
       {!expanded && (
         <motion.button

@@ -3,6 +3,9 @@ import { useStore } from "@/store/useStore";
 import type { DemoBeat } from "@/types/contracts";
 import { LogoMark } from "./Logo";
 import { TimeSlider } from "./TimeSlider";
+import { useFootfall } from "@/opendata/useFootfall";
+import { useEnvSensors } from "@/opendata/useEnvSensors";
+import type { EnvReading } from "@/opendata/athensEnvClient";
 
 const BEATS: { key: DemoBeat; label: string }[] = [
   { key: "INTRO", label: "Intro" },
@@ -35,6 +38,8 @@ export function TopBar() {
   const beat = useStore((s) => s.beat);
   const buses = useStore((s) => s.buses.length);
   const reports = useStore((s) => Object.keys(s.reports).length);
+  useFootfall(); // keep subscription alive for future beats
+  const { reading: envReading, loading: envLoading } = useEnvSensors();
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -71,6 +76,7 @@ export function TopBar() {
           <div className="flex items-center gap-4">
             <Stat label="λεωφορεία" value={buses} />
             <Stat label="αναφορές" value={reports} />
+            <EnvBadge reading={envReading} loading={envLoading} />
             <div className="text-right leading-none">
               <div className="data text-[26px] font-medium text-chalk">{clockFmt.format(now)}</div>
               <div className="mt-1 hud-label text-[10px] text-chalk/50">{dateFmt.format(now)}</div>
@@ -89,6 +95,33 @@ function Stat({ label, value }: { label: string; value: number }) {
     <div className="text-right leading-none">
       <div className="data text-[20px] text-holo">{String(value).padStart(2, "0")}</div>
       <div className="mt-1 hud-label text-[9px] text-chalk/45">{label}</div>
+    </div>
+  );
+}
+
+function EnvBadge({ reading, loading }: { reading: EnvReading | null; loading: boolean }) {
+  const aqiColor = (aqi: number) =>
+    aqi <= 2 ? "text-aurora" : aqi <= 5 ? "text-solar" : aqi <= 8 ? "text-warn" : "text-flare";
+  return (
+    <div className="text-right leading-none" title={reading ? `${reading.stationName} · ${reading.timestamp}` : "Αισθητήρες ατμόσφαιρας"}>
+      <div className="data flex items-baseline justify-end gap-2 text-[20px] text-chalk">
+        {loading || !reading ? (
+          <span className="text-chalk/30">—</span>
+        ) : (
+          <>
+            <span className="text-holo">{reading.temperature.toFixed(1)}°</span>
+            <span className={`text-[16px] font-semibold ${aqiColor(reading.aqi)}`}>AQI {reading.aqi}</span>
+          </>
+        )}
+      </div>
+      <div className="mt-1 flex items-center justify-end gap-1">
+        <span className="hud-label text-[9px] text-chalk/45">αισθητήρες</span>
+        {!loading && reading && (
+          <span className={`hud-label text-[8px] ${reading.source === "live" ? "text-aurora/60" : "text-chalk/25"}`}>
+            {reading.source === "live" ? "●" : "○"}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

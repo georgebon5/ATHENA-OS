@@ -17,13 +17,13 @@ export interface EnvReading {
 
 export const ENV_STATIONS: Record<
   number,
-  { resourceId: string; name: string; neighbourhood: string }
+  { resourceId: string; name: string; neighbourhood: string; lngLat: [number, number] }
 > = {
-  78: { resourceId: "261e3a98-bd04-41dd-bf32-653985f965be", name: "Γηπεδάκι Σεπολίων",  neighbourhood: "ΣΕΠΟΛΙΑ"   },
-  81: { resourceId: "6ee7c097-ee8c-40ba-9516-541d78f4972c", name: "Τρίτωνα Σεπολίων",   neighbourhood: "ΣΕΠΟΛΙΑ"   },
-  76: { resourceId: "56a4a304-a2e0-4765-b49f-c17963f3a8c0", name: "Βοτανικός Κήπος",     neighbourhood: "ΒΟΤΑΝΙΚΟΣ" },
-  82: { resourceId: "4c71e4a7-501a-4ec5-b0f6-54caf0c60a78", name: "Άτλας Σεπολίων",      neighbourhood: "ΣΕΠΟΛΙΑ"   },
-  77: { resourceId: "a34408f2-60e1-44a3-8edc-e399e1c023a8", name: "Θέατρο Κολωνού",      neighbourhood: "ΚΟΛΩΝΟΣ"   },
+  78: { resourceId: "261e3a98-bd04-41dd-bf32-653985f965be", name: "Γηπεδάκι Σεπολίων", neighbourhood: "ΣΕΠΟΛΙΑ",   lngLat: [23.7132, 37.9878] },
+  81: { resourceId: "6ee7c097-ee8c-40ba-9516-541d78f4972c", name: "Τρίτωνα Σεπολίων",  neighbourhood: "ΣΕΠΟΛΙΑ",   lngLat: [23.7141, 37.9868] },
+  76: { resourceId: "56a4a304-a2e0-4765-b49f-c17963f3a8c0", name: "Βοτανικός Κήπος",   neighbourhood: "ΒΟΤΑΝΙΚΟΣ", lngLat: [23.7035, 37.9788] },
+  82: { resourceId: "4c71e4a7-501a-4ec5-b0f6-54caf0c60a78", name: "Άτλας Σεπολίων",    neighbourhood: "ΣΕΠΟΛΙΑ",   lngLat: [23.7149, 37.9873] },
+  77: { resourceId: "a34408f2-60e1-44a3-8edc-e399e1c023a8", name: "Θέατρο Κολωνού",    neighbourhood: "ΚΟΛΩΝΟΣ",   lngLat: [23.7158, 37.9893] },
 };
 
 export const DEMO_ENV_STATIONS = [78, 81, 76, 82, 77];
@@ -120,6 +120,52 @@ export async function fetchNearestEnvReading(): Promise<EnvReading> {
     o3: null,
     pm2_5: null,
     source: "fixture",
+  };
+}
+
+import type { SimResult } from "@/types/contracts";
+
+/** Χτίζει ένα συνθετικό SimResult.thermal από live αισθητήρες για το FLIR layer. */
+export function buildLiveThermalResult(readings: EnvReading[]): SimResult {
+  const cells: SimResult["thermal"]["cells"] = [];
+  const SPREAD = 0.00045; // ~50m βήμα
+  const GRID = 3;         // 7×7 κελιά γύρω από κάθε σταθμό
+
+  for (const r of readings) {
+    const station = ENV_STATIONS[r.stationId];
+    if (!station) continue;
+    const [lng, lat] = station.lngLat;
+    for (let dx = -GRID; dx <= GRID; dx++) {
+      for (let dy = -GRID; dy <= GRID; dy++) {
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const noise = (Math.random() - 0.5) * 0.6;
+        const baseC = r.temperature + noise - dist * 0.15;
+        cells.push({
+          lngLat: [lng + dx * SPREAD, lat + dy * SPREAD],
+          baseC,
+          newC: baseC - 1.4 - dist * 0.05, // με δέντρα: -1.4°C hotspot
+        });
+      }
+    }
+  }
+
+  return {
+    scenarioId: "live-thermal",
+    status: "ok",
+    computeMs: 0,
+    traffic: {
+      segments: [],
+      corridorTravelTimeDeltaPct: { p10: 0, p50: 0, p90: 0 },
+      vehicleKmDeltaPct: { p10: 0, p50: 0, p90: 0 },
+      trips: [],
+    },
+    thermal: {
+      when: new Date().toISOString(),
+      cells,
+      hotspotDeltaC: { p10: -1.1, p50: -1.4, p90: -1.8 },
+    },
+    emissions: { co2DeltaPct: { p10: 0, p50: 0, p90: 0 } },
+    notes: ["Live θερμοκρασία από αισθητήρες opendata.cityofathens.gr"],
   };
 }
 

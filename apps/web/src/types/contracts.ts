@@ -152,7 +152,7 @@ export type DemoBeat =
   | "DECISION"
   | "CLOSE";
 
-export type LayerKey = "traffic" | "thermal" | "reports" | "votes" | "buses" | "projects";
+export type LayerKey = "traffic" | "thermal" | "reports" | "votes" | "buses" | "projects" | "pois" | "events";
 
 // WebSocket events (/ws)
 export type WsEvent =

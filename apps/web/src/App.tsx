@@ -9,6 +9,8 @@ import { VotesLayer } from "./layers/VotesLayer";
 import { DrawLayer } from "./layers/DrawLayer";
 import { ScenarioLayer } from "./layers/ScenarioLayer";
 import { ProjectsLayer } from "./layers/ProjectsLayer";
+import { PoisLayer } from "./layers/PoisLayer";
+import { EventsLayer } from "./layers/EventsLayer";
 import { AgentOrb } from "./hud/AgentOrb";
 import { Subtitles } from "./hud/Subtitles";
 import { ThinkingCard } from "./hud/ThinkingCard";
@@ -33,6 +35,7 @@ import { useStore } from "./store/useStore";
 import { WS_URL } from "./cesium/cesium-config";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { fetchNetwork } from "./network/networkClient";
+import { fetchAllEnvReadings, buildLiveThermalResult } from "./opendata/athensEnvClient";
 
 const DOCK_TOP = "top-[118px]";
 
@@ -42,6 +45,9 @@ export default function App() {
   const setNetworkWays = useStore((s) => s.setNetworkWays);
   const sensorMode = useStore((s) => s.sensorMode);
   const setSensorMode = useStore((s) => s.setSensorMode);
+  const simResult = useStore((s) => s.simResult);
+  const setLiveSimResult = useStore((s) => s.setLiveSimResult);
+  const setLayer = useStore((s) => s.setLayer);
   const clientRef = useRef<WsClient | null>(null);
 
   useEffect(() => {
@@ -58,6 +64,21 @@ export default function App() {
   useEffect(() => {
     void fetchNetwork().then(setNetworkWays);
   }, [setNetworkWays]);
+
+  // FLIR → thermal layer με live αισθητήρες
+  useEffect(() => {
+    if (sensorMode === "flir") {
+      setLayer("thermal", true);
+      if (!simResult) {
+        void fetchAllEnvReadings().then((readings) => {
+          if (readings.length > 0) setLiveSimResult(buildLiveThermalResult(readings));
+        });
+      }
+    } else {
+      setLayer("thermal", false);
+      setLiveSimResult(null);
+    }
+  }, [sensorMode, simResult, setLayer, setLiveSimResult]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -81,6 +102,8 @@ export default function App() {
       <ErrorBoundary name="draw"><DrawLayer viewer={viewer} /></ErrorBoundary>
       <ErrorBoundary name="scenario"><ScenarioLayer viewer={viewer} /></ErrorBoundary>
       <ErrorBoundary name="projects"><ProjectsLayer viewer={viewer} /></ErrorBoundary>
+      <ErrorBoundary name="pois"><PoisLayer viewer={viewer} /></ErrorBoundary>
+      <ErrorBoundary name="events"><EventsLayer viewer={viewer} /></ErrorBoundary>
 
       {/* ── εφέ οθόνης ── */}
       <div className="screen-grid" />

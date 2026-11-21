@@ -57,13 +57,15 @@ function mockPhotos(i: Votable, category?: string): string[] {
  * Με το άνοιγμα: η θέση μου στον χάρτη + popup με ό,τι ψηφίζεται κοντά.
  * Κλικ → 3D close-up εκεί και οι φωτογραφίες του: αναφορά (+ ίδιο συμβάν από άλλους), διαβούλευση (πριν/μετά).
  */
+interface PhotoPair { before: string; after: string | null; mock: boolean }
+
 export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
   const [here, setHere] = useState<LngLat | null>(null);
   const [items, setItems] = useState<Votable[]>([]);
   const [open, setOpen] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
-  const [photos, setPhotos] = useState<string[] | null>(null);
-  const [mock, setMock] = useState(false);
+  const [pair, setPair] = useState<PhotoPair | null>(null);
+  const [photoTab, setPhotoTab] = useState<"before" | "after">("before");
   const selectedRef = useRef<string | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
@@ -74,24 +76,24 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
     const id = selected === i.id ? null : i.id;
     selectedRef.current = id;
     setSelected(id);
-    setPhotos(null);
+    setPair(null);
+    setPhotoTab("before");
     if (!id) return;
-    // Κάθε item ψηφίζεται σαν διαβούλευση, άρα εκεί είναι και οι εικόνες του (τα έργα δεν έχουν)
     fetch(`${GATEWAY_URL}/api/consultations/${encodeURIComponent(id)}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((c: { beforeUrl?: string; afterUrl?: string; reportId?: string } | null) => {
         if (selectedRef.current !== id) return;
-        const dupes = (c?.reportId && reports[c.reportId]?.classification?.duplicates) || [];
-        const urls = [c?.beforeUrl, c?.afterUrl, ...dupes.map((d) => reports[d]?.photoUrl)];
-        const seeded = !!c?.reportId?.startsWith("r-seed-"); // generated placeholder, όχι φωτογραφία
-        const real = seeded ? [] : [...new Set(urls.filter((u): u is string => !!u))];
-        setMock(real.length === 0);
-        setPhotos(real.length ? real : mockPhotos(i, c?.reportId && reports[c.reportId]?.classification?.category));
+        const cat = c?.reportId ? reports[c.reportId]?.classification?.category : undefined;
+        const seeded = !!c?.reportId?.startsWith("r-seed-");
+        const fallbacks = mockPhotos(i, cat);
+        const before = (!seeded && c?.beforeUrl) ? c.beforeUrl : fallbacks[0];
+        const after  = (!seeded && c?.afterUrl)  ? c.afterUrl  : (fallbacks[1] ?? null);
+        setPair({ before, after, mock: seeded || (!c?.beforeUrl) });
       })
       .catch(() => {
         if (selectedRef.current !== id) return;
-        setMock(true);
-        setPhotos(mockPhotos(i));
+        const fallbacks = mockPhotos(i);
+        setPair({ before: fallbacks[0], after: fallbacks[1] ?? null, mock: true });
       });
   };
 
@@ -231,16 +233,36 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
                   </button>
                   {selected === i.id && (
                     <div className="mx-2.5 my-2 space-y-2">
-                      {photos === null ? (
+                      {pair === null ? (
                         <div className="aspect-[4/3] animate-pulse rounded-lg bg-white/5" />
-                      ) : photos.length ? (
-                        <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-2">
-                          {photos.map((u) => (
-                            <img key={u} src={u} alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
-                          ))}
-                          {mock && <p className="col-span-full -mt-1 text-[11px] text-chalk/40">Ενδεικτικές φωτογραφίες</p>}
-                        </div>
-                      ) : null}
+                      ) : (
+                        <>
+                          {/* Tabs Τώρα / Με βελτίωση */}
+                          <div className="flex gap-1 rounded-lg bg-white/5 p-1">
+                            <button
+                              type="button"
+                              onClick={() => setPhotoTab("before")}
+                              className={`flex-1 rounded-md py-1 text-[12px] font-semibold transition ${photoTab === "before" ? "bg-white/15 text-chalk" : "text-chalk/40 hover:text-chalk/70"}`}
+                            >
+                              Τώρα
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setPhotoTab("after")}
+                              disabled={!pair.after}
+                              className={`flex-1 rounded-md py-1 text-[12px] font-semibold transition ${photoTab === "after" ? "bg-holo/30 text-chalk" : "text-chalk/40 hover:text-chalk/70"} disabled:opacity-30`}
+                            >
+                              Με βελτίωση
+                            </button>
+                          </div>
+                          <img
+                            src={photoTab === "after" && pair.after ? pair.after : pair.before}
+                            alt={photoTab === "after" ? "Με βελτίωση" : "Τρέχουσα κατάσταση"}
+                            className="aspect-[4/3] w-full rounded-lg object-cover"
+                          />
+                          {pair.mock && <p className="text-[11px] text-chalk/40">Ενδεικτική φωτογραφία</p>}
+                        </>
+                      )}
                       <a
                         href={`/c/v/${i.id}`}
                         className="flex h-11 w-full items-center justify-center rounded-xl bg-yes font-bold text-[15px] text-void shadow-[0_0_16px_-4px_#4ade80] transition active:scale-[0.98]"
@@ -276,22 +298,19 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
                   </button>
                   {selected === i.id && (
                     <div className="mx-2.5 my-2 space-y-2">
-                      {photos === null ? (
+                      {pair === null ? (
                         <div className="aspect-[4/3] animate-pulse rounded-lg bg-white/5" />
-                      ) : photos.length ? (
-                        <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-2">
-                          {photos.map((u) => (
-                            <img key={u} src={u} alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
-                          ))}
-                          {mock && <p className="col-span-full -mt-1 text-[11px] text-chalk/40">Ενδεικτικές φωτογραφίες</p>}
-                        </div>
                       ) : (
-                        <p className="text-[12px] text-chalk/50">Δεν υπάρχουν φωτογραφίες.</p>
+                        <>
+                          <div className="flex gap-1 rounded-lg bg-white/5 p-1">
+                            <button type="button" onClick={() => setPhotoTab("before")} className={`flex-1 rounded-md py-1 text-[12px] font-semibold transition ${photoTab === "before" ? "bg-white/15 text-chalk" : "text-chalk/40 hover:text-chalk/70"}`}>Τώρα</button>
+                            <button type="button" onClick={() => setPhotoTab("after")} disabled={!pair.after} className={`flex-1 rounded-md py-1 text-[12px] font-semibold transition ${photoTab === "after" ? "bg-holo/30 text-chalk" : "text-chalk/40 hover:text-chalk/70"} disabled:opacity-30`}>Με βελτίωση</button>
+                          </div>
+                          <img src={photoTab === "after" && pair.after ? pair.after : pair.before} alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
+                          {pair.mock && <p className="text-[11px] text-chalk/40">Ενδεικτική φωτογραφία</p>}
+                        </>
                       )}
-                      <a
-                        href={`/c/v/${i.id}`}
-                        className="flex h-11 w-full items-center justify-center rounded-xl bg-yes font-bold text-[15px] text-void shadow-[0_0_16px_-4px_#4ade80] transition active:scale-[0.98]"
-                      >
+                      <a href={`/c/v/${i.id}`} className="flex h-11 w-full items-center justify-center rounded-xl bg-yes font-bold text-[15px] text-void shadow-[0_0_16px_-4px_#4ade80] transition active:scale-[0.98]">
                         ✓ Επικύρωσε / Vote
                       </a>
                     </div>

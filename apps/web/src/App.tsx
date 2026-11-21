@@ -25,6 +25,7 @@ import { DecisionPanel } from "./hud/DecisionPanel";
 import { DirectorBar } from "./hud/DirectorBar";
 import { FPSOverlay } from "./hud/FPSOverlay";
 import { IntroPills } from "./hud/IntroPills";
+import { CameraDirector } from "./layers/CameraDirector";
 import { VoteCounter } from "./hud/VoteCounter";
 import { SunClock } from "./hud/SunClock";
 import { NearbyPanel } from "./hud/NearbyPanel";
@@ -47,6 +48,7 @@ export default function App() {
   const simResult = useStore((s) => s.simResult);
   const setLiveSimResult = useStore((s) => s.setLiveSimResult);
   const setLayer = useStore((s) => s.setLayer);
+  const setBeat = useStore((s) => s.setBeat);
   const clientRef = useRef<WsClient | null>(null);
 
   useEffect(() => {
@@ -80,14 +82,19 @@ export default function App() {
   }, [sensorMode, simResult, setLayer, setLiveSimResult]);
 
   useEffect(() => {
+    const BEAT_KEYS: Record<string, Parameters<typeof setBeat>[0]> = {
+      "1": "INTRO", "2": "PITCH", "3": "SENSE",
+      "4": "SIMULATE", "5": "ENGAGE", "6": "DECISION", "7": "CLOSE",
+    };
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === "f" || e.key === "F") setSensorMode(sensorMode === "flir" ? "normal" : "flir");
       if (e.key === "n" || e.key === "N") setSensorMode(sensorMode === "nvg"  ? "normal" : "nvg");
+      if (BEAT_KEYS[e.key]) setBeat(BEAT_KEYS[e.key]);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [sensorMode, setSensorMode]);
+  }, [sensorMode, setSensorMode, setBeat]);
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-ink">
@@ -103,6 +110,7 @@ export default function App() {
       <ErrorBoundary name="projects"><ProjectsLayer viewer={viewer} /></ErrorBoundary>
       <ErrorBoundary name="pois"><PoisLayer viewer={viewer} /></ErrorBoundary>
       <ErrorBoundary name="events"><EventsLayer viewer={viewer} /></ErrorBoundary>
+      <CameraDirector viewer={viewer} />
 
       {/* ── εφέ οθόνης ── */}
       <div className="screen-grid" />

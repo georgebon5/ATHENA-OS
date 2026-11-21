@@ -11,7 +11,9 @@ import { ScenarioLayer } from "./layers/ScenarioLayer";
 import { ProjectsLayer } from "./layers/ProjectsLayer";
 import { PoisLayer } from "./layers/PoisLayer";
 import { EventsLayer } from "./layers/EventsLayer";
+import { AgentOrb } from "./hud/AgentOrb";
 import { Subtitles } from "./hud/Subtitles";
+import { CommandBar } from "./hud/CommandBar";
 import { ThinkingCard } from "./hud/ThinkingCard";
 import { ResultsCard } from "./hud/ResultsCard";
 import { TopBar } from "./hud/TopBar";
@@ -127,6 +129,10 @@ export default function App() {
 
       <div className="pointer-events-none fixed inset-x-0 bottom-6 z-10 flex flex-col items-center gap-3 px-6">
         <ErrorBoundary name="subtitles"><Subtitles /></ErrorBoundary>
+        <div className="flex w-full max-w-2xl items-center gap-3">
+          <ErrorBoundary name="orb"><AgentOrb /></ErrorBoundary>
+          <ErrorBoundary name="command"><CommandBar /></ErrorBoundary>
+        </div>
       </div>
 
       <SunClock />

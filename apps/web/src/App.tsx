@@ -29,6 +29,7 @@ import { CameraDirector } from "./layers/CameraDirector";
 import { VoteCounter } from "./hud/VoteCounter";
 import { SunClock } from "./hud/SunClock";
 import { NearbyPanel } from "./hud/NearbyPanel";
+import { PhonePreview } from "./hud/PhonePreview";
 import { WsClient } from "./ws/client";
 import { dispatchWs } from "./ws/dispatcher";
 import { useStore } from "./store/useStore";
@@ -144,6 +145,7 @@ export default function App() {
 
       <SunClock />
       <ErrorBoundary name="nearby"><NearbyPanel viewer={viewer} /></ErrorBoundary>
+      <ErrorBoundary name="phone"><PhonePreview /></ErrorBoundary>
 
       {/* ── full-screen στιγμές ── */}
       <ErrorBoundary name="beat-banner"><BeatBanner /></ErrorBoundary>

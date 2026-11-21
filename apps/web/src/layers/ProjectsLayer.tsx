@@ -64,6 +64,8 @@ export function ProjectsLayer({ viewer }: Props) {
           backgroundPadding: new Cesium.Cartesian2(5, 3),
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
           scale: 0.9,
+          // Στον top-down χάρτη (6 km) μόνο η κουκκίδα· το κείμενο στο close-up
+          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2500),
         },
       });
     }

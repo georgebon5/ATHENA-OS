@@ -39,6 +39,10 @@ class Settings:
     demo_dir: Path = field(default_factory=lambda: REPO_ROOT / "demo")
     citizen_dist: Path = field(default_factory=lambda: REPO_ROOT / "apps" / "citizen" / "dist")
     web_cache_dir: Path = field(default_factory=lambda: REPO_ROOT / "apps" / "web" / "public" / "demo" / "cache")
+    # Δημοτικά έργα (ίδιο αρχείο με το ProjectsLayer του web): ψηφίζονται στο /api/votables
+    projects_file: Path = field(
+        default_factory=lambda: REPO_ROOT / "apps" / "web" / "public" / "demo" / "fixtures" / "projects.geojson"
+    )
 
     @property
     def media_dir(self) -> Path:

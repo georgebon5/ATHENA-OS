@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import json
+import math
 import uuid
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 from athena_contracts import ConsultationCreate, Vote
@@ -20,6 +24,59 @@ vote_limiter = RateLimiter(min_interval_s=0.8)
 MAX_MEDIA_BYTES = 20 * 1024 * 1024
 # Χοντρικά η Αττική: ό,τι είναι έξω το αγνοούμε (η θέση είναι προαιρετική)
 ATTICA = (23.3, 37.6, 24.2, 38.4)
+SERAFIO = (23.7108, 37.9787)
+CATEGORY_EL = {
+    "pothole": "Λακκούβα",
+    "sidewalk_damage": "Φθορά πεζοδρομίου",
+    "waste": "Απορρίμματα",
+    "lighting": "Φωτισμός",
+    "obstruction": "Εμπόδιο",
+    "heat_exposure": "Θερμική έκθεση",
+    "graffiti": "Graffiti",
+    "accessibility": "Προσβασιμότητα",
+}
+
+
+@lru_cache(maxsize=2)
+def load_projects(path: Path) -> dict[str, dict[str, Any]]:
+    try:
+        features = json.loads(path.read_text(encoding="utf-8")).get("features", [])
+    except (OSError, ValueError):
+        return {}
+    return {
+        f["properties"]["id"]: {"title": f["properties"]["title"], "lngLat": tuple(f["geometry"]["coordinates"][:2])}
+        for f in features
+        if f.get("geometry", {}).get("type") == "Point"
+    }
+
+
+def report_title(row: Any) -> str:
+    return CATEGORY_EL.get((row.classification or {}).get("category"), "Αναφορά πολίτη")
+
+
+def distance_m(a: tuple[float, float], b: tuple[float, float]) -> float:
+    dx = (b[0] - a[0]) * 111_320 * math.cos(math.radians(a[1]))
+    return math.hypot(dx, (b[1] - a[1]) * 111_320)
+
+
+async def virtual_consultation(ctx: AppContext, cid: str) -> dict[str, Any] | None:
+    """Αναφορές (r-<id>) και δημοτικά έργα (p-<id>) ψηφίζονται σαν διαβουλεύσεις: ίδια ψήφος, tally, οθόνη ψήφου."""
+    kind, _, key = cid.partition("-")
+    base = {"id": cid, "scenarioId": "", "publicUrl": public_url_for(ctx, cid)}
+    if kind == "r":
+        async with ctx.db.engine.connect() as conn:
+            row = (
+                await conn.execute(
+                    select(tables.reports).where(tables.reports.c.id == key, tables.reports.c.hidden.is_(False))
+                )
+            ).first()
+        if row is None:
+            return None
+        question = f"{report_title(row)}: να το φτιάξει ο Δήμος με προτεραιότητα;"
+        return base | {"reportId": key, "beforeUrl": row.photo_url, "afterUrl": row.photo_url, "questionEl": question}
+    if kind == "p" and (p := load_projects(ctx.settings.projects_file).get(key)):
+        return base | {"beforeUrl": "", "afterUrl": "", "questionEl": f"Συμφωνείς με το έργο «{p['title']}»;"}
+    return None
 
 
 def public_consultation(ctx: AppContext, c: dict[str, Any], public: bool) -> dict[str, Any]:
@@ -31,9 +88,11 @@ def public_consultation(ctx: AppContext, c: dict[str, Any], public: bool) -> dic
 async def load_consultation(ctx: AppContext, cid: str) -> dict[str, Any]:
     async with ctx.db.engine.connect() as conn:
         row = (await conn.execute(select(tables.consultations).where(tables.consultations.c.id == cid))).first()
-    if row is None:
-        raise HTTPException(404, "Η διαβούλευση δεν βρέθηκε")
-    return row.data
+    if row is not None:
+        return row.data
+    if virtual := await virtual_consultation(ctx, cid):
+        return virtual
+    raise HTTPException(404, "Η διαβούλευση δεν βρέθηκε")
 
 
 async def save_consultation(ctx: AppContext, c: dict[str, Any]) -> None:
@@ -114,6 +173,46 @@ async def cast_vote(
     if new_device:
         set_device_cookie(request, resp, did)
     return resp
+
+
+@router.get("/votables")
+async def votables(
+    lng: float, lat: float, radiusM: float = 1500, limit: int = 12, ctx: AppContext = Depends(get_ctx)
+) -> list[dict[str, Any]]:
+    """Ό,τι ψηφίζεται κοντά μου: ανοιχτές διαβουλεύσεις, αναφορές πολιτών, δημοτικά έργα (κοντινότερα πρώτα)."""
+    async with ctx.db.engine.connect() as conn:
+        reports = (await conn.execute(select(tables.reports).where(tables.reports.c.hidden.is_(False)))).all()
+        consultations = (await conn.execute(select(tables.consultations))).all()
+    report_at = {r.id: (r.lng, r.lat) for r in reports}
+    # ponytail: διαβούλευση χωρίς αναφορά → στο Σεράφειο (όλα τα σενάρια του demo είναι στην Πειραιώς)
+    items = [
+        ("consultation", row.data["id"], row.data["questionEl"], report_at.get(row.data.get("reportId"), SERAFIO))
+        for row in consultations
+    ]
+    items += [("report", f"r-{r.id}", report_title(r), (r.lng, r.lat)) for r in reports]
+    items += [
+        ("project", f"p-{pid}", p["title"], p["lngLat"]) for pid, p in load_projects(ctx.settings.projects_file).items()
+    ]
+    near = sorted((distance_m((lng, lat), at), kind, cid, title, at) for kind, cid, title, at in items)
+    out = []
+    for d, kind, cid, title, at in near[:limit]:
+        if d > radiusM:
+            break
+        t = await ctx.tallies.tally(cid)
+        out.append(
+            {
+                "id": cid,
+                "kind": kind,
+                "titleEl": title,
+                "lngLat": list(at),
+                "distanceM": round(d),
+                "publicUrl": public_url_for(ctx, cid),
+                "yes": t["yes"],
+                "no": t["no"],
+                "maybe": t["maybe"],
+            }
+        )
+    return out
 
 
 @router.post("/media", status_code=201)

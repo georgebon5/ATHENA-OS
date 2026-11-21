@@ -25,6 +25,7 @@ COPY services/gateway/pyproject.toml services/gateway/uv.lock ./
 RUN uv sync --frozen --no-dev
 COPY packages/contracts/fixtures /repo/packages/contracts/fixtures
 COPY apps/web/public/demo/cache /repo/apps/web/public/demo/cache
+COPY apps/web/public/demo/fixtures/projects.geojson /repo/apps/web/public/demo/fixtures/projects.geojson
 COPY services/gateway/app ./app
 COPY --from=citizen /repo/apps/citizen/dist /repo/apps/citizen/dist
 EXPOSE 8000

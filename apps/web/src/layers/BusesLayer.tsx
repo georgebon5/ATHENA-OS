@@ -170,6 +170,7 @@ export function BusesLayer({ viewer }: Props) {
             verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
             pixelOffset: new Cesium.Cartesian2(0, -18),
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
+            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2500), // όχι στον χάρτη
           },
         });
         entitiesRef.current.set(b.id, ent);

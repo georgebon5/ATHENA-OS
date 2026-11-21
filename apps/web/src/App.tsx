@@ -25,6 +25,7 @@ import { FPSOverlay } from "./hud/FPSOverlay";
 import { VoteCounter } from "./hud/VoteCounter";
 import { Minimap } from "./hud/Minimap";
 import { SunClock } from "./hud/SunClock";
+import { NearbyPanel } from "./hud/NearbyPanel";
 import { CommandBar } from "./hud/CommandBar";
 import { WsClient } from "./ws/client";
 import { dispatchWs } from "./ws/dispatcher";
@@ -112,6 +113,7 @@ export default function App() {
       </div>
 
       <SunClock />
+      <ErrorBoundary name="nearby"><NearbyPanel viewer={viewer} /></ErrorBoundary>
       <div className="pointer-events-none fixed bottom-6 right-6 z-10">
         <ErrorBoundary name="minimap"><Minimap /></ErrorBoundary>
       </div>

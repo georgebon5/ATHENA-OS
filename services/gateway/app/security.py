@@ -24,6 +24,7 @@ PUBLIC_HTTP = [
     ("GET", re.compile(r"^/api/consultations/[^/]+$")),
     ("GET", re.compile(r"^/api/consultations/[^/]+/tally$")),
     ("POST", re.compile(r"^/api/consultations/[^/]+/votes$")),
+    ("GET", re.compile(r"^/api/votables$")),
     ("POST", re.compile(r"^/api/reports$")),
     ("GET", re.compile(r"^/api/reports/[^/]+$")),
 ]

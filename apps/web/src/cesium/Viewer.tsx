@@ -1,10 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./cesium-config";
 import * as Cesium from "cesium";
 import "cesium/Build/Cesium/Widgets/widgets.css";
 import { CESIUM_ION_TOKEN, GOOGLE_MAPS_API_KEY } from "./cesium-config";
 import { SERAFIO_LNGLAT, HEIGHT } from "./constants";
-import { cameraController } from "./cameraShots";
+import { cameraController, SHOTS } from "./cameraShots";
 import { useStore } from "@/store/useStore";
 
 const SENSOR_FILTER = {
@@ -58,6 +58,11 @@ export function CesiumViewer({ onReady }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const viewerRef = useRef<Cesium.Viewer | null>(null);
   const sensorMode = useStore((s) => s.sensorMode);
+  const [closeUp, setCloseUp] = useState(false);
+  const backToMap = () => {
+    cameraController.flyTo(SHOTS.mapOverview);
+    setCloseUp(false);
+  };
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -138,12 +143,13 @@ export function CesiumViewer({ onReady }: Props) {
     // ── 3D Assets (async, προαιρετικά) ───────────────────────────────────
     (async () => {
       // 16 = default Cesium. 8 = ένα επίπεδο λεπτομέρειας πάνω, αλλά περισσότερα tiles/FPS κόστος
-      // + cache/collision που βάζει το createGooglePhotorealistic3DTileset και χάνονται στο fromIonAssetId
+      // + cache που βάζει το createGooglePhotorealistic3DTileset και χάνεται στο fromIonAssetId.
+      // ΟΧΙ enableCollision: μαζί με το lowerToStreetLevel πετάει την κάμερα χιλιόμετρα ψηλότερα ~4s μετά
+      // το load (μετρημένο: 6000 → 13341 m), χαλώντας την αρχική λήψη και κάθε camera.flyTo.
       const detail = {
         maximumScreenSpaceError: 16,
         cacheBytes: 1536 * 1024 * 1024,
         maximumCacheOverflowBytes: 1024 * 1024 * 1024,
-        enableCollision: true,
       };
       try {
         if (GOOGLE_MAPS_API_KEY || CESIUM_ION_TOKEN) {
@@ -177,24 +183,37 @@ export function CesiumViewer({ onReady }: Props) {
       scene.primitives.add(buildings);
     })();
 
-    // ── Αρχική κάμερα: Σεράφειο fly-in ───────────────────────────────────
+    // ── Αρχική κάμερα: κάθετα από πάνω, η πόλη σαν επίπεδος χάρτης (2D look) ──
     viewer.camera.setView({
-      destination: Cesium.Cartesian3.fromDegrees(
-        SERAFIO_LNGLAT[0],
-        SERAFIO_LNGLAT[1] - 0.005,
-        HEIGHT.overview,
-      ),
-      orientation: {
-        heading: Cesium.Math.toRadians(0),
-        pitch: Cesium.Math.toRadians(-40),
-        roll: 0,
-      },
+      destination: Cesium.Cartesian3.fromDegrees(SERAFIO_LNGLAT[0], SERAFIO_LNGLAT[1], HEIGHT.map),
+      orientation: { heading: 0, pitch: Cesium.Math.toRadians(-90), roll: 0 },
     });
+
+    // ── Map lookup: κλικ σε σημείο → 3D close-up, Esc → πίσω στον χάρτη ──
+    const clicks = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+    clicks.setInputAction((ev: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
+      if (useStore.getState().drawMode) return; // τα κλικ τα θέλει το DrawLayer
+      const target = scene.pickPosition(ev.position);
+      if (!target) return;
+      cameraController.closeUp(target);
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    cameraController.onCloseUp = setCloseUp;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === "Escape") {
+        cameraController.flyTo(SHOTS.mapOverview);
+        setCloseUp(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
 
     cameraController.attach(viewer);
     onReady?.(viewer);
 
     return () => {
+      window.removeEventListener("keydown", onKey);
+      clicks.destroy();
+      cameraController.onCloseUp = null;
       cameraController.detach();
       viewer.destroy();
       viewerRef.current = null;
@@ -202,10 +221,20 @@ export function CesiumViewer({ onReady }: Props) {
   }, [onReady]);
 
   return (
-    <div
-      ref={containerRef}
-      className="absolute inset-0 transition-[filter] duration-700"
-      style={{ filter: SENSOR_FILTER[sensorMode] }}
-    />
+    <>
+      <div
+        ref={containerRef}
+        className="absolute inset-0 transition-[filter] duration-700"
+        style={{ filter: SENSOR_FILTER[sensorMode] }}
+      />
+      {closeUp && (
+        <button
+          onClick={backToMap}
+          className="glass fixed bottom-6 left-6 z-10 rounded-full px-4 py-2 text-sm text-chalk/85 hover:text-chalk"
+        >
+          ← Χάρτης <span className="ml-1 text-chalk/40">Esc</span>
+        </button>
+      )}
+    </>
   );
 }

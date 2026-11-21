@@ -160,6 +160,31 @@ def test_invalid_vote(client):
     assert client.post("/api/consultations/nope/votes", json={"choice": "yes"}).status_code == 404
 
 
+def test_votables_near_me_vote_like_consultations(client):
+    report = post_report(client).json()
+    at = {"lng": 23.7108, "lat": 37.9787}
+    items = client.get("/api/votables", params=at, headers=PUBLIC).json()  # και από κινητά (tunnel)
+    kinds = {i["kind"] for i in items}
+    assert {"report", "project"} <= kinds
+    assert [i["distanceM"] for i in items] == sorted(i["distanceM"] for i in items)
+    assert all(i["distanceM"] <= 1500 for i in items)
+
+    mine = next(i for i in items if i["id"] == f"r-{report['id']}")
+    assert mine["lngLat"] == [23.7111, 37.9789] and mine["distanceM"] < 50
+    project = next(i for i in items if i["kind"] == "project")
+    c = client.get(f"/api/consultations/{project['id']}", headers=PUBLIC).json()
+    assert project["titleEl"] in c["questionEl"] and c["beforeUrl"] == ""
+
+    url = f"/api/consultations/{mine['id']}/votes"
+    assert client.post(url, json={"choice": "yes"}, headers={"x-device-id": "phone-cccc-3"}).json()["yes"] == 1
+    again = client.get("/api/votables", params=at).json()
+    assert next(i for i in again if i["id"] == mine["id"])["yes"] == 1
+
+    assert client.get("/api/consultations/r-nope").status_code == 404
+    assert client.get("/api/consultations/p-nope").status_code == 404
+    assert client.get("/api/votables", params={"lng": 23.9, "lat": 38.1}).json() == []  # μακριά: τίποτα
+
+
 # ---------------- δημόσιο δίκτυο (tunnel) ----------------
 def test_public_requests_only_reach_citizen_endpoints(client):
     c = open_consultation(client)

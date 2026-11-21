@@ -36,7 +36,19 @@ function project([lng, lat]: LngLat): [number, number] {
   return [((lng - BBOX.w) / (BBOX.e - BBOX.w)) * W, ((BBOX.n - lat) / (BBOX.n - BBOX.s)) * H];
 }
 
-export function MiniMap({ at, heading, approximate }: { at: LngLat; heading: number | null; approximate?: boolean }) {
+export function MiniMap({
+  at,
+  heading,
+  approximate,
+  points = [],
+  caption,
+}: {
+  at: LngLat;
+  heading: number | null;
+  approximate?: boolean;
+  points?: { lngLat: LngLat; color: string }[];
+  caption?: string;
+}) {
   const inside = at[0] >= BBOX.w && at[0] <= BBOX.e && at[1] >= BBOX.s && at[1] <= BBOX.n;
   const [x, y] = project(inside ? at : SERAFIO);
   const [sx, sy] = project(SERAFIO);
@@ -76,6 +88,10 @@ export function MiniMap({ at, heading, approximate }: { at: LngLat; heading: num
         <text x={sx + 8} y={sy + 14} fill="#fff1ea" fontSize="9" opacity="0.8">
           Σεράφειο
         </text>
+        {points.map((p, i) => {
+          const [px, py] = project(p.lngLat);
+          return <circle key={i} cx={px} cy={py} r="4.5" fill={p.color} stroke="#0c0614" strokeWidth="1.5" />;
+        })}
         <circle cx={x} cy={y} r="34" fill="url(#glow)" />
         {heading != null && (
           <path d={`M ${x} ${y} L ${x - 11} ${y - 30} A 32 32 0 0 1 ${x + 11} ${y - 30} Z`} fill="#ff5fb8" opacity="0.35" transform={`rotate(${heading} ${x} ${y})`} />
@@ -86,7 +102,7 @@ export function MiniMap({ at, heading, approximate }: { at: LngLat; heading: num
         <circle cx={x} cy={y} r="7" fill="#ff5fb8" stroke="#0c0614" strokeWidth="2.5" />
       </svg>
       <figcaption className="flex justify-between gap-3 border-t border-holo/10 px-4 py-2.5 text-[13px] text-chalk/75">
-        <span>{approximate ? "Κατά προσέγγιση: Σεράφειο" : inside ? "Η αναφορά σου στον χάρτη" : "Εκτός της περιοχής του χάρτη"}</span>
+        <span>{caption ?? (approximate ? "Κατά προσέγγιση: Σεράφειο" : inside ? "Η αναφορά σου στον χάρτη" : "Εκτός της περιοχής του χάρτη")}</span>
         <span className="font-mono tabular-nums text-chalk/50">
           {at[1].toFixed(5)}, {at[0].toFixed(5)}
         </span>

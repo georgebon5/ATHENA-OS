@@ -90,7 +90,12 @@ export function VoteScreen({ id }: { id: string }) {
   return (
     <Shell subtitle="Ανοιχτή διαβούλευση · Δήμος Αθηναίων">
       <div className="space-y-5">
-        <BeforeAfter before={consultation.beforeUrl} after={consultation.afterUrl} />
+        {/* Έργα: χωρίς εικόνα. Αναφορές: μία φωτογραφία (πριν = μετά), όχι slider */}
+        {consultation.beforeUrl && consultation.beforeUrl === consultation.afterUrl ? (
+          <img src={consultation.beforeUrl} alt="" className="aspect-[4/3] w-full rounded-2xl object-cover ring-1 ring-holo/30" />
+        ) : (
+          consultation.beforeUrl && <BeforeAfter before={consultation.beforeUrl} after={consultation.afterUrl} />
+        )}
         <h1 className="text-[23px] font-bold leading-snug">{consultation.questionEl}</h1>
 
         {showResults && tally ? (

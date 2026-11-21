@@ -87,6 +87,8 @@ export function dispatchWs(ev: WsEvent): void {
       return;
 
     case "vote.tally":
+      // Ψήφοι σε αναφορές (r-…) / έργα (p-…) από το «κοντά μου» δεν αγγίζουν τον μετρητή του ENGAGE
+      if (/^[rp]-/.test(ev.payload.consultationId)) return;
       s.setVoteTally({
         consultationId: ev.payload.consultationId,
         yes: ev.payload.yes,

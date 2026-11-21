@@ -56,6 +56,22 @@ export const castVote = (id: string, choice: VoteChoice, location?: [number, num
     body: JSON.stringify({ consultationId: id, choice, ...(location ? { location } : {}), ...(comment ? { comment } : {}) }),
   }).then((r) => json<VoteTally>(r));
 
+/** Ό,τι ψηφίζεται κοντά μου (gateway /api/votables). Τοπικός τύπος: δεν είναι (ακόμα) στα contracts. */
+export interface Votable {
+  id: string; // ψηφίζεται στο /v/{id} σαν διαβούλευση (c-…, r-<αναφορά>, p-<έργο>)
+  kind: "consultation" | "report" | "project";
+  titleEl: string;
+  lngLat: [number, number];
+  distanceM: number;
+  publicUrl: string;
+  yes: number;
+  no: number;
+  maybe: number;
+}
+
+export const getVotables = ([lng, lat]: [number, number]) =>
+  fetch(`/api/votables?lng=${lng}&lat=${lat}`, { headers: headers() }).then((r) => json<Votable[]>(r));
+
 export const getReport = (id: string) =>
   fetch(`/api/reports/${encodeURIComponent(id)}`, { headers: headers() }).then((r) => json<Report>(r));
 

@@ -18,6 +18,14 @@ export interface ShotSpec extends Omit<FlyToSpec, "shot"> {}
  * μεταφράζουμε σε συγκεκριμένη θέση.
  */
 export const SHOTS: Record<string, ShotSpec> = {
+  // Κάθετα από πάνω: η πόλη διαβάζεται σαν επίπεδος χάρτης (αρχική οθόνη, Esc)
+  mapOverview: {
+    lngLat: SERAFIO_LNGLAT,
+    heightM: HEIGHT.map,
+    headingDeg: 0,
+    pitchDeg: -90,
+    durationS: 2.5,
+  },
   orbitSerafio: {
     lngLat: SERAFIO_LNGLAT,
     heightM: HEIGHT.flyover,
@@ -51,6 +59,8 @@ export const SHOTS: Record<string, ShotSpec> = {
 class CameraController {
   private viewer: Cesium.Viewer | null = null;
   private orbitHandle: number | null = null;
+  /** Ο Viewer δείχνει το «← Χάρτης» όσο είμαστε σε close-up του map lookup (κλικ ή «κοντά σου») */
+  onCloseUp: ((on: boolean) => void) | null = null;
 
   attach(v: Cesium.Viewer) {
     this.viewer = v;
@@ -85,6 +95,25 @@ class CameraController {
         roll: 0,
       },
       duration: Math.max(0.1, merged.durationS),
+      easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
+    });
+  }
+
+  /**
+   * Map lookup: από τον top-down χάρτη, βουτιά σε κεκλιμένο 3D close-up με το σημείο στο κέντρο
+   * (heading -25°, pitch -25°, ~350 m, 3.5 s).
+   */
+  closeUp(target: Cesium.Cartesian3, rangeM = 350) {
+    if (!this.viewer) return;
+    this.stopOrbit();
+    this.onCloseUp?.(true);
+    this.viewer.camera.flyToBoundingSphere(new Cesium.BoundingSphere(target, 30), {
+      offset: new Cesium.HeadingPitchRange(
+        Cesium.Math.toRadians(-25),
+        Cesium.Math.toRadians(-25),
+        rangeM,
+      ),
+      duration: 3.5,
       easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
     });
   }

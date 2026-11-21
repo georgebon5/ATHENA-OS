@@ -130,16 +130,12 @@ export default function App() {
       <div className="pointer-events-none fixed inset-x-0 bottom-6 z-10 flex flex-col items-center gap-3 px-6">
         <ErrorBoundary name="subtitles"><Subtitles /></ErrorBoundary>
         <div className="flex w-full max-w-2xl items-center gap-3">
-          <ErrorBoundary name="orb"><AgentOrb /></ErrorBoundary>
           <ErrorBoundary name="command"><CommandBar /></ErrorBoundary>
         </div>
       </div>
 
       <SunClock />
       <ErrorBoundary name="nearby"><NearbyPanel viewer={viewer} /></ErrorBoundary>
-      <div className="pointer-events-none fixed bottom-6 right-6 z-10">
-        <ErrorBoundary name="minimap"><Minimap /></ErrorBoundary>
-      </div>
 
       {/* ── full-screen στιγμές ── */}
       <ErrorBoundary name="beat-banner"><BeatBanner /></ErrorBoundary>

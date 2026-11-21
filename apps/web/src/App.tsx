@@ -25,6 +25,7 @@ import { BacktestPanel } from "./hud/BacktestPanel";
 import { DecisionPanel } from "./hud/DecisionPanel";
 import { DirectorBar } from "./hud/DirectorBar";
 import { FPSOverlay } from "./hud/FPSOverlay";
+import { IntroPills } from "./hud/IntroPills";
 import { VoteCounter } from "./hud/VoteCounter";
 import { Minimap } from "./hud/Minimap";
 import { SunClock } from "./hud/SunClock";
@@ -111,6 +112,7 @@ export default function App() {
 
       {/* ── HUD ── */}
       <ErrorBoundary name="topbar"><TopBar /></ErrorBoundary>
+      <ErrorBoundary name="intro-pills"><IntroPills /></ErrorBoundary>
 
       <aside className={`pointer-events-none fixed left-6 ${DOCK_TOP} z-10 flex w-[340px] flex-col gap-3`}>
         <ErrorBoundary name="director"><DirectorBar /></ErrorBoundary>

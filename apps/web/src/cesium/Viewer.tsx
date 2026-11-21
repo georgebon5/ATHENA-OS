@@ -5,6 +5,13 @@ import "cesium/Build/Cesium/Widgets/widgets.css";
 import { CESIUM_ION_TOKEN, GOOGLE_MAPS_API_KEY } from "./cesium-config";
 import { SERAFIO_LNGLAT, HEIGHT } from "./constants";
 import { cameraController } from "./cameraShots";
+import { useStore } from "@/store/useStore";
+
+const SENSOR_FILTER = {
+  normal: "none",
+  flir:   "grayscale(1) invert(1) sepia(1) saturate(6) hue-rotate(293deg) contrast(1.35) brightness(0.88)",
+  nvg:    "grayscale(1) brightness(1.6) contrast(1.9) sepia(1) hue-rotate(72deg) saturate(3.5)",
+};
 
 interface Props {
   onReady?: (viewer: Cesium.Viewer) => void;
@@ -50,6 +57,7 @@ function buildSatelliteLayer(): Cesium.ImageryLayer {
 export function CesiumViewer({ onReady }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const viewerRef = useRef<Cesium.Viewer | null>(null);
+  const sensorMode = useStore((s) => s.sensorMode);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -193,5 +201,11 @@ export function CesiumViewer({ onReady }: Props) {
     };
   }, [onReady]);
 
-  return <div ref={containerRef} className="absolute inset-0" />;
+  return (
+    <div
+      ref={containerRef}
+      className="absolute inset-0 transition-[filter] duration-700"
+      style={{ filter: SENSOR_FILTER[sensorMode] }}
+    />
+  );
 }

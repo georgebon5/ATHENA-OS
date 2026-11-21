@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useStore } from "@/store/useStore";
+import type { SensorMode } from "@/store/useStore";
 import type { DemoBeat } from "@/types/contracts";
 import { LogoMark } from "./Logo";
 import { useFootfall } from "@/opendata/useFootfall";
@@ -35,6 +36,8 @@ export function TopBar() {
   const ws = useStore((s) => s.wsConnected);
   const latency = useStore((s) => s.wsLatencyMs);
   const beat = useStore((s) => s.beat);
+  const sensorMode = useStore((s) => s.sensorMode);
+  const setSensorMode = useStore((s) => s.setSensorMode);
   const buses = useStore((s) => s.buses.length);
   const reports = useStore((s) => Object.keys(s.reports).length);
   useFootfall(); // keep subscription alive for future beats
@@ -75,6 +78,7 @@ export function TopBar() {
               <div className="data text-[26px] font-medium text-chalk">{clockFmt.format(now)}</div>
               <div className="mt-1 hud-label text-[10px] text-chalk/50">{dateFmt.format(now)}</div>
             </div>
+            <SensorBadge mode={sensorMode} onToggle={(m) => setSensorMode(m)} />
             <LiveDot ok={ws} latency={latency} />
           </div>
           <BeatTrack idx={beatIdx} />
@@ -130,6 +134,25 @@ function LiveDot({ ok, latency }: { ok: boolean; latency: number | null }) {
       {ok ? "live" : "offline"}
       {ok && latency !== null && <span className="data normal-case tracking-normal text-chalk/50">{Math.round(latency)}ms</span>}
     </div>
+  );
+}
+
+function SensorBadge({ mode, onToggle }: { mode: SensorMode; onToggle: (m: SensorMode) => void }) {
+  const next: Record<SensorMode, SensorMode> = { normal: "flir", flir: "nvg", nvg: "normal" };
+  const label: Record<SensorMode, string> = { normal: "VIS", flir: "FLIR", nvg: "NVG" };
+  const color: Record<SensorMode, string> = {
+    normal: "text-chalk/50",
+    flir:   "!text-warn !bg-warn/15 !border-warn/40 shadow-[0_0_12px_rgba(255,216,77,0.4)]",
+    nvg:    "!text-aurora !bg-aurora/15 !border-aurora/40 shadow-[0_0_12px_rgba(46,230,201,0.4)]",
+  };
+  return (
+    <button
+      className={`pointer-events-auto chip transition-all duration-300 ${color[mode]}`}
+      onClick={() => onToggle(next[mode])}
+      title="F = FLIR · N = NVG"
+    >
+      {label[mode]}
+    </button>
   );
 }
 

@@ -92,6 +92,16 @@ export interface AthenaState {
   sensorMode: SensorMode;
   liveSimResult: SimResult | null;
 
+  // picked report / project (κλικ σε κουκκίδα)
+  pickedReportId: string | null;
+  pickedProjectId: string | null;
+
+  // urgent navigation button (εμφανίζεται μετά από agent "reports" action)
+  showUrgentNav: boolean;
+
+  // reports list panel
+  showReportsList: boolean;
+
   // actions
   setWsConnected: (v: boolean, latencyMs?: number) => void;
   setBeat: (b: DemoBeat) => void;
@@ -122,11 +132,15 @@ export interface AthenaState {
   setSystemStatus: (st: SystemStatus) => void;
   setSensorMode: (m: SensorMode) => void;
   setLiveSimResult: (r: SimResult | null) => void;
+  setPickedReportId: (id: string | null) => void;
+  setPickedProjectId: (id: string | null) => void;
+  setShowUrgentNav: (v: boolean) => void;
+  setShowReportsList: (v: boolean) => void;
   reset: () => void;
 }
 
 const initialLayers: Visibility = {
-  traffic: true,
+  traffic: false,
   thermal: false,
   reports: true,
   votes: false,
@@ -165,6 +179,10 @@ export const useStore = create<AthenaState>((set) => ({
   systemStatus: null,
   sensorMode: "normal",
   liveSimResult: null,
+  pickedReportId: null,
+  pickedProjectId: null,
+  showUrgentNav: false,
+  showReportsList: false,
 
   setWsConnected: (v, latencyMs) =>
     set({ wsConnected: v, wsLatencyMs: latencyMs ?? null }),
@@ -211,6 +229,10 @@ export const useStore = create<AthenaState>((set) => ({
   setSystemStatus: (st) => set({ systemStatus: st }),
   setSensorMode: (m) => set({ sensorMode: m }),
   setLiveSimResult: (r) => set({ liveSimResult: r }),
+  setPickedReportId: (id) => set({ pickedReportId: id }),
+  setPickedProjectId: (id) => set({ pickedProjectId: id }),
+  setShowUrgentNav: (v) => set({ showUrgentNav: v }),
+  setShowReportsList: (v) => set({ showReportsList: v }),
   reset: () =>
     set({
       beat: "INTRO",

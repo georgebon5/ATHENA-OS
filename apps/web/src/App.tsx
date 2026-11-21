@@ -3,7 +3,6 @@ import * as Cesium from "cesium";
 import { CesiumViewer } from "./cesium/Viewer";
 import { BusesLayer } from "./layers/BusesLayer";
 import { ReportsLayer } from "./layers/ReportsLayer";
-import { TrafficLayer } from "./layers/TrafficLayer";
 import { ThermalLayer } from "./layers/ThermalLayer";
 import { VotesLayer } from "./layers/VotesLayer";
 import { DrawLayer } from "./layers/DrawLayer";
@@ -29,7 +28,11 @@ import { CameraDirector } from "./layers/CameraDirector";
 import { VoteCounter } from "./hud/VoteCounter";
 import { SunClock } from "./hud/SunClock";
 import { NearbyPanel } from "./hud/NearbyPanel";
-import { PhonePreview } from "./hud/PhonePreview";
+
+import { ReportPopup } from "./hud/ReportPopup";
+import { ReportsListPanel } from "./hud/ReportsListPanel";
+import { ProposalsPanel } from "./hud/ProposalsPanel";
+import { ProjectPopup } from "./hud/ProjectPopup";
 import { WsClient } from "./ws/client";
 import { dispatchWs } from "./ws/dispatcher";
 import { useStore } from "./store/useStore";
@@ -103,7 +106,7 @@ export default function App() {
       <ErrorBoundary name="viewer"><CesiumViewer onReady={setViewer} /></ErrorBoundary>
       <ErrorBoundary name="buses"><BusesLayer viewer={viewer} /></ErrorBoundary>
       <ErrorBoundary name="reports"><ReportsLayer viewer={viewer} /></ErrorBoundary>
-      <ErrorBoundary name="traffic"><TrafficLayer viewer={viewer} /></ErrorBoundary>
+      {/* TrafficLayer αφαιρέθηκε — ενεργοποιείται μόνο κατά τη διάρκεια simulation */}
       <ErrorBoundary name="thermal"><ThermalLayer viewer={viewer} /></ErrorBoundary>
       <ErrorBoundary name="votes"><VotesLayer viewer={viewer} /></ErrorBoundary>
       <ErrorBoundary name="draw"><DrawLayer viewer={viewer} /></ErrorBoundary>
@@ -112,10 +115,6 @@ export default function App() {
       <ErrorBoundary name="pois"><PoisLayer viewer={viewer} /></ErrorBoundary>
       <ErrorBoundary name="events"><EventsLayer viewer={viewer} /></ErrorBoundary>
       <CameraDirector viewer={viewer} />
-
-      {/* ── εφέ οθόνης (pointer-events-none ώστε να μην μπλοκάρουν το Cesium) ── */}
-      <div className="screen-grid pointer-events-none" />
-      <div className="screen-fx pointer-events-none" />
 
       {/* ── HUD ── */}
       <ErrorBoundary name="topbar"><TopBar /></ErrorBoundary>
@@ -145,7 +144,11 @@ export default function App() {
 
       <SunClock />
       <ErrorBoundary name="nearby"><NearbyPanel viewer={viewer} /></ErrorBoundary>
-      <ErrorBoundary name="phone"><PhonePreview /></ErrorBoundary>
+
+      <ErrorBoundary name="reports-list"><ReportsListPanel /></ErrorBoundary>
+      <ErrorBoundary name="report-popup"><ReportPopup /></ErrorBoundary>
+      <ErrorBoundary name="proposals"><ProposalsPanel /></ErrorBoundary>
+      <ErrorBoundary name="project-popup"><ProjectPopup /></ErrorBoundary>
 
       {/* ── full-screen στιγμές ── */}
       <ErrorBoundary name="beat-banner"><BeatBanner /></ErrorBoundary>

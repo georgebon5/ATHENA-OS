@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { triggerText, triggerBeat } from "@/director/directorApi";
+import { askAthena } from "@/agent/athenaAgent";
 import { useStore } from "@/store/useStore";
 
 const SUGGESTIONS = [
@@ -37,13 +38,23 @@ export function CommandBar() {
     if (!q || loading) return;
     setLoading(true);
     setText("");
-    try {
-      await triggerText(q);
-    } catch {
-      // silent — agent might be starting up
-    } finally {
-      setLoading(false);
+
+    // Πρώτα δοκιμάζουμε τον πραγματικό agent (gateway → agent service)
+    const ok = await triggerText(q);
+    if (ok) {
+      // Περιμένουμε 3s — αν ο agent απαντήσει, τέλεια
+      const before = useStore.getState().thinking.length + (useStore.getState().agentSpeech ? 1 : 0);
+      await new Promise((r) => setTimeout(r, 3000));
+      const after = useStore.getState().thinking.length + (useStore.getState().agentSpeech ? 1 : 0);
+      if (after !== before) {
+        setLoading(false);
+        return;
+      }
     }
+
+    // Agent δεν απάντησε → LLM fallback (Claude) → keyword fallback
+    await askAthena(q);
+    setLoading(false);
   };
 
   return (

@@ -13,12 +13,21 @@ const STATUS_COLOR: Record<CityProject["status"], string> = {
   completed:   "#2ee6c9",
 };
 
+/** Shared project list — popup reads from here. */
+let _projectList: CityProject[] = [];
+export function getProjectById(id: string): CityProject | undefined {
+  return _projectList.find((p) => p.id === id);
+}
+
 export function ProjectsLayer({ viewer }: Props) {
   const [projects, setProjects] = useState<CityProject[]>([]);
   const visible = useStore((s) => s.layers.projects);
 
   useEffect(() => {
-    void fetchProjects().then(setProjects);
+    void fetchProjects().then((ps) => {
+      _projectList = ps;
+      setProjects(ps);
+    });
   }, []);
 
   useEffect(() => {
@@ -26,48 +35,51 @@ export function ProjectsLayer({ viewer }: Props) {
     const ds = new Cesium.CustomDataSource("projects");
     viewer.dataSources.add(ds);
 
+    const startTime = performance.now();
+
     for (const p of projects) {
       const [lng, lat] = p.coordinates;
       const hex = STATUS_COLOR[p.status];
       const color = Cesium.Color.fromCssColorString(hex);
       const isActive = p.status === "in_progress";
-      const tooltipLines = [
-        p.title,
-        p.district ?? "",
-        p.budget != null ? `€${(p.budget / 1000).toFixed(0)}χιλ.` : "",
-      ]
-        .filter(Boolean)
-        .join("\n");
+
+      const pos = Cesium.Cartesian3.fromDegrees(lng, lat, 3);
 
       ds.entities.add({
         id: `project-${p.id}`,
-        position: Cesium.Cartesian3.fromDegrees(lng, lat, 3),
+        position: pos,
         point: {
-          pixelSize: isActive ? 11 : 8,
-          color: color.withAlpha(p.status === "planned" ? 0.45 : 0.85),
+          pixelSize: isActive ? 11 : 7,
+          color: color.withAlpha(isActive ? 0.95 : (p.status === "planned" ? 0.5 : 0.85)),
           outlineColor: color,
-          outlineWidth: isActive ? 2 : 1,
-          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          outlineWidth: isActive ? 2.5 : 1,
+          heightReference: Cesium.HeightReference.NONE,
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
-        },
-        label: {
-          text: tooltipLines,
-          font: "500 10px Inter, sans-serif",
-          fillColor: Cesium.Color.WHITE,
-          outlineColor: color,
-          outlineWidth: 2,
-          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-          pixelOffset: new Cesium.Cartesian2(0, -16),
-          showBackground: true,
-          backgroundColor: Cesium.Color.fromCssColorString("#0c0614").withAlpha(0.78),
-          backgroundPadding: new Cesium.Cartesian2(5, 3),
-          disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          scale: 0.9,
-          // Στον top-down χάρτη (6 km) μόνο η κουκκίδα· το κείμενο στο close-up
-          distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 2500),
         },
       });
+
+      // Pulse ring for in_progress projects — expanding/fading point
+      if (isActive) {
+        ds.entities.add({
+          id: `project-pulse-${p.id}`,
+          position: pos,
+          point: {
+            pixelSize: new Cesium.CallbackProperty(() => {
+              const t = ((performance.now() - startTime) % 2200) / 2200;
+              viewer.scene.requestRender();
+              return 11 + t * 28;
+            }, false) as unknown as Cesium.Property,
+            color: new Cesium.CallbackProperty(() => {
+              const t = ((performance.now() - startTime) % 2200) / 2200;
+              return color.withAlpha(0.5 * (1 - t));
+            }, false) as unknown as Cesium.Property,
+            outlineWidth: 0,
+            outlineColor: Cesium.Color.TRANSPARENT,
+            heightReference: Cesium.HeightReference.NONE,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          },
+        });
+      }
     }
 
     viewer.scene.requestRender();

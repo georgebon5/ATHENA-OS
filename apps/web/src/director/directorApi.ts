@@ -27,11 +27,14 @@ export async function triggerBeat(beat: DemoBeat): Promise<void> {
   }
 }
 
-export async function triggerText(text: string): Promise<void> {
+/** @returns true if the gateway accepted the prompt */
+export async function triggerText(text: string): Promise<boolean> {
   try {
-    await post("/api/agent/prompt", { textEl: text });
+    const r = await post("/api/agent/prompt", { textEl: text });
+    return r.ok;
   } catch (err) {
     console.warn("[director] agent prompt failed", err);
+    return false;
   }
 }
 

@@ -4,8 +4,8 @@ import { useStore } from "@/store/useStore";
 import { submitScenario, DEMO_PRESETS } from "@/director/scenarioApi";
 
 /**
- * Πάνελ κάτω αριστερά — δύο modes:
- * 1. Preset σενάρια Πειραιώς (δέντρα / bus lane / δροσερό / κλείσιμο)
+ * Panel κάτω αριστερά — δύο modes:
+ * 1. Preset buttons: Πειραιώς (δέντρα / bus lane / δροσερό / κλείσιμο)
  * 2. Draw mode: ο χρήστης κλικάρει σημεία για custom add_trees
  */
 export function DrawPanel() {
@@ -33,9 +33,10 @@ export function DrawPanel() {
     if (points.length === 0) return;
     setLoading("draw");
     try {
-      await submitScenario(`Σχεδιασμένο σενάριο — ${points.length} δέντρα`, [
-        { type: "add_trees", geometry: [...points], count: points.length },
-      ]);
+      await submitScenario(
+        `Σχεδιασμένο σενάριο — ${points.length} δέντρα`,
+        [{ type: "add_trees", geometry: [...points], count: points.length }],
+      );
     } finally {
       setLoading(null);
     }
@@ -50,14 +51,17 @@ export function DrawPanel() {
   };
 
   return (
-    <div className="pointer-events-auto flex flex-col-reverse items-start gap-2">
+    <div className="pointer-events-auto fixed left-6 bottom-6 flex flex-col gap-2 items-start">
+      {/* Trigger pill */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className={`glass !rounded-full flex items-center gap-2 px-4 py-2 text-[13px] transition-all ${open ? "shadow-glow" : ""}`}
+        className={`glass rounded-full px-4 py-2 text-sm flex items-center gap-2 transition-all ${
+          open ? "ring-2 ring-athena" : ""
+        }`}
       >
-        <span className="text-holo">◈</span>
-        <span className="hud-label !text-chalk/85">σενάρια πειραιώς</span>
-        <span className="text-[10px] text-chalk/50">{open ? "▼" : "▲"}</span>
+        <span className="text-base">🗺</span>
+        <span>Σενάρια Πειραιώς</span>
+        <span className="text-chalk/50 text-xs">{open ? "▲" : "▼"}</span>
       </button>
 
       <AnimatePresence>
@@ -67,63 +71,97 @@ export function DrawPanel() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.97 }}
             transition={{ duration: 0.18 }}
-            className="glass-strong holo-corners w-80 p-4"
+            className="glass-strong rounded-2xl p-4 w-72"
           >
-            <div className="hud-label mb-3 text-[10px]">γρήγορα σενάρια</div>
+            <div className="text-[11px] uppercase tracking-widest text-chalk/50 mb-3">
+              Γρήγορα σενάρια demo
+            </div>
+
+            {/* Preset buttons */}
             <div className="grid grid-cols-2 gap-2">
               {DEMO_PRESETS.map((p) => {
-                const active = activeScenario?.title === p.titleEl;
+                const isActive = activeScenario?.title === p.titleEl;
+                const accentMap: Record<string, string> = {
+                  trees: "hover:border-cool/40 hover:bg-cool/[0.08]",
+                  bus_lane: "hover:border-warn/40 hover:bg-warn/[0.08]",
+                  cool: "hover:border-athena/40 hover:bg-athena/[0.08]",
+                  close: "hover:border-hot/40 hover:bg-hot/[0.08]",
+                };
+                const activeMap: Record<string, string> = {
+                  trees: "bg-cool/10 ring-1 ring-cool/50 text-cool",
+                  bus_lane: "bg-warn/10 ring-1 ring-warn/50 text-warn",
+                  cool: "bg-athena/10 ring-1 ring-athena/50 text-athena",
+                  close: "bg-hot/10 ring-1 ring-hot/50 text-hot",
+                };
                 return (
                   <button
                     key={p.id}
                     onClick={() => runPreset(p.id)}
                     disabled={loading !== null}
-                    className={`rounded-xl px-3 py-3 text-left text-[13px] font-semibold transition-all disabled:opacity-50 ${
-                      active
-                        ? "bg-holo/15 text-holo shadow-[inset_0_0_0_1px_rgba(255,95,184,0.6),0_0_18px_-4px_rgba(255,95,184,0.6)]"
-                        : "bg-holo/[0.04] text-chalk shadow-[inset_0_0_0_1px_rgba(255,95,184,0.14)] hover:bg-holo/10"
-                    }`}
+                    className={`rounded-xl px-3 py-2.5 text-sm font-medium text-left transition-all border border-chalk/[0.06]
+                      ${isActive
+                        ? activeMap[p.id] ?? "bg-athena/20 ring-1 ring-athena text-athena"
+                        : `bg-rail text-chalk ${accentMap[p.id] ?? ""}`
+                      } disabled:opacity-50`}
                   >
-                    {loading === p.id ? <span className="animate-pulse">…</span> : p.labelEl}
+                    {loading === p.id ? (
+                      <span className="animate-pulse">…</span>
+                    ) : (
+                      p.labelEl
+                    )}
                   </button>
                 );
               })}
             </div>
 
-            <div className="divider my-4" />
+            {/* Divider */}
+            <div className="border-t border-chalk/10 my-3" />
 
+            {/* Draw mode */}
             {!drawMode ? (
-              <button onClick={() => setDrawMode(true)} className="btn-ghost w-full !justify-start">
-                ✎ Σχεδίασε δικά σου σημεία
+              <button
+                onClick={() => setDrawMode(true)}
+                className="w-full rounded-xl bg-rail hover:bg-rail/70 px-3 py-2 text-sm text-chalk/80 text-left"
+              >
+                ✏️ Σχεδίασε custom σημεία
               </button>
             ) : (
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-[13px] text-holo">
-                  <span className="h-2 w-2 rounded-full bg-holo animate-breathe" />
-                  <span className="data">{points.length}</span> σημεία · κλικ στον χάρτη
+                <div className="flex items-center gap-2 text-sm text-athena">
+                  <span className="w-2 h-2 rounded-full bg-athena animate-breathe" />
+                  {points.length} σημεία — κλικ στον χάρτη
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={clear} disabled={points.length === 0} className="btn-ghost flex-1 text-[12px] disabled:opacity-40">
+                  <button
+                    onClick={clear}
+                    disabled={points.length === 0}
+                    className="flex-1 rounded-lg bg-rail px-3 py-1.5 text-xs text-chalk/80 disabled:opacity-40"
+                  >
                     Καθάρισε
                   </button>
-                  <button onClick={commitDraw} disabled={points.length === 0 || loading !== null} className="btn-holo flex-1 text-[12px]">
-                    {loading === "draw" ? "…" : "ΥΠΟΛΟΓΙΣΕ"}
+                  <button
+                    onClick={commitDraw}
+                    disabled={points.length === 0 || loading !== null}
+                    className="flex-1 rounded-lg bg-athena text-ink font-medium px-3 py-1.5 text-xs disabled:opacity-40"
+                  >
+                    {loading === "draw" ? "…" : "Υπολόγισε"}
                   </button>
                 </div>
                 <button
-                  onClick={() => {
-                    setDrawMode(false);
-                    clear();
-                  }}
-                  className="mt-1 text-[12px] text-chalk/40 hover:text-chalk/70"
+                  onClick={() => { setDrawMode(false); clear(); }}
+                  className="text-xs text-chalk/40 hover:text-chalk/70 mt-1"
                 >
                   ✕ Άκυρο
                 </button>
               </div>
             )}
 
+            {/* Clear active scenario */}
             {activeScenario && !drawMode && (
-              <button onClick={clearAll} className="mt-3 w-full text-left text-[12px] text-chalk/40 hover:text-chalk/70">
+              <button
+                onClick={clearAll}
+                className="mt-3 text-xs text-chalk/40 hover:text-chalk/70 w-full text-left"
+              >
                 ✕ Καθάρισε τρέχον σενάριο
               </button>
             )}

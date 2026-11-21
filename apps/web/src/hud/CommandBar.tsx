@@ -11,17 +11,24 @@ const SUGGESTIONS = [
 ];
 
 /**
- * Γραμμή εντολών της ATHENA (πάντα ορατή). Enter → gateway /api/agent/prompt → agent.
+ * Persistent command bar κάτω από το AgentOrb.
+ * Πάντα ορατό — δεν χρειάζεται director mode.
+ * Enter → στέλνει στον agent (POST /command).
  */
 export function CommandBar() {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [suggIdx, setSuggIdx] = useState(0);
+  const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const wsConnected = useStore((s) => s.wsConnected);
 
+  // Rotate placeholder suggestion
   useEffect(() => {
-    const t = window.setInterval(() => setSuggIdx((i) => (i + 1) % SUGGESTIONS.length), 3500);
+    const t = window.setInterval(
+      () => setSuggIdx((i) => (i + 1) % SUGGESTIONS.length),
+      3500,
+    );
     return () => clearInterval(t);
   }, []);
 
@@ -32,54 +39,72 @@ export function CommandBar() {
     setText("");
     try {
       await triggerText(q);
+    } catch {
+      // silent — agent might be starting up
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="pointer-events-auto w-full max-w-xl">
+    <div className="pointer-events-auto fixed left-1/2 -translate-x-1/2 bottom-6 w-full max-w-xl px-4">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        className="glass-strong holo-corners flex items-center gap-3 px-4 py-3"
+        className="glass-strong rounded-2xl px-4 py-3 flex items-center gap-3 transition-all duration-200"
+        style={focused ? {
+          boxShadow: "0 0 0 1px rgba(123,209,255,0.4), 0 0 28px rgba(123,209,255,0.14), 0 12px 60px rgba(0,0,0,0.65), inset 0 1px 0 rgba(123,209,255,0.08)"
+        } : undefined}
       >
-        <span className="data text-[15px] text-holo">❯</span>
+        {/* WS indicator */}
+        <span
+          className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors ${
+            wsConnected ? "bg-cool" : "bg-chalk/30"
+          }`}
+          title={wsConnected ? "Συνδεδεμένο" : "Αποσυνδεδεμένο"}
+        />
+
         <input
           ref={inputRef}
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && void submit()}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           placeholder={SUGGESTIONS[suggIdx]}
-          className="min-w-0 flex-1 bg-transparent text-[15px] text-chalk outline-none placeholder:text-chalk/35"
+          className="flex-1 bg-transparent outline-none text-sm text-chalk placeholder:text-chalk/35 min-w-0"
         />
-        {!text && !loading && <span className="data h-5 w-[2px] bg-holo animate-blink" aria-hidden />}
-        <span
-          className={`h-2 w-2 shrink-0 rounded-full ${wsConnected ? "bg-aurora shadow-[0_0_8px_#2ee6c9]" : "bg-chalk/25"}`}
-          title={wsConnected ? "Συνδεδεμένο" : "Αποσυνδεδεμένο"}
-        />
+
         <AnimatePresence mode="wait">
           {loading ? (
-            <motion.span key="l" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hud-label shrink-0 text-holo animate-pulse">
-              επεξεργασία
+            <motion.span
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-xs text-athena animate-pulse flex-shrink-0"
+            >
+              σκέφτεται…
             </motion.span>
           ) : (
             <motion.button
-              key="s"
+              key="send"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => void submit()}
               disabled={!text.trim()}
-              className="btn-holo shrink-0 !px-3 !py-1.5 text-[12px]"
+              className="flex-shrink-0 rounded-xl bg-athena/90 hover:bg-athena text-ink text-xs font-semibold px-3 py-1.5 disabled:opacity-30 transition-all"
             >
-              ΠΕΣ ΤΗΣ
+              Πες της
             </motion.button>
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* Quick-fire beat buttons για director */}
       <QuickBeats />
     </div>
   );
@@ -87,16 +112,15 @@ export function CommandBar() {
 
 function QuickBeats() {
   const director = useStore((s) => s.director);
-  const beat = useStore((s) => s.beat);
   if (!director) return null;
   const beats = ["INTRO", "SENSE", "SIMULATE", "ENGAGE", "DECISION"] as const;
   return (
-    <div className="mt-2 flex justify-center gap-2">
+    <div className="flex gap-2 justify-center mt-2">
       {beats.map((b) => (
         <button
           key={b}
           onClick={() => void triggerBeat(b)}
-          className={`chip transition-colors hover:!text-holo ${beat === b ? "!bg-holo/25 !text-white" : "!text-chalk/55"}`}
+          className="glass rounded-full px-3 py-1 text-[10px] uppercase tracking-widest text-chalk/60 hover:text-athena transition-colors"
         >
           {b}
         </button>

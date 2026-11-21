@@ -1,37 +1,47 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useStore } from "@/store/useStore";
 
-const MOOD_TONE: Record<string, string> = {
-  neutral: "text-holo",
-  alert: "text-solar",
-  proud: "text-aurora",
-};
-
-/** Κινηματογραφικοί υπότιτλοι: όνομα ομιλητή σε χρώμα, λέξη-λέξη, χωρίς κουτί. */
 export function Subtitles() {
   const speech = useStore((s) => s.agentSpeech);
-  const tone = MOOD_TONE[speech?.mood ?? "neutral"];
   return (
-    <div className="pointer-events-none w-full max-w-4xl text-center">
+    <div className="pointer-events-none fixed left-1/2 bottom-28 -translate-x-1/2 max-w-3xl w-full px-6">
       <AnimatePresence mode="wait">
         {speech && (
-          <motion.p
+          <motion.div
             key={speech.at}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.3 }}
-            className="text-[28px] font-semibold leading-snug text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.9),0_0_24px_rgba(0,0,0,0.85)]"
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35 }}
+            className="glass-strong rounded-2xl px-6 py-4 text-center"
           >
-            <span className={`hud-title mr-2 text-[30px] ${tone}`}>ATHENA:</span>
-            {speech.textEl.split(" ").map((w, i) => (
-              <motion.span key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.045, duration: 0.2 }}>
-                {w}{" "}
-              </motion.span>
-            ))}
-          </motion.p>
+            <div className="text-xl font-medium leading-snug">{speech.textEl}</div>
+            <div className="mt-2 flex items-center justify-center gap-2">
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  speech.mood === "alert" ? "bg-hot" :
+                  speech.mood === "proud" ? "bg-cool" :
+                  "bg-athena"
+                } animate-breathe`}
+              />
+              <span className="text-[11px] uppercase tracking-widest text-chalk/50">
+                ATHENA · {moodLabel(speech.mood)}
+              </span>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
   );
+}
+
+function moodLabel(mood: string): string {
+  switch (mood) {
+    case "alert":
+      return "προσοχή";
+    case "proud":
+      return "ικανοποίηση";
+    default:
+      return "ουδέτερη";
+  }
 }

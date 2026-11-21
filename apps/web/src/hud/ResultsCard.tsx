@@ -3,93 +3,151 @@ import { useStore } from "@/store/useStore";
 import type { Range } from "@/types/contracts";
 
 /**
- * Κάρτα αποτελεσμάτων sim: πάντα δείχνουμε εύρος p10–p90, και οπτικά (μπάρα) και αριθμητικά.
+ * Κάρτα αποτελεσμάτων sim: πάντα δείχνουμε εύρος p10–p90.
  * Δεν εμφανίζουμε νούμερο χωρίς εύρος (CLAUDE.md §5.6).
  */
 export function ResultsCard() {
   const sim = useStore((s) => s.simResult);
   return (
-    <AnimatePresence>
-      {sim && sim.status === "ok" && (
-        <motion.div
-          key={sim.scenarioId}
-          initial={{ opacity: 0, x: 16 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 16 }}
-          className="glass holo-corners holo-scan pointer-events-none w-full p-5"
-        >
-          <span className="scanline" />
-          <div className="flex items-center justify-between">
-            <div className="hud-label">αποτελέσματα προσομοίωσης</div>
-            <span className="chip">εκτίμηση</span>
-          </div>
-
-          <Metric label="Χρόνος διαδρομής άξονα" unit="%" range={sim.traffic.corridorTravelTimeDeltaPct} />
-          <Metric label="Θερμοκρασία επιφάνειας" unit="°C" range={sim.thermal.hotspotDeltaC} />
-          <Metric label="Οχηματοχιλιόμετρα" unit="%" range={sim.traffic.vehicleKmDeltaPct} />
-          <Metric label="CO₂" unit="%" range={sim.emissions.co2DeltaPct} />
-
-          {sim.notes.length > 0 && (
-            <div className="mt-4">
-              <div className="divider" />
-              <div className="hud-label mt-3 text-[9px] text-chalk/45">παραδοχές</div>
-              <ul className="mt-1.5 space-y-1 text-[11.5px] leading-snug text-chalk/65">
-                {sim.notes.slice(0, 3).map((n, i) => (
-                  <li key={i} className="flex gap-1.5">
-                    <span className="text-holo/60">▸</span>
-                    <span>{n}</span>
-                  </li>
-                ))}
-              </ul>
+    <div className="pointer-events-none fixed right-6 top-6 w-96">
+      <AnimatePresence>
+        {sim && (
+          <motion.div
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 12 }}
+            className="glass rounded-2xl p-5"
+          >
+            <div className="flex items-center justify-between">
+              <div className="hud-label">Εκτιμώμενα αποτελέσματα</div>
+              <span className="chip">εκτίμηση</span>
             </div>
-          )}
-          <div className="data mt-3 text-right text-[10px] text-chalk/35">υπολογισμός {sim.computeMs} ms</div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+
+            <Metric
+              label="Χρόνος διαδρομής άξονα"
+              unit="%"
+              range={sim.traffic.corridorTravelTimeDeltaPct}
+              invertGood
+            />
+            <Metric
+              label="Οχηματο-χλμ."
+              unit="%"
+              range={sim.traffic.vehicleKmDeltaPct}
+              invertGood
+            />
+            <Metric
+              label="Θερμικό hotspot"
+              unit="°C"
+              range={sim.thermal.hotspotDeltaC}
+              invertGood
+            />
+            <Metric
+              label="CO₂"
+              unit="%"
+              range={sim.emissions.co2DeltaPct}
+              invertGood
+            />
+
+            {sim.notes.length > 0 && (
+              <div className="mt-4 border-t border-chalk/10 pt-3">
+                <div className="hud-label mb-1">Παραδοχές</div>
+                <ul className="text-xs text-chalk/60 space-y-0.5 list-disc list-inside">
+                  {sim.notes.slice(0, 3).map((n, i) => (
+                    <li key={i}>{n}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
-/** Μείωση = καλό (λιγότερος χρόνος, θερμοκρασία, km, CO₂). */
-function Metric({ label, unit, range }: { label: string; unit: string; range: Range }) {
-  const zero = range.p10 === 0 && range.p50 === 0 && range.p90 === 0;
-  const tone = zero ? "text-chalk/60" : range.p50 < 0 ? "text-aurora" : "text-flare";
-  const bar = zero ? "bg-chalk/30" : range.p50 < 0 ? "bg-aurora" : "bg-flare";
-  // Κλίμακα συμμετρική γύρω από το 0, ώστε να φαίνεται αν το εύρος περνά το μηδέν
-  const span = Math.max(Math.abs(range.p10), Math.abs(range.p90), 0.5) * 1.15;
-  const x = (v: number) => 50 + (v / span) * 50;
+function Metric({
+  label,
+  unit,
+  range,
+  invertGood,
+}: {
+  label: string;
+  unit: string;
+  range: Range;
+  invertGood?: boolean;
+}) {
+  const good = invertGood ? range.p50 < 0 : range.p50 > 0;
+  const neutral = range.p50 === 0;
+  const color = neutral ? "text-chalk/70" : good ? "text-cool" : "text-hot";
+  const glowClass = neutral ? "" : good ? "text-glow-cool" : "text-glow-hot";
+  const sign = range.p50 > 0 ? "+" : "";
   return (
-    <div className="mt-4">
+    <div className="mt-3.5">
       <div className="flex items-baseline justify-between">
-        <div className="text-[13px] text-chalk/80">{label}</div>
-        <div className={`data text-[22px] font-bold ${tone}`}>
-          {zero ? "0" : signed(range.p50)}
-          <span className="ml-0.5 text-[13px] font-medium opacity-80">{unit}</span>
+        <div className="text-sm text-chalk/75">{label}</div>
+        <div className={`text-lg font-semibold tabular-nums ${color} ${glowClass}`}>
+          {sign}{range.p50.toFixed(1)}{unit}
         </div>
       </div>
-      <div className="range-track mt-2">
-        <div className="absolute inset-y-[-3px] left-1/2 w-px bg-chalk/25" />
-        {!zero && (
-          <>
-            <div
-              className={`absolute inset-y-0 rounded-full opacity-40 ${bar}`}
-              style={{ left: `${x(range.p10)}%`, width: `${Math.max(x(range.p90) - x(range.p10), 1)}%` }}
-            />
-            <div
-              className={`absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full ${bar}`}
-              style={{ left: `${x(range.p50)}%`, boxShadow: "0 0 10px currentColor" }}
-            />
-          </>
-        )}
-      </div>
-      <div className="range-badge mt-1.5 flex justify-between">
-        <span>p10 {signed(range.p10)}{unit}</span>
-        <span>p90 {signed(range.p90)}{unit}</span>
+      <RangeBar range={range} unit={unit} good={good} neutral={neutral} />
+      <div className="range-badge mt-1">
+        εύρος {range.p10.toFixed(1)}{unit} … {range.p90.toFixed(1)}{unit} (p10–p90)
       </div>
     </div>
   );
 }
 
-function signed(n: number): string {
-  return `${n > 0 ? "+" : ""}${n.toFixed(1)}`;
+function RangeBar({
+  range,
+  unit,
+  good,
+  neutral,
+}: {
+  range: Range;
+  unit: string;
+  good: boolean;
+  neutral: boolean;
+}) {
+  const maxScale = unit === "°C" ? 5 : 35;
+  // Map value to 0–100% position (50% = zero)
+  const toPos = (v: number) =>
+    Math.round(50 + Math.max(-1, Math.min(1, v / maxScale)) * 50);
+
+  const p10pos = toPos(range.p10);
+  const p50pos = toPos(range.p50);
+  const p90pos = toPos(range.p90);
+  const bandLeft = Math.min(p10pos, p90pos);
+  const bandWidth = Math.max(Math.abs(p90pos - p10pos), 2);
+
+  const hex = neutral ? "#9ca3af" : good ? "#55e6c1" : "#ff6a4c";
+
+  return (
+    <div className="relative h-1 bg-rail rounded-full mt-1.5">
+      {/* Zero line */}
+      <div
+        className="absolute top-0 bottom-0 w-px bg-chalk/20"
+        style={{ left: "50%" }}
+      />
+      {/* P10–P90 band */}
+      <div
+        className="absolute top-0 h-full rounded-full"
+        style={{
+          left: `${bandLeft}%`,
+          width: `${bandWidth}%`,
+          backgroundColor: hex,
+          opacity: 0.28,
+        }}
+      />
+      {/* P50 marker dot */}
+      <div
+        className="absolute top-1/2 w-2.5 h-2.5 rounded-full"
+        style={{
+          left: `${p50pos}%`,
+          transform: "translate(-50%, -50%)",
+          backgroundColor: hex,
+          boxShadow: `0 0 8px ${hex}99`,
+        }}
+      />
+    </div>
+  );
 }

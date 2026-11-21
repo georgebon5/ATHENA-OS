@@ -8,21 +8,15 @@ interface Props {
 
 const MORPH_MS = 1500;
 const CELL_SIZE_M = 25;
-
-interface MorphEntity {
-  entity: Cesium.Entity;
-  baseColor: string;
-  targetColor: string;
-}
+const ALPHA = 0.42;
 
 /**
- * Θερμικό heatmap ως εκτεταμένα ορθογώνια πλακίδια στο έδαφος.
+ * Θερμικό heatmap ως πλακίδια «ντυμένα» πάνω στα 3D tiles (δρόμοι + ταράτσες).
  * Όταν αλλάζει η σκηνή, κάνει morph από baseC → newC σε ~1.5s.
  */
 export function ThermalLayer({ viewer }: Props) {
   const dsRef = useRef<Cesium.CustomDataSource | null>(null);
   const morphStart = useRef<number>(0);
-  const morphEntitiesRef = useRef<MorphEntity[]>([]);
 
   const simResult = useStore((s) => s.simResult);
   const visible = useStore((s) => s.layers.thermal);
@@ -36,19 +30,7 @@ export function ThermalLayer({ viewer }: Props) {
 
     let raf = 0;
     const tick = () => {
-      const list = morphEntitiesRef.current;
-      if (list.length) {
-        const t = Math.min(1, (performance.now() - morphStart.current) / MORPH_MS);
-        for (const m of list) {
-          if (!m.entity.rectangle) continue;
-          m.entity.rectangle.material = new Cesium.ColorMaterialProperty(
-            Cesium.Color.fromCssColorString(
-              lerpColor(m.baseColor, m.targetColor, t),
-            ).withAlpha(0.42),
-          );
-        }
-        viewer.scene.requestRender();
-      }
+      if (performance.now() - morphStart.current < MORPH_MS) viewer.scene.requestRender();
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -57,7 +39,6 @@ export function ThermalLayer({ viewer }: Props) {
       cancelAnimationFrame(raf);
       viewer.dataSources.remove(ds, true);
       dsRef.current = null;
-      morphEntitiesRef.current = [];
     };
   }, [viewer]);
 
@@ -66,16 +47,17 @@ export function ThermalLayer({ viewer }: Props) {
     const ds = dsRef.current;
     if (!ds) return;
     ds.entities.removeAll();
-    morphEntitiesRef.current = [];
     if (!simResult) return;
 
     morphStart.current = performance.now();
+    const morphT = () => Math.min(1, (performance.now() - morphStart.current) / MORPH_MS);
     const half = (CELL_SIZE_M / 2) * 1e-5 * 1.1;
     for (const cell of simResult.thermal.cells) {
       const [lng, lat] = cell.lngLat;
-      const baseColor = tempColor(cell.baseC);
-      const targetColor = tempColor(cell.newC);
-      const entity = ds.entities.add({
+      const base = Cesium.Color.fromCssColorString(tempColor(cell.baseC)).withAlpha(ALPHA);
+      const target = Cesium.Color.fromCssColorString(tempColor(cell.newC)).withAlpha(ALPHA);
+      const color = new Cesium.Color();
+      ds.entities.add({
         rectangle: {
           coordinates: Cesium.Rectangle.fromDegrees(
             lng - half,
@@ -83,11 +65,15 @@ export function ThermalLayer({ viewer }: Props) {
             lng + half,
             lat + half,
           ),
-          material: Cesium.Color.fromCssColorString(baseColor).withAlpha(0.35),
-          height: 2,
+          // Χρώμα μέσω callback: το Cesium αλλάζει μόνο το χρώμα του instance. Πριν μπαινε νέο material
+          // σε κάθε frame → η γεωμετρία ξαναχτιζόταν συνέχεια και δεν προλάβαινε ποτέ να φανεί.
+          material: new Cesium.ColorMaterialProperty(
+            new Cesium.CallbackProperty(() => Cesium.Color.lerp(base, target, morphT(), color), false),
+          ),
+          // Χωρίς height: ντύνεται πάνω στα 3D tiles, ανεξάρτητα από το ύψος του δρόμου
+          classificationType: Cesium.ClassificationType.BOTH,
         },
       });
-      morphEntitiesRef.current.push({ entity, baseColor, targetColor });
     }
     viewer?.scene.requestRender();
   }, [simResult, viewer]);
@@ -124,18 +110,4 @@ function tempColor(c: number): string {
   }
   const last = stops[stops.length - 1][1];
   return `rgb(${last[0]}, ${last[1]}, ${last[2]})`;
-}
-
-function lerpColor(a: string, b: string, t: number): string {
-  const pa = parseRgb(a);
-  const pb = parseRgb(b);
-  const r = Math.round(pa[0] + (pb[0] - pa[0]) * t);
-  const g = Math.round(pa[1] + (pb[1] - pa[1]) * t);
-  const bl = Math.round(pa[2] + (pb[2] - pa[2]) * t);
-  return `rgb(${r}, ${g}, ${bl})`;
-}
-function parseRgb(s: string): [number, number, number] {
-  const m = s.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-  if (!m) return [0, 0, 0];
-  return [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)];
 }

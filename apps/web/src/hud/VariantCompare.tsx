@@ -1,8 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useStore } from "@/store/useStore";
-import type { Range, SimResult } from "@/types/contracts";
+import type { SimResult } from "@/types/contracts";
 
-/** «Η πρότασή σας» απέναντι στην «Πρόταση ATHENA», με τα εύρη και την αιτιολόγηση. */
+/**
+ * Split σύγκριση «Η πρότασή σας vs Η πρόταση της ATHENA» —
+ * δείχνει τα κύρια νούμερα σε δύο στήλες και την εξήγηση.
+ */
 export function VariantCompare() {
   const variant = useStore((s) => s.variant);
   return (
@@ -12,53 +15,59 @@ export function VariantCompare() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
-          className="glass-strong holo-corners holo-scan pointer-events-none w-full p-5"
+          className="pointer-events-none fixed right-6 top-32 w-[440px] glass-strong rounded-2xl p-5"
         >
-          <span className="scanline" />
           <div className="flex items-center justify-between">
-            <div className="hud-label">σύγκριση παραλλαγών</div>
-            <span className="chip !text-plasma !bg-plasma/10 !shadow-[inset_0_0_0_1px_rgba(255,160,67,0.4)]">
-              ✦ athena
-            </span>
+            <div className="text-xs uppercase tracking-widest text-chalk/60">
+              Σύγκριση παραλλαγών
+            </div>
+            <span className="chip">ATHENA · πρόταση</span>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <Column title="Η πρότασή σας" sim={variant.base} />
-            <Column title="Πρόταση ATHENA" sim={variant.best} best />
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            <Column title="Η πρότασή σας" sim={variant.base} tone="neutral" />
+            <Column title="Πρόταση ATHENA" sim={variant.best} tone="good" />
           </div>
-          <p className="mt-4 border-l-2 border-plasma/60 pl-3 text-[13px] leading-snug text-chalk/85">
+          <div className="mt-4 text-sm text-chalk/85 border-t border-chalk/10 pt-3">
             {variant.reasonEl}
-          </p>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
   );
 }
 
-function Column({ title, sim, best }: { title: string; sim: SimResult; best?: boolean }) {
+function Column({
+  title,
+  sim,
+  tone,
+}: {
+  title: string;
+  sim: SimResult;
+  tone: "neutral" | "good";
+}) {
+  const isGood = tone === "good";
   return (
     <div
-      className={`rounded-xl p-3 ${
-        best ? "bg-gradient-to-b from-plasma/15 to-transparent shadow-[inset_0_0_0_1px_rgba(255,160,67,0.45)]" : "bg-holo/5 shadow-[inset_0_0_0_1px_rgba(255,95,184,0.15)]"
-      }`}
+      className={`rounded-xl p-3 ${isGood ? "bg-cool/[0.06] border border-cool/20" : "bg-rail/60"}`}
     >
-      <div className={`hud-label text-[9px] ${best ? "text-plasma" : "text-chalk/55"}`}>{title}</div>
-      <Value range={sim.thermal.hotspotDeltaC} unit="°C" label="θερμοκρασία" big />
-      <Value range={sim.traffic.corridorTravelTimeDeltaPct} unit="%" label="χρόνος άξονα" />
-    </div>
-  );
-}
-
-function Value({ range, unit, label, big }: { range: Range; unit: string; label: string; big?: boolean }) {
-  const tone = range.p50 < 0 ? "text-aurora" : range.p50 > 0 ? "text-flare" : "text-chalk/70";
-  return (
-    <div className="mt-2">
-      <div className={`data font-bold ${tone} ${big ? "text-[28px]" : "text-[18px]"}`}>
-        {signed(range.p50)}
-        <span className="text-[12px] opacity-80">{unit}</span>
+      <div className="flex items-center justify-between">
+        <div className="hud-label">{title}</div>
+        {isGood && (
+          <span className="chip-cool text-[10px] px-1.5 py-0.5">✓ βέλτιστο</span>
+        )}
       </div>
-      <div className="range-badge">
-        {label} · {signed(range.p10)}…{signed(range.p90)}
+      <div
+        className={`mt-2 text-2xl font-semibold tabular-nums ${isGood ? "text-cool text-glow-cool" : "text-chalk/80"}`}
+      >
+        {signed(sim.traffic.corridorTravelTimeDeltaPct.p50)}%
       </div>
+      <div className="text-xs text-chalk/55 mb-2">χρόνος άξονα</div>
+      <div
+        className={`text-xl font-semibold tabular-nums ${isGood ? "text-athena text-glow-athena" : "text-athena/70"}`}
+      >
+        {signed(sim.thermal.hotspotDeltaC.p50)}°C
+      </div>
+      <div className="text-xs text-chalk/55">θερμικό hotspot</div>
     </div>
   );
 }

@@ -1,63 +1,78 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useStore } from "@/store/useStore";
 
-/** Η ATHENA «σκέφτεται»: τα βήματα σαν log συστήματος + πρόοδος προσομοίωσης. */
 export function ThinkingCard() {
   const thinking = useStore((s) => s.thinking);
   const progress = useStore((s) => s.simProgress);
   const scenario = useStore((s) => s.activeScenario);
 
-  const running = progress !== null && progress < 1;
-  const show = thinking.length > 0 || running;
+  const show = thinking.length > 0 || (progress !== null && progress < 1);
 
   return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          initial={{ opacity: 0, x: -16 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -16 }}
-          className="glass holo-corners holo-scan pointer-events-none w-full p-4"
-        >
-          <span className="scanline" />
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-holo opacity-70 animate-pulseRing" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-holo" />
-            </span>
-            <div className="hud-label">η athena σκέφτεται</div>
-          </div>
-          {scenario && <div className="hud-title mt-2 text-[15px] text-chalk">{scenario.title}</div>}
-          <ul className="mt-3 space-y-1.5">
-            {thinking.map((step, i) => (
-              <motion.li
-                key={step.id}
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: i === thinking.length - 1 ? 1 : 0.6, x: 0 }}
-                className="flex gap-2 text-[13px] leading-snug text-chalk"
-              >
-                <span className="data text-[11px] text-holo/70">{String(i + 1).padStart(2, "0")}</span>
-                <span>{step.textEl}</span>
-              </motion.li>
-            ))}
-          </ul>
-          {running && (
-            <div className="mt-4">
-              <div className="flex justify-between">
-                <span className="hud-label text-[9px] text-chalk/50">προσομοίωση</span>
-                <span className="data text-[11px] text-holo">{Math.round((progress ?? 0) * 100)}%</span>
+    <div className="pointer-events-none fixed left-6 top-6 w-80">
+      <AnimatePresence>
+        {show && (
+          <motion.div
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -12 }}
+            className="glass rounded-2xl p-4 overflow-hidden relative"
+          >
+            {/* Scan line sweep */}
+            <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
+              <div className="absolute inset-y-0 w-full bg-gradient-to-r from-transparent via-athena/[0.05] to-transparent animate-scan" />
+            </div>
+
+            {/* Header */}
+            <div className="flex items-center gap-2.5 relative">
+              <div className="relative flex-shrink-0 w-3 h-3">
+                <span className="absolute inset-[-3px] rounded-full bg-athena/40 animate-pulseRing" />
+                <span className="relative block w-3 h-3 rounded-full bg-athena" />
               </div>
-              <div className="range-track mt-1.5 overflow-hidden">
+              <div className="hud-label">Η ATHENA σκέφτεται</div>
+            </div>
+
+            {scenario && (
+              <div className="mt-2 text-sm font-medium text-chalk leading-snug">
+                {scenario.title}
+              </div>
+            )}
+
+            {/* Thinking steps — staggered */}
+            <ul className="mt-3 space-y-1.5">
+              {thinking.map((step, i) => (
+                <motion.li
+                  key={step.id}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.07, duration: 0.25 }}
+                  className="text-sm text-chalk/85 flex gap-2"
+                >
+                  <span className="text-athena flex-shrink-0 select-none">›</span>
+                  <span>{step.textEl}</span>
+                </motion.li>
+              ))}
+            </ul>
+
+            {/* Progress bar with glow dot */}
+            {progress !== null && progress < 1 && (
+              <div className="mt-3 relative h-1.5 rounded-full bg-rail overflow-visible">
                 <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-holo to-plasma shadow-glow"
-                  animate={{ width: `${(progress ?? 0) * 100}%` }}
+                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-athenaDeep to-athena"
+                  animate={{ width: `${progress * 100}%` }}
+                  transition={{ duration: 0.3 }}
+                />
+                <motion.div
+                  className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-athena z-10"
+                  style={{ boxShadow: "0 0 10px #7bd1ff, 0 0 4px #7bd1ff" }}
+                  animate={{ left: `calc(${progress * 100}% - 6px)` }}
                   transition={{ duration: 0.3 }}
                 />
               </div>
-            </div>
-          )}
-        </motion.div>
-      )}
-    </AnimatePresence>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

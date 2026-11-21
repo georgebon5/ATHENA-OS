@@ -2,14 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --accent: 127 178 255;
-  --line: 255 255 255 / 0.08;
-  --line-strong: 255 255 255 / 0.12;
-  --surface: 17 18 22;
-  --surface-strong: 11 12 15;
-}
-
 @layer base {
   html,
   body,
@@ -18,18 +10,14 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background: #08090b;
-    color: #f5f5f7;
-    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-    font-feature-settings: "cv11", "ss01";
+    background: #06090d;
+    color: #e8edf2;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    letter-spacing: -0.005em;
   }
   * {
     box-sizing: border-box;
   }
-  /* Κρύβουμε όλο το default chrome του Cesium — τα credits μένουν μικρά για τους όρους χρήσης */
+  /* Κρύβουμε όλο το default chrome του Cesium */
   .cesium-viewer-bottom {
     display: none !important;
   }
@@ -44,176 +32,88 @@
     display: none !important;
   }
   .cesium-widget-credits {
-    opacity: 0.3;
-    transform: scale(0.75);
+    opacity: 0.4;
+    transform: scale(0.85);
     transform-origin: bottom right;
   }
 }
 
 @layer components {
-  /* ── Πάνελ: λιτό γυαλί, καθόλου gradient περίγραμμα ── */
-  .holo,
-  .glass,
-  .glass-strong {
-    position: relative;
-    border-radius: 12px;
-    background: rgb(var(--surface) / 0.72);
-    backdrop-filter: blur(20px) saturate(140%);
-    -webkit-backdrop-filter: blur(20px) saturate(140%);
-    border: 1px solid rgb(var(--line));
-    box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.6);
+  /* ── glass surfaces ──────────────────────────────────────────────────── */
+  .glass {
+    background: rgba(11, 15, 20, 0.58);
+    backdrop-filter: blur(14px) saturate(145%);
+    -webkit-backdrop-filter: blur(14px) saturate(145%);
+    border: 1px solid rgba(232, 237, 242, 0.09);
+    box-shadow:
+      0 8px 40px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(232, 237, 242, 0.06);
   }
   .glass-strong {
-    background: rgb(var(--surface-strong) / 0.88);
-    border-color: rgb(var(--line-strong));
-    box-shadow: 0 20px 60px -12px rgba(0, 0, 0, 0.8);
+    background: rgba(6, 9, 13, 0.82);
+    backdrop-filter: blur(20px) saturate(155%);
+    -webkit-backdrop-filter: blur(20px) saturate(155%);
+    border: 1px solid rgba(123, 209, 255, 0.13);
+    box-shadow:
+      0 12px 60px rgba(0, 0, 0, 0.65),
+      inset 0 1px 0 rgba(123, 209, 255, 0.08);
   }
 
-  /* Μικρή διακριτική γραμμή αριστερά για «κύριες» κάρτες */
-  .holo-corners::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 16px;
-    bottom: 16px;
-    width: 2px;
-    border-radius: 2px;
-    pointer-events: none;
-    background: rgb(var(--accent) / 0.55);
-  }
-
-  /* Παλιά «scan» γραμμή: έγινε no-op (overflow hidden για να μην κρέμεται ο placeholder) */
-  .holo-scan {
-    overflow: hidden;
-  }
-  .holo-scan > .scanline {
-    display: none;
-  }
-
-  .hud-label {
-    font-family: "Inter", sans-serif;
-    font-weight: 500;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: rgb(255 255 255 / 0.5);
-  }
-  .hud-title {
-    font-family: "Inter", sans-serif;
-    font-weight: 600;
-    letter-spacing: -0.015em;
-  }
-  .data {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0;
-  }
-
-  /* Τίτλοι & shimmer: πλέον σκέτοι, όχι gradient */
-  .holo-text {
-    color: #f5f5f7;
-    background: none;
-    -webkit-background-clip: initial;
-    background-clip: initial;
-  }
-  .holo-shimmer {
-    color: rgb(var(--accent));
-    background: none;
-    -webkit-background-clip: initial;
-    background-clip: initial;
-    animation: none;
-  }
-
+  /* ── badges ───────────────────────────────────────────────────────────── */
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[10px] font-medium uppercase;
-    font-family: "Inter", sans-serif;
-    letter-spacing: 0.08em;
-    background: rgb(255 255 255 / 0.04);
-    color: rgb(255 255 255 / 0.72);
-    border: 1px solid rgb(255 255 255 / 0.1);
-    box-shadow: none;
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+    background: rgba(123, 209, 255, 0.12);
+    color: #bfe5ff;
+    border: 1px solid rgba(123, 209, 255, 0.25);
   }
-
+  .chip-cool {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+    background: rgba(85, 230, 193, 0.12);
+    color: #55e6c1;
+    border: 1px solid rgba(85, 230, 193, 0.25);
+  }
   .range-badge {
-    @apply text-[12px] text-chalk/55;
-    font-family: "JetBrains Mono", ui-monospace, monospace;
+    @apply text-chalk/50 text-xs tracking-wide;
   }
 
-  .btn-holo {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-1.5 text-[12px] font-semibold transition;
-    font-family: "Inter", sans-serif;
-    letter-spacing: 0.01em;
-    color: #08090b;
-    background: #f5f5f7;
-    border: 1px solid transparent;
-    box-shadow: none;
-  }
-  .btn-holo:hover {
-    background: #ffffff;
-  }
-  .btn-holo:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-    background: rgb(255 255 255 / 0.1);
-    color: rgb(255 255 255 / 0.4);
+  /* ── typography utilities ─────────────────────────────────────────────── */
+  .hud-label {
+    @apply text-[11px] font-medium uppercase tracking-[0.12em] text-chalk/50;
   }
 
-  .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-[12px] transition;
-    color: rgb(255 255 255 / 0.75);
+  /* ── text glow ───────────────────────────────────────────────────────── */
+  .text-glow-athena {
+    text-shadow: 0 0 20px rgba(123, 209, 255, 0.55);
+  }
+  .text-glow-cool {
+    text-shadow: 0 0 16px rgba(85, 230, 193, 0.55);
+  }
+  .text-glow-hot {
+    text-shadow: 0 0 16px rgba(255, 106, 76, 0.55);
+  }
+  .text-glow-warn {
+    text-shadow: 0 0 16px rgba(255, 204, 92, 0.5);
+  }
+
+  /* ── scrollbar ───────────────────────────────────────────────────────── */
+  .panel-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(123, 209, 255, 0.15) transparent;
+  }
+  .panel-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+  .panel-scroll::-webkit-scrollbar-track {
     background: transparent;
-    border: 1px solid rgb(255 255 255 / 0.1);
-    box-shadow: none;
   }
-  .btn-ghost:hover {
-    background: rgb(255 255 255 / 0.05);
-    border-color: rgb(255 255 255 / 0.2);
-    color: #ffffff;
+  .panel-scroll::-webkit-scrollbar-thumb {
+    background: rgba(123, 209, 255, 0.15);
+    border-radius: 2px;
   }
-
-  .divider {
-    height: 1px;
-    background: rgb(255 255 255 / 0.08);
-  }
-
-  /* Μπάρα εύρους p10–p90 με δείκτη p50 */
-  .range-track {
-    position: relative;
-    height: 4px;
-    border-radius: 999px;
-    background: rgb(255 255 255 / 0.06);
-  }
-}
-
-/* ── Οι παλιές overlay γραμμές «golden hour» αφαιρούνται ── */
-.screen-grid,
-.screen-fx {
-  display: none !important;
 }
 
 /* Για να μην φαίνεται η μαύρη λωρίδα πίσω από το Cesium */
 .cesium-widget,
 .cesium-widget canvas {
   background: transparent !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-  }
-}
-
-/* Keyframes που χρησιμοποιούνται και από απλό CSS (όχι μόνο από utilities) */
-@keyframes scan {
-  0% { transform: translateY(-100%); opacity: 0; }
-  15% { opacity: 0.6; }
-  100% { transform: translateY(2400%); opacity: 0; }
-}
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
 }

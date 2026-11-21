@@ -278,11 +278,11 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
         </div>
 
         {/* ── Υπόλοιπα votables ── */}
-        {items.filter((i) => !(i.kind === "report" && i.distanceM <= 50)).length > 0 && (
+        {items.filter((i) => !(i.kind === "report" && i.distanceM <= 300)).length > 0 && (
           <div>
             <p className="hud-label px-2 pb-1.5 text-[11px]">Άλλα κοντά σου</p>
             <ul className="space-y-0.5">
-              {items.filter((i) => !(i.kind === "report" && i.distanceM <= 50)).map((i) => (
+              {items.filter((i) => !(i.kind === "report" && i.distanceM <= 300)).map((i) => (
                 <li key={i.id}>
                   <button
                     type="button"

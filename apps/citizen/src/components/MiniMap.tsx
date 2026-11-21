@@ -42,16 +42,31 @@ export function MiniMap({
   approximate,
   points = [],
   caption,
+  zoomTo,
 }: {
   at: LngLat;
   heading: number | null;
   approximate?: boolean;
   points?: { lngLat: LngLat; color: string }[];
   caption?: string;
+  zoomTo?: LngLat;
 }) {
+  // Αν υπάρχει zoomTo, χρησιμοποιούμε μικρό bbox γύρω από το σημείο (~400m)
+  const activeBbox = zoomTo
+    ? { w: zoomTo[0] - 0.0025, s: zoomTo[1] - 0.002, e: zoomTo[0] + 0.0025, n: zoomTo[1] + 0.002 }
+    : BBOX;
+
+  function projectTo([lng, lat]: LngLat): [number, number] {
+    return [
+      ((lng - activeBbox.w) / (activeBbox.e - activeBbox.w)) * W,
+      ((activeBbox.n - lat) / (activeBbox.n - activeBbox.s)) * H,
+    ];
+  }
+
   const inside = at[0] >= BBOX.w && at[0] <= BBOX.e && at[1] >= BBOX.s && at[1] <= BBOX.n;
-  const [x, y] = project(inside ? at : SERAFIO);
-  const [sx, sy] = project(SERAFIO);
+  const [x, y] = projectTo(inside ? at : SERAFIO);
+  const [sx, sy] = projectTo(SERAFIO);
+  const [zx, zy] = zoomTo ? projectTo(zoomTo) : [null, null];
   return (
     <figure className="card overflow-hidden">
       <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" role="img" aria-label="Η θέση της αναφοράς στον χάρτη">
@@ -60,11 +75,15 @@ export function MiniMap({
             <stop offset="0" stopColor="#79b7e4" stopOpacity="0.5" />
             <stop offset="1" stopColor="#79b7e4" stopOpacity="0" />
           </radialGradient>
+          <radialGradient id="glowRed">
+            <stop offset="0" stopColor="#f87171" stopOpacity="0.5" />
+            <stop offset="1" stopColor="#f87171" stopOpacity="0" />
+          </radialGradient>
         </defs>
         {STREETS.map((s, i) => (
           <polyline
             key={i}
-            points={s.pts.map((p) => project(p).join(",")).join(" ")}
+            points={s.pts.map((p) => projectTo(p).join(",")).join(" ")}
             fill="none"
             stroke={s.main ? "#79b7e4" : "#1d4a78"}
             strokeOpacity={s.main ? 0.55 : 1}
@@ -73,25 +92,40 @@ export function MiniMap({
             strokeLinejoin="round"
           />
         ))}
-        {AREAS.map((a) => {
-          const [ax, ay] = project(a.at);
+        {!zoomTo && AREAS.map((a) => {
+          const [ax, ay] = projectTo(a.at);
           return (
             <text key={a.name} x={ax} y={ay} fill="#8fb1d1" fontSize="9" letterSpacing="2" textAnchor="middle">
               {a.name}
             </text>
           );
         })}
-        <text x={project([23.7215, 37.9838])[0]} y={project([23.7215, 37.9838])[1] - 6} fill="#79b7e4" fontSize="10" opacity="0.8">
-          Πειραιώς
-        </text>
-        <rect x={sx - 4} y={sy - 4} width="8" height="8" fill="#ffffff" opacity="0.8" transform={`rotate(45 ${sx} ${sy})`} />
-        <text x={sx + 8} y={sy + 14} fill="#ffffff" fontSize="9" opacity="0.8">
-          Σεράφειο
-        </text>
+        {!zoomTo && (
+          <>
+            <text x={projectTo([23.7215, 37.9838])[0]} y={projectTo([23.7215, 37.9838])[1] - 6} fill="#79b7e4" fontSize="10" opacity="0.8">
+              Πειραιώς
+            </text>
+            <rect x={sx - 4} y={sy - 4} width="8" height="8" fill="#ffffff" opacity="0.8" transform={`rotate(45 ${sx} ${sy})`} />
+            <text x={sx + 8} y={sy + 14} fill="#ffffff" fontSize="9" opacity="0.8">
+              Σεράφειο
+            </text>
+          </>
+        )}
         {points.map((p, i) => {
-          const [px, py] = project(p.lngLat);
+          const [px, py] = projectTo(p.lngLat);
           return <circle key={i} cx={px} cy={py} r="4.5" fill={p.color} stroke="#031b35" strokeWidth="1.5" />;
         })}
+        {/* Zoomed target marker */}
+        {zx != null && zy != null && (
+          <>
+            <circle cx={zx} cy={zy} r="28" fill="url(#glowRed)" />
+            <circle cx={zx} cy={zy} r="11" fill="#f87171" stroke="#031b35" strokeWidth="2.5" />
+            <line x1={zx} y1={zy - 18} x2={zx} y2={zy - 11} stroke="#f87171" strokeWidth="2" />
+            <line x1={zx} y1={zy + 11} x2={zx} y2={zy + 18} stroke="#f87171" strokeWidth="2" />
+            <line x1={zx - 18} y1={zy} x2={zx - 11} y2={zy} stroke="#f87171" strokeWidth="2" />
+            <line x1={zx + 11} y1={zy} x2={zx + 18} y2={zy} stroke="#f87171" strokeWidth="2" />
+          </>
+        )}
         <circle cx={x} cy={y} r="34" fill="url(#glow)" />
         {heading != null && (
           <path d={`M ${x} ${y} L ${x - 11} ${y - 30} A 32 32 0 0 1 ${x + 11} ${y - 30} Z`} fill="#79b7e4" opacity="0.35" transform={`rotate(${heading} ${x} ${y})`} />

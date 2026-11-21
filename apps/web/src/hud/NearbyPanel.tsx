@@ -177,7 +177,7 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
 
   if (!open) return null;
 
-  const nearby50 = items.filter((i) => i.kind === "report" && i.distanceM <= 50);
+  const nearby50 = items.filter((i) => i.kind === "report" && i.distanceM <= 300);
   return (
     // Δεξιά, πάνω από το minimap. Σέρνεται από την κεφαλίδα, αλλάζει μέγεθος από την κάτω-δεξιά γωνία (CSS resize)
     <div
@@ -206,11 +206,11 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
         {/* ── Αναφορές ≤ 50m ── */}
         <div>
           <p className="hud-label px-2 pb-1.5 text-[11px]">
-            Προβλήματα κοντά σου <span className="text-chalk/30">(&lt;50m)</span>
+            Προβλήματα κοντά σου <span className="text-chalk/30">(&lt;300m)</span>
           </p>
           {nearby50.length === 0 ? (
             <p className="px-2.5 py-2 text-[13px] text-chalk/40">
-              {items.length === 0 ? "Φορτώνουμε…" : "Δεν υπάρχουν αναφορές σε 50m."}
+              {items.length === 0 ? "Φορτώνουμε…" : "Δεν υπάρχουν αναφορές σε 300m."}
             </p>
           ) : (
             <ul className="space-y-0.5">

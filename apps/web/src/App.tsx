@@ -8,6 +8,7 @@ import { ThermalLayer } from "./layers/ThermalLayer";
 import { VotesLayer } from "./layers/VotesLayer";
 import { DrawLayer } from "./layers/DrawLayer";
 import { ScenarioLayer } from "./layers/ScenarioLayer";
+import { ProjectsLayer } from "./layers/ProjectsLayer";
 import { AgentOrb } from "./hud/AgentOrb";
 import { Subtitles } from "./hud/Subtitles";
 import { ThinkingCard } from "./hud/ThinkingCard";
@@ -66,6 +67,7 @@ export default function App() {
       <ErrorBoundary name="votes"><VotesLayer viewer={viewer} /></ErrorBoundary>
       <ErrorBoundary name="draw"><DrawLayer viewer={viewer} /></ErrorBoundary>
       <ErrorBoundary name="scenario"><ScenarioLayer viewer={viewer} /></ErrorBoundary>
+      <ErrorBoundary name="projects"><ProjectsLayer viewer={viewer} /></ErrorBoundary>
 
       {/* ── εφέ οθόνης ── */}
       <div className="screen-grid" />

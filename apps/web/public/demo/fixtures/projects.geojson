@@ -1,0 +1,118 @@
+{
+  "_note": "Δημοτικά έργα Αθήνας — fixture για AthensGov Sandbox API (VITE_ATHENSGOV_API_KEY). Περιοχή: Πειραιώς / Γκάζι / Κεραμεικός / Θησείο.",
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "proj-001",
+      "geometry": { "type": "Point", "coordinates": [23.7122, 37.9782] },
+      "properties": {
+        "id": "proj-001",
+        "title": "Ανάπλαση Πεζοδρομίου Πειραιώς",
+        "category": "Οδοποιία",
+        "status": "in_progress",
+        "budget": 820000,
+        "district": "Γκάζι - Κεραμεικός",
+        "description": "Ανακατασκευή πεζοδρομίων κατά μήκος της Πειραιώς από Θησείο έως Γκάζι. Τοποθέτηση νέας ασφάλτου, οδογραμμών και διαβάσεων με ΑΜΕΑ ράμπες."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "proj-002",
+      "geometry": { "type": "Point", "coordinates": [23.7140, 37.9810] },
+      "properties": {
+        "id": "proj-002",
+        "title": "Λωρίδα Λεωφορείου Πειραιώς",
+        "category": "Αστικές Συγκοινωνίες",
+        "status": "planned",
+        "budget": 1250000,
+        "district": "Γκάζι - Κεραμεικός",
+        "description": "Αποκλειστική λωρίδα λεωφορείου στην Πειραιώς κατεύθυνση βορρά. Αναμενόμενη μείωση χρόνου διαδρομής κατά 18-22%."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "proj-003",
+      "geometry": { "type": "Point", "coordinates": [23.7110, 37.9805] },
+      "properties": {
+        "id": "proj-003",
+        "title": "Νέα Φύτευση Πάρκου Τεχνόπολης",
+        "category": "Πρασινισμός",
+        "status": "in_progress",
+        "budget": 340000,
+        "district": "Γκάζι",
+        "description": "Φύτευση 85 νέων δέντρων και εγκατάσταση συστήματος στάγδην άρδευσης. Αναμενόμενη μείωση θερμοκρασίας περιβάλλοντος κατά 1.8°C."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "proj-004",
+      "geometry": { "type": "Point", "coordinates": [23.7175, 37.9790] },
+      "properties": {
+        "id": "proj-004",
+        "title": "Αποκατάσταση Οδοστρώματος Κεραμεικού",
+        "category": "Οδοποιία",
+        "status": "completed",
+        "budget": 460000,
+        "district": "Κεραμεικός",
+        "description": "Ολοκληρώθηκε τον Σεπτέμβριο 2026. Ασφαλτόστρωση 2.3 χλμ οδικού δικτύου εντός της ιστορικής περιοχής Κεραμεικού."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "proj-005",
+      "geometry": { "type": "Point", "coordinates": [23.7215, 37.9755] },
+      "properties": {
+        "id": "proj-005",
+        "title": "Ανακατασκευή Πλατείας Αβησσυνίας",
+        "category": "Αστικοί Χώροι",
+        "status": "completed",
+        "budget": 530000,
+        "district": "Θησείο",
+        "description": "Ολοκληρώθηκε Ιούλιο 2026. Νέα δάπεδα, παγκάκια, φωτισμός LED και εγκατάσταση συντριβανιών για ψύξη."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "proj-006",
+      "geometry": { "type": "Point", "coordinates": [23.7200, 37.9742] },
+      "properties": {
+        "id": "proj-006",
+        "title": "Σηματοδότηση Θησείου",
+        "category": "Κυκλοφορία",
+        "status": "planned",
+        "budget": 285000,
+        "district": "Θησείο",
+        "description": "Αντικατάσταση 14 παλαιών σηματοδοτών με έξυπνους αισθητήρες βίντεο. Προβλεπόμενη εκκίνηση: Ιανουάριος 2027."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "proj-007",
+      "geometry": { "type": "Point", "coordinates": [23.7092, 37.9793] },
+      "properties": {
+        "id": "proj-007",
+        "title": "Ποδηλατολωρίδα Ιεράς Οδού",
+        "category": "Βιώσιμη Κινητικότητα",
+        "status": "in_progress",
+        "budget": 695000,
+        "district": "Γκάζι - Βοτανικός",
+        "description": "Αμφίδρομη ποδηλατολωρίδα 1.6 χλμ κατά μήκος της Ιεράς Οδού. Σύνδεση με τον ποδηλατόδρομο Κηφισού."
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "proj-008",
+      "geometry": { "type": "Point", "coordinates": [23.7135, 37.9765] },
+      "properties": {
+        "id": "proj-008",
+        "title": "Αναβάθμιση Φωτισμού Πειραιώς LED",
+        "category": "Ενέργεια",
+        "status": "completed",
+        "budget": 198000,
+        "district": "Γκάζι - Κεραμεικός",
+        "description": "Ολοκληρώθηκε Οκτώβριο 2026. 160 νέα φωτιστικά σώματα LED. Εκτιμώμενη εξοικονόμηση ενέργειας 42% ετησίως."
+      }
+    }
+  ]
+}

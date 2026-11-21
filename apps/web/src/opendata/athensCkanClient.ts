@@ -21,6 +21,8 @@ export const STATION_REGISTRY: Record<
   number,
   { resourceId: string; name: string; neighbourhood: string }
 > = {
+  // resource_ids from signed blob download URLs (opendata.athens.gr)
+  95:  { resourceId: "",                                       name: "Άτλας Σεπολίων",      neighbourhood: "ΣΕΠΟΛΙΑ"    }, // TODO: UUID pending
   96:  { resourceId: "f39043ef-1289-4f3c-a25c-ea78551b7008", name: "Τρίτωνα Σεπολίων",    neighbourhood: "ΣΕΠΟΛΙΑ"    },
   97:  { resourceId: "b69836e4-b946-4431-befc-54227af0ddeb", name: "Πλατεία Θυμαράκια",   neighbourhood: "ΣΕΠΟΛΙΑ"    },
   98:  { resourceId: "b02ebb00-3e17-4bc0-b7aa-b0b3c610a447", name: "Πλατεία Ζέρβα",       neighbourhood: "ΣΕΠΟΛΙΑ"    },
@@ -65,7 +67,7 @@ async function loadFixture(): Promise<Record<number, number>> {
 let _fixtureCache: Record<number, number> | null = null;
 
 export async function fetchAreaFootfall(
-  stationIds: number[] = [96, 97, 98, 99, 100, 112]
+  stationIds: number[] = [95, 96, 97, 98, 99, 100, 112]
 ): Promise<VisitorRecord[]> {
   if (!_fixtureCache) _fixtureCache = await loadFixture();
   const fixture = _fixtureCache;

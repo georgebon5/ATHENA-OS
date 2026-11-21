@@ -97,10 +97,10 @@ export default function App() {
         </div>
       </div>
 
-      <div className="fixed bottom-14 left-6 z-10">
+      <div className="pointer-events-none fixed bottom-14 left-6 z-10">
         <ErrorBoundary name="draw-panel"><DrawPanel /></ErrorBoundary>
       </div>
-      <div className="fixed bottom-6 right-6 z-10">
+      <div className="pointer-events-none fixed bottom-6 right-6 z-10">
         <ErrorBoundary name="minimap"><Minimap /></ErrorBoundary>
       </div>
 

@@ -70,7 +70,7 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
   const reports = useStore((s) => s.reports);
 
   const pick = (i: Votable) => {
-    cameraController.closeUp(Cesium.Cartesian3.fromDegrees(i.lngLat[0], i.lngLat[1], 0));
+    cameraController.flyTo({ lngLat: i.lngLat, heightM: HEIGHT.street + 20, headingDeg: 0, pitchDeg: -30, durationS: 1.8 });
     const id = selected === i.id ? null : i.id;
     selectedRef.current = id;
     setSelected(id);
@@ -173,7 +173,9 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
     window.addEventListener("pointerup", up);
   };
 
-  if (!open || items.length === 0) return null;
+  if (!open) return null;
+
+  const nearby50 = items.filter((i) => i.kind === "report" && i.distanceM <= 50);
   return (
     // Δεξιά, πάνω από το minimap. Σέρνεται από την κεφαλίδα, αλλάζει μέγεθος από την κάτω-δεξιά γωνία (CSS resize)
     <div
@@ -198,40 +200,108 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
           ×
         </button>
       </div>
-      <ul className="flex-1 space-y-0.5 overflow-y-auto p-2">
-        {items.map((i) => (
-          <li key={i.id}>
-            <button
-              type="button"
-              onClick={() => pick(i)}
-              className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left hover:bg-white/5 ${selected === i.id ? "bg-white/5" : ""}`}
-            >
-              <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: KIND[i.kind].color }} />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] text-chalk">{i.titleEl}</span>
-                <span className="block text-[12px] text-chalk/50">
-                  {KIND[i.kind].label} · {distance(i.distanceM)}
-                </span>
-              </span>
-              <span className="text-[12px] tabular-nums text-chalk/50">{i.yes + i.no + i.maybe} ψήφοι</span>
-            </button>
-            {selected === i.id &&
-              (photos === null ? (
-                <div className="mx-2.5 my-2 aspect-[4/3] animate-pulse rounded-lg bg-white/5" />
-              ) : photos.length ? (
-                // Οι φωτογραφίες μεγαλώνουν μαζί με το παράθυρο
-                <div className="mx-2.5 my-2 grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-2">
-                  {photos.map((u) => (
-                    <img key={u} src={u} alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
-                  ))}
-                  {mock && <p className="col-span-full -mt-1 text-[11px] text-chalk/40">Ενδεικτικές φωτογραφίες</p>}
-                </div>
-              ) : (
-                <p className="mx-2.5 my-2 text-[12px] text-chalk/50">Δεν υπάρχουν φωτογραφίες για αυτό.</p>
+      <div className="flex-1 overflow-y-auto p-2 space-y-3">
+        {/* ── Αναφορές ≤ 50m ── */}
+        <div>
+          <p className="hud-label px-2 pb-1.5 text-[11px]">
+            Προβλήματα κοντά σου <span className="text-chalk/30">(&lt;50m)</span>
+          </p>
+          {nearby50.length === 0 ? (
+            <p className="px-2.5 py-2 text-[13px] text-chalk/40">
+              {items.length === 0 ? "Φορτώνουμε…" : "Δεν υπάρχουν αναφορές σε 50m."}
+            </p>
+          ) : (
+            <ul className="space-y-0.5">
+              {nearby50.map((i) => (
+                <li key={i.id}>
+                  <button
+                    type="button"
+                    onClick={() => pick(i)}
+                    className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left hover:bg-white/5 ${selected === i.id ? "bg-white/8 ring-1 ring-yes/40" : ""}`}
+                  >
+                    <span className="h-3 w-3 shrink-0 rounded-full bg-white" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[15px] text-chalk">{i.titleEl}</span>
+                      <span className="block text-[12px] text-chalk/50">Αναφορά · {distance(i.distanceM)}</span>
+                    </span>
+                    <span className="shrink-0 text-right">
+                      <span className="block text-[14px] font-bold tabular-nums text-chalk">{i.yes + i.no + i.maybe}</span>
+                      <span className="block text-[11px] text-chalk/40">ψήφοι</span>
+                    </span>
+                  </button>
+                  {selected === i.id && (
+                    <div className="mx-2.5 my-2 space-y-2">
+                      {photos === null ? (
+                        <div className="aspect-[4/3] animate-pulse rounded-lg bg-white/5" />
+                      ) : photos.length ? (
+                        <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-2">
+                          {photos.map((u) => (
+                            <img key={u} src={u} alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
+                          ))}
+                          {mock && <p className="col-span-full -mt-1 text-[11px] text-chalk/40">Ενδεικτικές φωτογραφίες</p>}
+                        </div>
+                      ) : null}
+                      <a
+                        href={`/c/v/${i.id}`}
+                        className="flex h-11 w-full items-center justify-center rounded-xl bg-yes font-bold text-[15px] text-void shadow-[0_0_16px_-4px_#4ade80] transition active:scale-[0.98]"
+                      >
+                        ✓ Επικύρωσε / Vote
+                      </a>
+                    </div>
+                  )}
+                </li>
               ))}
-          </li>
-        ))}
-      </ul>
+            </ul>
+          )}
+        </div>
+
+        {/* ── Υπόλοιπα votables ── */}
+        {items.filter((i) => !(i.kind === "report" && i.distanceM <= 50)).length > 0 && (
+          <div>
+            <p className="hud-label px-2 pb-1.5 text-[11px]">Άλλα κοντά σου</p>
+            <ul className="space-y-0.5">
+              {items.filter((i) => !(i.kind === "report" && i.distanceM <= 50)).map((i) => (
+                <li key={i.id}>
+                  <button
+                    type="button"
+                    onClick={() => pick(i)}
+                    className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left hover:bg-white/5 ${selected === i.id ? "bg-white/5" : ""}`}
+                  >
+                    <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: KIND[i.kind].color }} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[15px] text-chalk">{i.titleEl}</span>
+                      <span className="block text-[12px] text-chalk/50">{KIND[i.kind].label} · {distance(i.distanceM)}</span>
+                    </span>
+                    <span className="text-[12px] tabular-nums text-chalk/50">{i.yes + i.no + i.maybe} ψήφοι</span>
+                  </button>
+                  {selected === i.id && (
+                    <div className="mx-2.5 my-2 space-y-2">
+                      {photos === null ? (
+                        <div className="aspect-[4/3] animate-pulse rounded-lg bg-white/5" />
+                      ) : photos.length ? (
+                        <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-2">
+                          {photos.map((u) => (
+                            <img key={u} src={u} alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
+                          ))}
+                          {mock && <p className="col-span-full -mt-1 text-[11px] text-chalk/40">Ενδεικτικές φωτογραφίες</p>}
+                        </div>
+                      ) : (
+                        <p className="text-[12px] text-chalk/50">Δεν υπάρχουν φωτογραφίες.</p>
+                      )}
+                      <a
+                        href={`/c/v/${i.id}`}
+                        className="flex h-11 w-full items-center justify-center rounded-xl bg-yes font-bold text-[15px] text-void shadow-[0_0_16px_-4px_#4ade80] transition active:scale-[0.98]"
+                      >
+                        ✓ Επικύρωσε / Vote
+                      </a>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

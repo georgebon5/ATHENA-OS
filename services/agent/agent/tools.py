@@ -173,19 +173,47 @@ async def open_consultation(scenario_id: str, report_id: str | None = None,
 
 # ── Tool: render_before_after ──────────────────────────────────────────────
 
+_FIXED_AFTER = {
+    "pothole":         "https://images.unsplash.com/photo-1584905347025-55c1b4a4c0cb?w=1200",
+    "sidewalk_damage": "https://images.unsplash.com/photo-1476231682828-37e571bc172f?w=1200",
+    "accessibility":   "https://images.unsplash.com/photo-1544551706-26bb6a4a24a7?w=1200",
+    "waste":           "https://images.unsplash.com/photo-1485115905815-74a5dd96ffe8?w=1200",
+    "lighting":        "https://images.unsplash.com/photo-1543518360-68b9612a7c8c?w=1200",
+    "obstruction":     "https://images.unsplash.com/photo-1600596542815-0c92b59a69b0?w=1200",
+    "graffiti":        "https://images.unsplash.com/photo-1571446390594-87abc6667406?w=1200",
+    "trees":           "https://images.unsplash.com/photo-1668009219418-4ece0d9e36c4?w=1200",
+    "default":         "https://images.unsplash.com/photo-1476231682828-37e571bc172f?w=1200",
+}
+
+def _pick_fixed_after(scenario_title: str) -> str:
+    t = scenario_title.lower()
+    if any(x in t for x in ["λακκ", "λακούβ", "pothole", "ασφαλτ"]):
+        return _FIXED_AFTER["pothole"]
+    if any(x in t for x in ["πεζοδρόμ", "sidewalk", "πλακ", "τσιμεντ"]):
+        return _FIXED_AFTER["sidewalk_damage"]
+    if any(x in t for x in ["αμεα", "αμαξίδ", "ράμπα", "προσβα", "access"]):
+        return _FIXED_AFTER["accessibility"]
+    if any(x in t for x in ["σκουπ", "waste", "απορρίμ", "σκέδι"]):
+        return _FIXED_AFTER["waste"]
+    if any(x in t for x in ["φωτισμ", "φωτεινό", "lighting", "λαμπ"]):
+        return _FIXED_AFTER["lighting"]
+    if any(x in t for x in ["γκράφ", "graffiti"]):
+        return _FIXED_AFTER["graffiti"]
+    if any(x in t for x in ["δέντρ", "φύτευ", "tree", "πρασιν", "σκιά"]):
+        return _FIXED_AFTER["trees"]
+    return _FIXED_AFTER["default"]
+
 async def render_before_after(photo_url: str, scenario_title: str) -> tuple[str, str]:
     """
     Δημιουργεί before/after εικόνες για τη διαβούλευση.
-    Χωρίς IMAGE_EDIT_API_KEY επιστρέφει placeholder Unsplash URLs.
+    Χωρίς IMAGE_EDIT_API_KEY επιστρέφει category-aware placeholder Unsplash URLs.
     """
     from .constants import IMAGE_EDIT_API_KEY
+    before = photo_url or "https://images.unsplash.com/photo-1657811146442-0d66d65dbe92?w=1200"
+    after  = _pick_fixed_after(scenario_title)
     if not IMAGE_EDIT_API_KEY:
-        before = photo_url or "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1200"
-        after  = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200"
         return before, after
-    # Placeholder — ο κάλογος image editing API πηγαίνει εδώ (π.χ. OpenAI edits)
-    before = photo_url or "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1200"
-    after  = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200"
+    # Placeholder — ο κώδικας image editing API πηγαίνει εδώ (π.χ. OpenAI edits)
     return before, after
 
 

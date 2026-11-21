@@ -5,6 +5,18 @@ import { cameraController } from "@/cesium/cameraShots";
 import { HEIGHT, SERAFIO_LNGLAT } from "@/cesium/constants";
 import { GATEWAY_URL } from "@/director/directorApi";
 import type { LngLat } from "@/types/contracts";
+import { initialMockVotes, saveMockVotes, voteHeat, withMockVotes } from "./voteHeat";
+
+/** Αριθμός ψήφων σε χρώμα: γαλάζιο (λίγες) → σκούρο κόκκινο (οι περισσότερες, «κρίσιμο»). */
+function VoteBadge({ votes, max }: { votes: number; max: number }) {
+  const h = voteHeat(votes, max);
+  return (
+    <span className="min-w-[58px] shrink-0 rounded-lg px-2.5 py-1 text-center leading-tight" style={{ background: h.bg, color: h.fg }}>
+      <span className="block text-[15px] font-bold tabular-nums">{votes}</span>
+      <span className="block text-[10px] font-semibold uppercase tracking-wide opacity-80">{h.critical ? "κρίσιμο" : "ψήφοι"}</span>
+    </span>
+  );
+}
 
 /** gateway GET /api/votables. Τοπικός τύπος: δεν είναι (ακόμα) στα contracts. */
 interface Votable {
@@ -60,6 +72,7 @@ function mockPhotos(i: Votable, category?: string): string[] {
 export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
   const [here, setHere] = useState<LngLat | null>(null);
   const [items, setItems] = useState<Votable[]>([]);
+  const [mockVotes, setMockVotes] = useState(initialMockVotes);
   const [open, setOpen] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
   const [photos, setPhotos] = useState<string[] | null>(null);
@@ -175,7 +188,9 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
 
   if (!open) return null;
 
-  const nearby50 = items.filter((i) => i.kind === "report" && i.distanceM <= 50);
+  const shown = mockVotes ? withMockVotes(items) : items;
+  const nearby50 = shown.filter((i) => i.kind === "report" && i.distanceM <= 50);
+  const maxVotes = Math.max(0, ...shown.map((i) => i.yes + i.no + i.maybe));
   return (
     // Δεξιά, πάνω από το minimap. Σέρνεται από την κεφαλίδα, αλλάζει μέγεθος από την κάτω-δεξιά γωνία (CSS resize)
     <div
@@ -189,6 +204,18 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
       >
         <span className="hud-label text-[11px]">
           <span className="mr-2 text-chalk/30">⠿</span>Ψηφίζεται κοντά σου · {items.length}
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => {
+              saveMockVotes(!mockVotes);
+              setMockVotes(!mockVotes);
+            }}
+            title="Δοκιμαστικές ψήφοι μόνο στην οθόνη (τίποτα στη βάση)"
+            className={`ml-2 rounded px-1.5 py-0.5 ${mockVotes ? "bg-warn/15 text-warn" : "bg-white/5 text-chalk/40 hover:text-chalk/70"}`}
+          >
+            δοκιμαστικές ψήφοι · {mockVotes ? "ON" : "OFF"}
+          </button>
         </span>
         <button
           type="button"
@@ -224,10 +251,7 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
                       <span className="block truncate text-[15px] text-chalk">{i.titleEl}</span>
                       <span className="block text-[12px] text-chalk/50">Αναφορά · {distance(i.distanceM)}</span>
                     </span>
-                    <span className="shrink-0 text-right">
-                      <span className="block text-[14px] font-bold tabular-nums text-chalk">{i.yes + i.no + i.maybe}</span>
-                      <span className="block text-[11px] text-chalk/40">ψήφοι</span>
-                    </span>
+                    <VoteBadge votes={i.yes + i.no + i.maybe} max={maxVotes} />
                   </button>
                   {selected === i.id && (
                     <div className="mx-2.5 my-2 space-y-2">
@@ -256,11 +280,11 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
         </div>
 
         {/* ── Υπόλοιπα votables ── */}
-        {items.filter((i) => !(i.kind === "report" && i.distanceM <= 50)).length > 0 && (
+        {shown.filter((i) => !(i.kind === "report" && i.distanceM <= 50)).length > 0 && (
           <div>
             <p className="hud-label px-2 pb-1.5 text-[11px]">Άλλα κοντά σου</p>
             <ul className="space-y-0.5">
-              {items.filter((i) => !(i.kind === "report" && i.distanceM <= 50)).map((i) => (
+              {shown.filter((i) => !(i.kind === "report" && i.distanceM <= 50)).map((i) => (
                 <li key={i.id}>
                   <button
                     type="button"
@@ -272,7 +296,7 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
                       <span className="block truncate text-[15px] text-chalk">{i.titleEl}</span>
                       <span className="block text-[12px] text-chalk/50">{KIND[i.kind].label} · {distance(i.distanceM)}</span>
                     </span>
-                    <span className="text-[12px] tabular-nums text-chalk/50">{i.yes + i.no + i.maybe} ψήφοι</span>
+                    <VoteBadge votes={i.yes + i.no + i.maybe} max={maxVotes} />
                   </button>
                   {selected === i.id && (
                     <div className="mx-2.5 my-2 space-y-2">

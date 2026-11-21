@@ -4,6 +4,18 @@ import { Shell, Spinner } from "../components/Shell";
 import { MiniMap } from "../components/MiniMap";
 import { getVotables, type Votable } from "../lib/api";
 import { SERAFIO } from "../lib/sensors";
+import { initialMockVotes, saveMockVotes, voteHeat, withMockVotes } from "../lib/voteHeat";
+
+/** Αριθμός ψήφων σε χρώμα: γαλάζιο (λίγες) → σκούρο κόκκινο (οι περισσότερες, «κρίσιμο»). */
+function VoteBadge({ votes, max }: { votes: number; max: number }) {
+  const h = voteHeat(votes, max);
+  return (
+    <span className="min-w-[60px] shrink-0 rounded-xl px-2.5 py-1.5 text-center leading-tight" style={{ background: h.bg, color: h.fg }}>
+      <span className="block text-[16px] font-bold tabular-nums">{votes}</span>
+      <span className="block text-[10px] font-semibold uppercase tracking-wide opacity-80">{h.critical ? "κρίσιμο" : "ψήφοι"}</span>
+    </span>
+  );
+}
 
 const KIND: Record<Votable["kind"], { label: string; color: string }> = {
   consultation: { label: "Διαβούλευση", color: "#79b7e4" },
@@ -35,6 +47,7 @@ export function NearbyScreen() {
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   const [here, setHere] = useState<Here | null>(null);
   const [items, setItems] = useState<Votable[] | null>(null);
+  const [mockVotes, setMockVotes] = useState(initialMockVotes);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Votable | null>(null);
 
@@ -47,8 +60,10 @@ export function NearbyScreen() {
       .catch((e: Error) => setError(e.message));
   }, [here]);
 
-  const nearby = items?.filter((i) => i.kind === "report" && i.distanceM <= NEARBY_RADIUS) ?? [];
-  const rest = items?.filter((i) => !(i.kind === "report" && i.distanceM <= NEARBY_RADIUS)) ?? [];
+  const shown = items && mockVotes ? withMockVotes(items) : items;
+  const nearby = shown?.filter((i) => i.kind === "report" && i.distanceM <= NEARBY_RADIUS) ?? [];
+  const rest = shown?.filter((i) => !(i.kind === "report" && i.distanceM <= NEARBY_RADIUS)) ?? [];
+  const maxVotes = Math.max(0, ...(shown ?? []).map((i) => i.yes + i.no + i.maybe));
 
   const handleSelect = (item: Votable) => {
     setSelected((prev) => (prev?.id === item.id ? null : item));
@@ -113,6 +128,16 @@ export function NearbyScreen() {
             <h1 className="text-[21px] font-bold">
               Προβλήματα κοντά σου{" "}
               <span className="text-[14px] font-normal text-muted">(&lt; {NEARBY_RADIUS}m)</span>
+              <button
+                type="button"
+                onClick={() => {
+                  saveMockVotes(!mockVotes);
+                  setMockVotes(!mockVotes);
+                }}
+                className={`ml-2 rounded px-1.5 py-0.5 align-middle text-[12px] font-semibold ${mockVotes ? "bg-maybe/15 text-maybe" : "bg-white/5 text-muted"}`}
+              >
+                δοκιμαστικές ψήφοι · {mockVotes ? "ON" : "OFF"}
+              </button>
             </h1>
             {nearby.length === 0 ? (
               <p className="text-muted text-[15px]">Δεν υπάρχουν αναφορές σε {NEARBY_RADIUS}m.</p>
@@ -134,10 +159,7 @@ export function NearbyScreen() {
                         </span>
                         <span className="block truncate text-[16px] font-semibold">{i.titleEl}</span>
                       </span>
-                      <span className="shrink-0 text-right">
-                        <span className="block text-[15px] font-bold tabular-nums">{i.yes + i.no + i.maybe}</span>
-                        <span className="block text-[11px] text-muted">ψήφοι</span>
-                      </span>
+                      <VoteBadge votes={i.yes + i.no + i.maybe} max={maxVotes} />
                     </button>
                   </li>
                 ))}
@@ -162,7 +184,7 @@ export function NearbyScreen() {
                   </span>
                   <span className="block truncate text-[16px] font-semibold">{i.titleEl}</span>
                 </span>
-                <span className="shrink-0 text-[13px] tabular-nums text-muted">{i.yes + i.no + i.maybe} ψήφοι</span>
+                <VoteBadge votes={i.yes + i.no + i.maybe} max={maxVotes} />
               </a>
             </li>
           ))}

@@ -28,29 +28,46 @@ const ATTICA = { w: 23.3, s: 37.6, e: 24.2, n: 38.4 };
 
 const distance = (m: number) => (m < 1000 ? `${m} m` : `${(m / 1000).toFixed(1).replace(".", ",")} km`);
 
-// Ενδεικτικές φωτογραφίες (Unsplash, ελεύθερη άδεια, ελεγμένες μία-μία) για ό,τι δεν έχει πραγματική:
-// τα έργα και οι ιστορικές αναφορές του seed (εκείνες έχουν generated placeholder). Οι αληθινές δεν αντικαθίστανται.
+// Ενδεικτικές φωτογραφίες (Unsplash, ελεύθερη άδεια) — δύο λεξιλόγια:
+// BEFORE: εικόνες του προβλήματος · AFTER: πώς θα φαίνεται φτιαγμένο
 const U = (id: string) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=900&q=70`;
-const MOCK: Record<string, string[]> = {
-  pothole: [U("1657811146442-0d66d65dbe92"), U("1560782205-4dd83ceb0270")],
-  sidewalk_damage: [U("1717185691293-4ecd7072b847"), U("1777985075988-efde43fbcc78")],
-  waste: [U("1759401654832-ab2e73a14336"), U("1739569482726-511824b03679")],
-  lighting: [U("1565199975350-a723a63c053f"), U("1543518360-68b9612a7c8c")],
-  obstruction: [U("1774686251372-33e8fae4faef"), U("1786391756547-89c6c69b140c")],
-  graffiti: [U("1765230182334-e29feea9e49e"), U("1571446390594-87abc6667406")],
-  accessibility: [U("1653701888795-a23335d9aee2"), U("1699170551757-348ed5a52e48")],
-  street: [U("1655548624089-18e789cd3245"), U("1602769247692-126fdf1f1da6")],
-  roadworks: [U("1529792083865-d23889753466"), U("1503708928676-1cb796a0891e")],
-  park: [U("1641357441057-e798d0af9ed8"), U("1668009219418-4ece0d9e36c4")],
+const MOCK_BEFORE: Record<string, string> = {
+  pothole:         U("1657811146442-0d66d65dbe92"),
+  sidewalk_damage: U("1717185691293-4ecd7072b847"),
+  waste:           U("1759401654832-ab2e73a14336"),
+  lighting:        U("1565199975350-a723a63c053f"),
+  obstruction:     U("1774686251372-33e8fae4faef"),
+  graffiti:        U("1765230182334-e29feea9e49e"),
+  accessibility:   U("1653701888795-a23335d9aee2"),
+  street:          U("1655548624089-18e789cd3245"),
+  roadworks:       U("1529792083865-d23889753466"),
+  park:            U("1641357441057-e798d0af9ed8"),
+};
+// "Μετά": καθαρός δρόμος, νέο πεζοδρόμιο, ράμπα ΑΜΕΑ, κτλ.
+const MOCK_AFTER: Record<string, string> = {
+  pothole:         U("1584905347025-55c1b4a4c0cb"),  // smooth new asphalt
+  sidewalk_damage: U("1476231682828-37e571bc172f"),  // clean walkway
+  waste:           U("1485115905815-74a5dd96ffe8"),  // clean street
+  lighting:        U("1543518360-68b9612a7c8c"),     // well-lit
+  obstruction:     U("1600596542815-0c92b59a69b0"),  // clear path
+  graffiti:        U("1571446390594-87abc6667406"),  // clean wall
+  accessibility:   U("1544551706-26bb6a4a24a7"),     // accessible ramp
+  street:          U("1602769247692-126fdf1f1da6"),  // clean road
+  roadworks:       U("1503708928676-1cb796a0891e"),  // finished road
+  park:            U("1668009219418-4ece0d9e36c4"),  // planted trees
 };
 
-function mockPhotos(i: Votable, category?: string): string[] {
+function mockPhotos(i: Votable, category?: string): { before: string; after: string } {
+  let key = category ?? "";
   if (i.kind === "project") {
-    if (/φύτευ|πάρκ|πρασιν|δέντρ/i.test(i.titleEl)) return MOCK.park;
-    if (/λεωφορ|ποδηλατ|λωρίδ/i.test(i.titleEl)) return MOCK.street;
-    return MOCK.roadworks;
+    if (/φύτευ|πάρκ|πρασιν|δέντρ/i.test(i.titleEl)) key = "park";
+    else if (/λεωφορ|ποδηλατ|λωρίδ/i.test(i.titleEl)) key = "street";
+    else key = "roadworks";
   }
-  return MOCK[category ?? ""] ?? MOCK.street;
+  return {
+    before: MOCK_BEFORE[key] ?? MOCK_BEFORE.street,
+    after:  MOCK_AFTER[key]  ?? MOCK_AFTER.street,
+  };
 }
 
 /**
@@ -65,7 +82,8 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
   const [open, setOpen] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
   const [pair, setPair] = useState<PhotoPair | null>(null);
-  const [photoTab, setPhotoTab] = useState<"before" | "after">("before");
+  const [myVote, setMyVote] = useState<Record<string, "yes" | "no" | "maybe">>({});
+  const [extraVotes, setExtraVotes] = useState<Record<string, { yes: number; no: number; maybe: number }>>({});
   const selectedRef = useRef<string | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
@@ -77,7 +95,6 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
     selectedRef.current = id;
     setSelected(id);
     setPair(null);
-    setPhotoTab("before");
     if (!id) return;
     fetch(`${GATEWAY_URL}/api/consultations/${encodeURIComponent(id)}`)
       .then((r) => (r.ok ? r.json() : null))
@@ -86,15 +103,34 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
         const cat = c?.reportId ? reports[c.reportId]?.classification?.category : undefined;
         const seeded = !!c?.reportId?.startsWith("r-seed-");
         const fallbacks = mockPhotos(i, cat);
-        const before = (!seeded && c?.beforeUrl) ? c.beforeUrl : fallbacks[0];
-        const after  = (!seeded && c?.afterUrl)  ? c.afterUrl  : (fallbacks[1] ?? null);
+        const before = (!seeded && c?.beforeUrl) ? c.beforeUrl : fallbacks.before;
+        const after  = (!seeded && c?.afterUrl)  ? c.afterUrl  : fallbacks.after;
         setPair({ before, after, mock: seeded || (!c?.beforeUrl) });
       })
       .catch(() => {
         if (selectedRef.current !== id) return;
         const fallbacks = mockPhotos(i);
-        setPair({ before: fallbacks[0], after: fallbacks[1] ?? null, mock: true });
+        setPair({ before: fallbacks.before, after: fallbacks.after, mock: true });
       });
+  };
+
+  const castVote = (i: Votable, choice: "yes" | "no" | "maybe") => {
+    if (myVote[i.id]) return;
+    setMyVote((v) => ({ ...v, [i.id]: choice }));
+    setExtraVotes((e) => {
+      const cur = e[i.id] ?? { yes: 0, no: 0, maybe: 0 };
+      return { ...e, [i.id]: { ...cur, [choice]: cur[choice] + 1 } };
+    });
+    fetch(`${GATEWAY_URL}/api/consultations/${encodeURIComponent(i.id)}/votes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ consultationId: i.id, choice }),
+    }).catch(() => undefined);
+  };
+
+  const tally = (i: Votable) => {
+    const ex = extraVotes[i.id] ?? { yes: 0, no: 0, maybe: 0 };
+    return { yes: i.yes + ex.yes, no: i.no + ex.no, maybe: i.maybe + ex.maybe };
   };
 
   useEffect(() => {
@@ -237,38 +273,22 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
                         <div className="aspect-[4/3] animate-pulse rounded-lg bg-white/5" />
                       ) : (
                         <>
-                          {/* Tabs Τώρα / Με βελτίωση */}
-                          <div className="flex gap-1 rounded-lg bg-white/5 p-1">
-                            <button
-                              type="button"
-                              onClick={() => setPhotoTab("before")}
-                              className={`flex-1 rounded-md py-1 text-[12px] font-semibold transition ${photoTab === "before" ? "bg-white/15 text-chalk" : "text-chalk/40 hover:text-chalk/70"}`}
-                            >
-                              Τώρα
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setPhotoTab("after")}
-                              disabled={!pair.after}
-                              className={`flex-1 rounded-md py-1 text-[12px] font-semibold transition ${photoTab === "after" ? "bg-holo/30 text-chalk" : "text-chalk/40 hover:text-chalk/70"} disabled:opacity-30`}
-                            >
-                              Με βελτίωση
-                            </button>
-                          </div>
-                          <img
-                            src={photoTab === "after" && pair.after ? pair.after : pair.before}
-                            alt={photoTab === "after" ? "Με βελτίωση" : "Τρέχουσα κατάσταση"}
-                            className="aspect-[4/3] w-full rounded-lg object-cover"
-                          />
-                          {pair.mock && <p className="text-[11px] text-chalk/40">Ενδεικτική φωτογραφία</p>}
+                          <img src={pair.before} alt="Τρέχουσα κατάσταση" className="aspect-[4/3] w-full rounded-lg object-cover" />
+                          {pair.mock && <p className="text-[11px] text-chalk/30">Ενδεικτική φωτογραφία</p>}
                         </>
                       )}
-                      <a
-                        href={`/c/v/${i.id}`}
-                        className="flex h-11 w-full items-center justify-center rounded-xl bg-yes font-bold text-[15px] text-void shadow-[0_0_16px_-4px_#4ade80] transition active:scale-[0.98]"
-                      >
-                        ✓ Επικύρωσε / Vote
-                      </a>
+                      {myVote[i.id] ? (
+                        <div className="flex items-center justify-between rounded-xl border border-yes/20 bg-yes/10 px-4 py-2.5">
+                          <span className="text-[14px] font-semibold text-yes">✓ Ψήφος καταγράφηκε</span>
+                          <span className="tabular-nums text-[12px] text-chalk/50">{tally(i).yes + tally(i).no + tally(i).maybe} ψήφοι</span>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-3 gap-1.5">
+                          <button type="button" onClick={() => castVote(i, "yes")} className="flex h-10 items-center justify-center rounded-xl bg-[#4ade80]/15 text-[13px] font-bold text-[#4ade80] transition hover:bg-[#4ade80]/25 active:scale-95">✓ ΝΑΙ</button>
+                          <button type="button" onClick={() => castVote(i, "maybe")} className="flex h-10 items-center justify-center rounded-xl bg-holo/15 text-[13px] font-bold text-holo transition hover:bg-holo/25 active:scale-95">~ ΙΣΩΣ</button>
+                          <button type="button" onClick={() => castVote(i, "no")} className="flex h-10 items-center justify-center rounded-xl bg-[#ff6a4c]/15 text-[13px] font-bold text-[#ff6a4c] transition hover:bg-[#ff6a4c]/25 active:scale-95">✗ ΟΧΙ</button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </li>
@@ -302,17 +322,22 @@ export function NearbyPanel({ viewer }: { viewer: Cesium.Viewer | null }) {
                         <div className="aspect-[4/3] animate-pulse rounded-lg bg-white/5" />
                       ) : (
                         <>
-                          <div className="flex gap-1 rounded-lg bg-white/5 p-1">
-                            <button type="button" onClick={() => setPhotoTab("before")} className={`flex-1 rounded-md py-1 text-[12px] font-semibold transition ${photoTab === "before" ? "bg-white/15 text-chalk" : "text-chalk/40 hover:text-chalk/70"}`}>Τώρα</button>
-                            <button type="button" onClick={() => setPhotoTab("after")} disabled={!pair.after} className={`flex-1 rounded-md py-1 text-[12px] font-semibold transition ${photoTab === "after" ? "bg-holo/30 text-chalk" : "text-chalk/40 hover:text-chalk/70"} disabled:opacity-30`}>Με βελτίωση</button>
-                          </div>
-                          <img src={photoTab === "after" && pair.after ? pair.after : pair.before} alt="" className="aspect-[4/3] w-full rounded-lg object-cover" />
-                          {pair.mock && <p className="text-[11px] text-chalk/40">Ενδεικτική φωτογραφία</p>}
+                          <img src={pair.before} alt="Τρέχουσα κατάσταση" className="aspect-[4/3] w-full rounded-lg object-cover" />
+                          {pair.mock && <p className="text-[11px] text-chalk/30">Ενδεικτική φωτογραφία</p>}
                         </>
                       )}
-                      <a href={`/c/v/${i.id}`} className="flex h-11 w-full items-center justify-center rounded-xl bg-yes font-bold text-[15px] text-void shadow-[0_0_16px_-4px_#4ade80] transition active:scale-[0.98]">
-                        ✓ Επικύρωσε / Vote
-                      </a>
+                      {myVote[i.id] ? (
+                        <div className="flex items-center justify-between rounded-xl border border-yes/20 bg-yes/10 px-4 py-2.5">
+                          <span className="text-[14px] font-semibold text-yes">✓ Ψήφος καταγράφηκε</span>
+                          <span className="tabular-nums text-[12px] text-chalk/50">{tally(i).yes + tally(i).no + tally(i).maybe} ψήφοι</span>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-3 gap-1.5">
+                          <button type="button" onClick={() => castVote(i, "yes")} className="flex h-10 items-center justify-center rounded-xl bg-[#4ade80]/15 text-[13px] font-bold text-[#4ade80] transition hover:bg-[#4ade80]/25 active:scale-95">✓ ΝΑΙ</button>
+                          <button type="button" onClick={() => castVote(i, "maybe")} className="flex h-10 items-center justify-center rounded-xl bg-holo/15 text-[13px] font-bold text-holo transition hover:bg-holo/25 active:scale-95">~ ΙΣΩΣ</button>
+                          <button type="button" onClick={() => castVote(i, "no")} className="flex h-10 items-center justify-center rounded-xl bg-[#ff6a4c]/15 text-[13px] font-bold text-[#ff6a4c] transition hover:bg-[#ff6a4c]/25 active:scale-95">✗ ΟΧΙ</button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </li>

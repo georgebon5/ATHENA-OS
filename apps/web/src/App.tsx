@@ -50,6 +50,7 @@ export default function App() {
   const setLiveSimResult = useStore((s) => s.setLiveSimResult);
   const setLayer = useStore((s) => s.setLayer);
   const setBeat = useStore((s) => s.setBeat);
+  const citizenMode = useStore((s) => s.citizenMode);
   const clientRef = useRef<WsClient | null>(null);
 
   useEffect(() => {
@@ -118,41 +119,66 @@ export default function App() {
       <div className="screen-fx" />
 
       {/* ── HUD ── */}
-      <ErrorBoundary name="topbar"><TopBar /></ErrorBoundary>
-      <ErrorBoundary name="intro-pills"><IntroPills /></ErrorBoundary>
+      {!citizenMode && <ErrorBoundary name="topbar"><TopBar /></ErrorBoundary>}
+      {!citizenMode && <ErrorBoundary name="intro-pills"><IntroPills /></ErrorBoundary>}
 
-      <aside className={`pointer-events-none fixed left-6 ${DOCK_TOP} z-10 flex w-[340px] flex-col gap-3`}>
-        <ErrorBoundary name="director"><DirectorBar /></ErrorBoundary>
-        <ErrorBoundary name="toasts"><Toasts /></ErrorBoundary>
-        <ErrorBoundary name="thinking"><ThinkingCard /></ErrorBoundary>
-      </aside>
+      {citizenMode && (
+        <header className="pointer-events-none fixed inset-x-0 top-0 z-20 px-5 pt-4">
+          <div className="pointer-events-auto mx-auto flex max-w-lg items-center gap-3 rounded-2xl border border-holo/15 bg-[rgba(5,49,93,0.7)] px-5 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.6)] backdrop-blur-xl">
+            <span className="hud-title text-[22px] holo-shimmer">ATHENA</span>
+            <span className="hud-title -skew-x-6 rounded-sm bg-holo px-1.5 text-[11px] text-void">OS</span>
+            <span className="ml-2 text-[13px] text-chalk/50">Citizen Mode — εξερεύνησε τη γειτονιά σου</span>
+            <span className="ml-auto flex items-center gap-1.5 rounded-full bg-[#4ade80]/10 px-2.5 py-1 text-[10px] font-bold tracking-widest text-[#4ade80]">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#4ade80] opacity-60" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#4ade80]" />
+              </span>
+              LIVE
+            </span>
+          </div>
+        </header>
+      )}
 
-      <aside className={`pointer-events-none fixed right-6 ${DOCK_TOP} z-10 flex max-h-[calc(100vh-360px)] w-[380px] flex-col gap-3`}>
-        <ErrorBoundary name="results"><ResultsCard /></ErrorBoundary>
-        <ErrorBoundary name="variant"><VariantCompare /></ErrorBoundary>
-      </aside>
+      {!citizenMode && (
+        <aside className={`pointer-events-none fixed left-6 ${DOCK_TOP} z-10 flex w-[340px] flex-col gap-3`}>
+          <ErrorBoundary name="director"><DirectorBar /></ErrorBoundary>
+          <ErrorBoundary name="toasts"><Toasts /></ErrorBoundary>
+          <ErrorBoundary name="thinking"><ThinkingCard /></ErrorBoundary>
+        </aside>
+      )}
 
-      <div className={`pointer-events-none fixed left-1/2 ${DOCK_TOP} z-10 -translate-x-1/2`}>
-        <ErrorBoundary name="vote-counter"><VoteCounter /></ErrorBoundary>
-      </div>
+      {!citizenMode && (
+        <aside className={`pointer-events-none fixed right-6 ${DOCK_TOP} z-10 flex max-h-[calc(100vh-360px)] w-[380px] flex-col gap-3`}>
+          <ErrorBoundary name="results"><ResultsCard /></ErrorBoundary>
+          <ErrorBoundary name="variant"><VariantCompare /></ErrorBoundary>
+        </aside>
+      )}
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-10 flex flex-col items-center gap-3 px-6">
-        <ErrorBoundary name="subtitles"><Subtitles /></ErrorBoundary>
-        <div className="flex w-full max-w-2xl items-center gap-3">
-          <ErrorBoundary name="command"><CommandBar /></ErrorBoundary>
+      {!citizenMode && (
+        <div className={`pointer-events-none fixed left-1/2 ${DOCK_TOP} z-10 -translate-x-1/2`}>
+          <ErrorBoundary name="vote-counter"><VoteCounter /></ErrorBoundary>
         </div>
-      </div>
+      )}
 
-      <SunClock />
+      {!citizenMode && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-6 z-10 flex flex-col items-center gap-3 px-6">
+          <ErrorBoundary name="subtitles"><Subtitles /></ErrorBoundary>
+          <div className="flex w-full max-w-2xl items-center gap-3">
+            <ErrorBoundary name="command"><CommandBar /></ErrorBoundary>
+          </div>
+        </div>
+      )}
+
+      {!citizenMode && <SunClock />}
       <ErrorBoundary name="nearby"><NearbyPanel viewer={viewer} /></ErrorBoundary>
       <ErrorBoundary name="phone"><PhonePreview /></ErrorBoundary>
 
-      {/* ── full-screen στιγμές ── */}
-      <ErrorBoundary name="beat-banner"><BeatBanner /></ErrorBoundary>
-      <ErrorBoundary name="engage"><EngagePanel /></ErrorBoundary>
-      <ErrorBoundary name="backtest"><BacktestPanel /></ErrorBoundary>
-      <ErrorBoundary name="decision"><DecisionPanel /></ErrorBoundary>
-      <ErrorBoundary name="fps"><FPSOverlay /></ErrorBoundary>
+      {/* ── full-screen στιγμές (μόνο admin) ── */}
+      {!citizenMode && <ErrorBoundary name="beat-banner"><BeatBanner /></ErrorBoundary>}
+      {!citizenMode && <ErrorBoundary name="engage"><EngagePanel /></ErrorBoundary>}
+      {!citizenMode && <ErrorBoundary name="backtest"><BacktestPanel /></ErrorBoundary>}
+      {!citizenMode && <ErrorBoundary name="decision"><DecisionPanel /></ErrorBoundary>}
+      {!citizenMode && <ErrorBoundary name="fps"><FPSOverlay /></ErrorBoundary>}
     </div>
   );
 }

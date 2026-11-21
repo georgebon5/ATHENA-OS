@@ -1,7 +1,7 @@
 import type { DemoBeat, Report } from "@/types/contracts";
 
 export const GATEWAY_URL =
-  (import.meta.env.VITE_GATEWAY_URL as string | undefined) ??
+  (import.meta.env.VITE_GATEWAY_URL as string | undefined) ||
   (typeof window !== "undefined"
     ? `${window.location.protocol}//${window.location.hostname}:8000`
     : "http://localhost:8000");

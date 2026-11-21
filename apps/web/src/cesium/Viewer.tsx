@@ -112,7 +112,13 @@ export function CesiumViewer({ onReady }: Props) {
     // ── 3D Assets (async, προαιρετικά) ───────────────────────────────────
     (async () => {
       // 16 (default) → 8: ένα επίπεδο λεπτομέρειας πάνω. Χαμηλότερο = πιο καθαρό αλλά περισσότερα tiles/FPS κόστος
-      const detail = { maximumScreenSpaceError: 8 };
+      // + cache/collision που βάζει το createGooglePhotorealistic3DTileset και χάνονται στο fromIonAssetId
+      const detail = {
+        maximumScreenSpaceError: 8,
+        cacheBytes: 1536 * 1024 * 1024,
+        maximumCacheOverflowBytes: 1024 * 1024 * 1024,
+        enableCollision: true,
+      };
       try {
         if (GOOGLE_MAPS_API_KEY || CESIUM_ION_TOKEN) {
           // Google Photorealistic 3D Tiles — με δικό μας key, αλλιώς μέσω Cesium ion (asset 2275207).

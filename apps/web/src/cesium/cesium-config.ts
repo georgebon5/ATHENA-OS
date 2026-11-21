@@ -15,12 +15,13 @@ export const GOOGLE_MAPS_API_KEY =
   (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined) ?? "";
 
 export const WS_URL =
-  (import.meta.env.VITE_WS_URL as string | undefined) ??
+  // || και όχι ??: το .env.example αφήνει «VITE_WS_URL=» κενό, που πρέπει να σημαίνει default
+  (import.meta.env.VITE_WS_URL as string | undefined) ||
   (() => {
     if (typeof window === "undefined") return "ws://localhost:8000/ws";
     const proto = window.location.protocol === "https:" ? "wss" : "ws";
     const host = window.location.hostname;
     const port =
-      (import.meta.env.VITE_GATEWAY_PORT as string | undefined) ?? "8000";
+      (import.meta.env.VITE_GATEWAY_PORT as string | undefined) || "8000";
     return `${proto}://${host}:${port}/ws`;
   })();

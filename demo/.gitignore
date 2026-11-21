@@ -3,3 +3,4 @@ cache/sim/
 cache/backtests.json
 # Αντίγραφα σε μεγάλη ανάλυση· βάλε στο git μόνο μικρές (≤ 300 KB) φωτογραφίες seed
 seed/photos/**/*.heic
+cache/network.json

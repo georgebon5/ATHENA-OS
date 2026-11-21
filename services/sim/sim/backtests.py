@@ -30,7 +30,7 @@ def load_backtests() -> list[Backtest]:
     cache_path = DATA_PROCESSED_DIR / "backtests.json"
     if cache_path.exists():
         try:
-            data = json.loads(cache_path.read_text())
+            data = json.loads(cache_path.read_text(encoding="utf-8"))
             backtests = [Backtest.model_validate(b) for b in data]
             log.info("Loaded %d backtests from %s", len(backtests), cache_path)
             return backtests
@@ -43,7 +43,8 @@ def save_backtests(backtests: list[Backtest]) -> None:
     cache_path = DATA_PROCESSED_DIR / "backtests.json"
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     cache_path.write_text(
-        json.dumps([b.model_dump() for b in backtests], indent=2, ensure_ascii=False)
+        json.dumps([b.model_dump() for b in backtests], indent=2, ensure_ascii=False),
+        encoding="utf-8",
     )
     log.info("Saved %d backtests to %s", len(backtests), cache_path)
 

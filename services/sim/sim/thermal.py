@@ -35,7 +35,7 @@ from .constants import (
     M_PER_DEG_LAT, M_PER_DEG_LNG_AT_38,
     ATHENS_TZ,
     TREE_CANOPY_RADIUS_M, TREE_NDVI_BOOST_CENTER, TREE_SHADE_PEAK,
-    COOL_PAVEMENT_ALBEDO_BOOST,
+    COOL_PAVEMENT_ALBEDO_BOOST, COOL_PAVEMENT_REACH_M,
     DATA_PROCESSED_DIR,
     SERAFEIO_LNGLAT,
 )
@@ -256,12 +256,14 @@ class PhysicsModel:
     BASE_LST_ASPHALT = 52.0
     BASE_LST_VEGETATION = 30.0
     BASE_LST_BUILDING = 48.0
-    # Maximum LST reduction from full shade (canopy or building shadow).
-    # Applied additively so delta(shade) maps linearly to delta(LST).
-    # Calibrated so 42 trees (TREE_SHADE_PEAK=0.07, sigma=15m) → p50 ≈ -2.3°C.
+    # Maximum LST reduction from full shade (canopy or building shadow), additive.
+    # Βιβλιογραφία: 8–16 °C ψύξη επιφάνειας σε πλήρη σκιά → κεντρική τιμή 12.
     SHADE_DELTA_MAX = 12.0
+    ALBEDO_K = 20.0  # °C ανά μονάδα albedo
+    # Ευαισθησία των συντελεστών σκιάς/albedo (×2/3 … ×4/3) → p10/p90 της θερμικής αλλαγής
+    COEF_SCALES = (2 / 3, 4 / 3)
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
+    def predict(self, X: np.ndarray, coef_scale: float = 1.0) -> np.ndarray:
         shade, ndvi, bldg, road, albedo, svf, dist_green_norm, sin_alt = X.T
         # Weighted average by surface type (shade NOT applied here — single additive term below)
         lst = (
@@ -272,11 +274,11 @@ class PhysicsModel:
             )
         )
         # Albedo correction: higher albedo → lower LST
-        lst -= (albedo - 0.15) * 20.0
+        lst -= (albedo - 0.15) * self.ALBEDO_K * coef_scale
         # SVF: lower SVF (more enclosed) → trapped heat
         lst += (1 - svf) * 3.0
         # Shade: single additive term — tree/pavement scenario deltas scale linearly
-        lst -= shade * self.SHADE_DELTA_MAX
+        lst -= shade * self.SHADE_DELTA_MAX * coef_scale
         # Solar scaling
         lst *= np.clip(sin_alt, 0.1, 1.0) ** 0.3
         return lst.clip(20.0, 70.0)
@@ -386,9 +388,10 @@ def compute_thermal_frame(when_iso: str) -> list[ThermalCell]:
 
 # ── Scenario simulation ───────────────────────────────────────────────────────
 
-def simulate_thermal(scenario: Scenario) -> tuple[ThermalPart, float]:
+def simulate_thermal(scenario: Scenario, cool_points: np.ndarray | None = None) -> tuple[ThermalPart, float]:
     """
     Predict LST before and after scenario edits.
+    cool_points: σημεία (lng, lat) κατά μήκος των δρόμων του cool_pavement (network.way_points).
     Returns (ThermalPart, compute_ms).
     """
     if _grid_df is None or _thermal_model is None:
@@ -401,18 +404,22 @@ def simulate_thermal(scenario: Scenario) -> tuple[ThermalPart, float]:
     # Apply scenario edits to feature matrix
     X_new = X_base.copy()
     df_new = _grid_df.copy()
+    cool_mask = _cells_near(cool_points, COOL_PAVEMENT_REACH_M)
     for edit in scenario.edits:
         match edit.type:
             case "add_trees":
                 _apply_add_trees(df_new, X_new, edit, when)
             case "cool_pavement":
-                _apply_cool_pavement(df_new, X_new, edit)
+                _apply_cool_pavement(X_new, cool_mask)
 
     # Predict
+    variants: list[tuple[np.ndarray, np.ndarray]] = []
     if isinstance(_thermal_model, PhysicsModel):
         lst_base = _thermal_model.predict(X_base)
         lst_new = _thermal_model.predict(X_new)
         lst_base_p10, lst_base_p90 = _thermal_model.predict_p10_p90(X_base)
+        variants = [(_thermal_model.predict(X_base, k), _thermal_model.predict(X_new, k))
+                    for k in PhysicsModel.COEF_SCALES]
     else:
         lst_base = _thermal_model.predict(X_base)
         lst_new = _thermal_model.predict(X_new)
@@ -428,13 +435,8 @@ def simulate_thermal(scenario: Scenario) -> tuple[ThermalPart, float]:
         if edit.type in ("add_trees", "cool_pavement"):
             if edit.type == "add_trees" and hasattr(edit, "geometry"):
                 edit_lnglats.extend(edit.geometry)
-            elif edit.type == "cool_pavement" and hasattr(edit, "wayIds") and _grid_df is not None:
-                # Use road cells for cool_pavement
-                road_cells = _grid_df[_grid_df["road_frac"] > 0.3]
-                if len(road_cells) > 0:
-                    mid = len(road_cells) // 2
-                    row = road_cells.iloc[mid]
-                    edit_lnglats.append((row["lng"], row["lat"]))
+            elif edit.type == "cool_pavement" and cool_points is not None and len(cool_points):
+                edit_lnglats.append(tuple(cool_points.mean(axis=0)))
 
     if edit_lnglats:
         # Use centroid of edit geometry as hotspot reference
@@ -453,20 +455,23 @@ def simulate_thermal(scenario: Scenario) -> tuple[ThermalPart, float]:
     if hotspot_mask.sum() == 0:
         hotspot_mask[:5] = True
 
-    delta_hotspot = lst_new[hotspot_mask] - lst_base[hotspot_mask]
     # Report mean of changed cells (more representative for sparse interventions)
-    changed_mask = np.abs(delta_hotspot) > 0.05
-    if changed_mask.sum() >= 3:
-        p50 = float(np.mean(delta_hotspot[changed_mask]))
+    changed_mask = np.abs(lst_new[hotspot_mask] - lst_base[hotspot_mask]) > 0.05
+
+    def hotspot_delta(base: np.ndarray, new: np.ndarray) -> float:
+        d = new[hotspot_mask] - base[hotspot_mask]
+        return float(np.mean(d[changed_mask])) if changed_mask.sum() >= 3 else float(np.median(d))
+
+    p50 = hotspot_delta(lst_base, lst_new)
+    has_thermal_edit = any(e.type in ("add_trees", "cool_pavement") for e in scenario.edits)
+    if not has_thermal_edit:
+        lo = hi = 0.0  # τίποτα δεν αλλάζει στο θερμικό μοντέλο, άρα ούτε αβεβαιότητα υπάρχει
+    elif variants:
+        vals = [p50, *(hotspot_delta(b, n) for b, n in variants)]
+        lo, hi = min(vals), max(vals)
     else:
-        p50 = float(np.median(delta_hotspot))
-    # Uncertainty on the delta: 90% CI using residual sigma
-    sigma_delta = 1.2
-    hotspot_range = Range(
-        p10=round(p50 - 1.65 * sigma_delta, 2),
-        p50=round(p50, 2),
-        p90=round(p50 + 1.65 * sigma_delta, 2),
-    )
+        lo, hi = p50 - 1.65 * 1.2, p50 + 1.65 * 1.2  # εκπαιδευμένο μοντέλο: residual sigma
+    hotspot_range = Range(p10=round(lo, 2), p50=round(p50, 2), p90=round(hi, 2))
 
     # Build cell list (only cells with notable change OR near hotspot for payload size)
     cells: list[ThermalCell] = []
@@ -574,11 +579,22 @@ def _apply_add_trees(
         X[:, 1] = np.clip(X[:, 1] + ndvi_boost, 0, 1)
 
 
-def _apply_cool_pavement(df: pd.DataFrame, X: np.ndarray, edit) -> None:
-    """Modify albedo_proxy for cool_pavement scenario."""
-    # For now: apply to all road cells (we don't have exact road-to-cell mapping at runtime)
-    road_mask = df["road_frac"].values > 0.3
-    X[road_mask, 4] = np.clip(X[road_mask, 4] + COOL_PAVEMENT_ALBEDO_BOOST, 0, 1)
+def _cells_near(points: np.ndarray | None, reach_m: float) -> np.ndarray:
+    """Μάσκα κελιών με κέντρο σε απόσταση ≤ reach_m από κάποιο σημείο."""
+    mask = np.zeros(len(_grid_df), dtype=bool)
+    if points is None or not len(points):
+        return mask
+    gx = _grid_df["lng"].values * M_PER_DEG_LNG_AT_38
+    gy = _grid_df["lat"].values * M_PER_DEG_LAT
+    for x, y in points:  # λίγες εκατοντάδες σημεία × ~10k κελιά: ok
+        mask |= (gx - x * M_PER_DEG_LNG_AT_38) ** 2 + (gy - y * M_PER_DEG_LAT) ** 2 <= reach_m ** 2
+    return mask
+
+
+def _apply_cool_pavement(X: np.ndarray, mask: np.ndarray) -> None:
+    """Albedo +0.15 ΜΟΝΟ στα κελιά δρόμου που αγγίζουν οι δρόμοι του σεναρίου."""
+    road = mask & (_grid_df["road_frac"].values > 0.05)
+    X[road, 4] = np.clip(X[road, 4] + COOL_PAVEMENT_ALBEDO_BOOST, 0, 1)
 
 
 # ── Accessors ─────────────────────────────────────────────────────────────────

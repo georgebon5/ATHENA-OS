@@ -63,7 +63,7 @@ async def lifespan(app: FastAPI):
             state.ready = True
             log.info("Simulation service ready.")
         except Exception as e:
-            log.error("Failed to load simulation data: %s — falling back to mock", e)
+            log.error("Failed to load simulation data: %s — /simulate απαντά 503 (ο gateway δείχνει cached)", e)
             state.backtests_cache = _backtests.load_backtests()
             state.ready = True
     yield
@@ -117,16 +117,16 @@ async def simulate(scenario: Scenario) -> SimResult:
     """
     h = scenario_hash(scenario)
 
-    # Check cache first
+    if MOCK:
+        # Ποτέ στο cache: αλλιώς τα fixtures σερβίρονται αργότερα ως «live» αποτελέσματα
+        return _mock.build_mock_sim_result(scenario.id)
+    if state.graph is None:
+        raise HTTPException(status_code=503, detail="Τα δεδομένα του sim δεν φορτώθηκαν (MOCK=0)")
+
     cached = get_cached(h)
     if cached:
         log.info("Cache hit for scenario %s (hash=%s)", scenario.id, h)
-        return cached
-
-    if MOCK or state.graph is None:
-        result = _mock.build_mock_sim_result(scenario.id)
-        put_cached(h, result)
-        return result
+        return cached.model_copy(update={"scenarioId": scenario.id})
 
     t_start = time.perf_counter()
     loop = asyncio.get_event_loop()
@@ -160,17 +160,22 @@ def _run_simulation(scenario: Scenario) -> SimResult:
     G_scenario = net.apply_edits_to_graph(G_base, scenario.edits)
 
     # Traffic simulation
-    traffic_part, traffic_ms, co2_range = trf.simulate_traffic(G_scenario, G_base, scenario)
+    traffic_part, traffic_ms, co2_range, traffic_notes = trf.simulate_traffic(G_scenario, G_base, scenario)
 
     # Thermal simulation
-    thermal_part, thermal_ms = thm.simulate_thermal(scenario)
+    cool_ways = [w for e in scenario.edits if e.type == "cool_pavement" for w in e.wayIds]
+    cool_points = net.way_points(G_base, cool_ways) if cool_ways else None
+    thermal_part, thermal_ms = thm.simulate_thermal(scenario, cool_points)
 
     total_ms = int((time.perf_counter() - t_start) * 1000)
 
     notes = [
         "Ανάθεση κυκλοφορίας: στατική ισορροπία χρήστη (Frank-Wolfe, BPR α=0.15, β=4).",
-        "Αβεβαιότητα: ανάλυση ευαισθησίας ζήτησης (×0.85, ×1.00, ×1.15) → p10/p50/p90.",
-        "Θερμικό: εκτίμηση θερμοκρασίας επιφάνειας εδάφους — ΟΧΙ θερμοκρασία αέρα (~8–15°C χαμηλότερη).",
+        "Ζήτηση: συνθετικός πίνακας OD (μοντέλο βαρύτητας), όχι βαθμονομημένος με μετρήσεις: δεν υπάρχουν αισθητήρες στην περιοχή.",
+        "Αβεβαιότητα κυκλοφορίας: ζήτηση ×0.85 / ×1.00 / ×1.15, κάθε επίπεδο απέναντι στη δική του βάση → p10/p50/p90.",
+        *traffic_notes,
+        "Θερμικό: εκτίμηση θερμοκρασίας επιφάνειας εδάφους, ΟΧΙ θερμοκρασία αέρα (~8–15°C χαμηλότερη).",
+        "Αβεβαιότητα θερμικού: συντελεστές σκιάς (8–16 °C σε πλήρη σκιά) και albedo ×2/3 … ×4/3 → p10/p90.",
         f"Χρόνος υπολογισμού: {total_ms} ms (κυκλοφορία {traffic_ms} ms, θερμικό {thermal_ms} ms).",
     ]
     # Add any scenario-specific notes
@@ -183,11 +188,13 @@ def _run_simulation(scenario: Scenario) -> SimResult:
                     "Αποτέλεσμα: αύξηση σκιάς + NDVI στα κελιά εντός κόμης."
                 )
             case "cool_pavement":
-                notes.append("Cool pavement: εκτιμώμενη αύξηση albedo +0.15 στους επηρεαζόμενους δρόμους.")
+                notes.append(f"Cool pavement: albedo +0.15 μόνο στα κελιά των wayIds {edit.wayIds}.")
             case "close_road":
                 notes.append(f"Κλείσιμο δρόμου: wayIds {edit.wayIds} αφαιρέθηκαν από τον γράφο.")
             case "bus_lane":
                 notes.append(f"Λωρίδα λεωφορείου: wayIds {edit.wayIds} → μείωση χωρητικότητας κατά 1 λωρίδα ΙΧ.")
+            case "remove_lane":
+                notes.append(f"Αφαίρεση λωρίδας: wayIds {edit.wayIds} → μία λωρίδα ΙΧ λιγότερη (μένει πάντα ≥ 1).")
 
     return SimResult(
         scenarioId=scenario.id,
@@ -308,7 +315,7 @@ async def health() -> HealthResponse:
             thermal_model="mock",
             backtests_ready=len(state.backtests_cache) > 0,
         )
-    if not state.ready:
+    if not state.ready or state.graph is None:
         return HealthResponse(status="degraded", mock=False, backtests_ready=False)
 
     from sim import network as net

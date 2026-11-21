@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useStore } from "@/store/useStore";
 import type { DemoBeat } from "@/types/contracts";
-import { triggerBeat, triggerText } from "./directorApi";
+import { hideReport, resetGateway, triggerBeat, triggerText } from "./directorApi";
 import { playFallback } from "./fallback";
 import { cameraController, SHOTS } from "@/cesium/cameraShots";
 
@@ -63,9 +63,18 @@ export function useDirector(): {
         return;
       }
       if (ev.key === "r" || ev.key === "R") {
-        reset();
+        // Ο gateway στέλνει state.reset σε όλες τις οθόνες· τοπικά μόνο αν είναι κάτω
+        void resetGateway().then((ok) => ok || reset());
         setBeat("INTRO");
         cameraController.flyTo({ ...SHOTS.riseToOverview, durationS: 0.6 });
+        return;
+      }
+      if (ev.key === "h" || ev.key === "H") {
+        // Moderation: κρύβει την πιο πρόσφατη φωτογραφία (π.χ. ακατάλληλη) από όλες τις οθόνες
+        const latest = Object.values(useStore.getState().reports).sort((a, b) =>
+          b.createdAt.localeCompare(a.createdAt),
+        )[0];
+        if (latest) void hideReport(latest.id);
         return;
       }
     };

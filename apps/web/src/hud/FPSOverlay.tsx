@@ -33,7 +33,7 @@ export function FPSOverlay() {
   const color = fps >= 55 ? "text-cool" : fps >= 45 ? "text-warn" : "text-hot";
 
   return (
-    <div className="fixed right-4 bottom-4 glass rounded-md px-2 py-1 text-[11px] font-mono flex items-center gap-1 pointer-events-none">
+    <div className="glass pointer-events-none fixed left-1/2 top-[96px] z-20 flex -translate-x-1/2 items-center gap-1 !rounded-md px-2 py-0.5 font-mono text-[11px]">
       <span className={color}>{fps}</span>
       <span className="text-chalk/50">fps</span>
     </div>

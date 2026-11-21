@@ -1,38 +1,37 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useStore } from "@/store/useStore";
 
+const MOOD_TONE: Record<string, string> = {
+  neutral: "text-holo",
+  alert: "text-solar",
+  proud: "text-aurora",
+};
+
+/** Κινηματογραφικοί υπότιτλοι: όνομα ομιλητή σε χρώμα, λέξη-λέξη, χωρίς κουτί. */
 export function Subtitles() {
   const speech = useStore((s) => s.agentSpeech);
+  const tone = MOOD_TONE[speech?.mood ?? "neutral"];
   return (
-    <div className="pointer-events-none fixed left-1/2 bottom-28 -translate-x-1/2 max-w-3xl w-full px-6">
+    <div className="pointer-events-none w-full max-w-4xl text-center">
       <AnimatePresence mode="wait">
         {speech && (
-          <motion.div
+          <motion.p
             key={speech.at}
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.35 }}
-            className="glass-strong rounded-2xl px-6 py-4 text-center"
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.3 }}
+            className="text-[28px] font-semibold leading-snug text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.9),0_0_24px_rgba(0,0,0,0.85)]"
           >
-            <div className="text-xl font-medium leading-snug">{speech.textEl}</div>
-            <div className="mt-1 text-[11px] uppercase tracking-widest text-chalk/50">
-              ATHENA · {moodLabel(speech.mood)}
-            </div>
-          </motion.div>
+            <span className={`hud-title mr-2 text-[30px] ${tone}`}>ATHENA:</span>
+            {speech.textEl.split(" ").map((w, i) => (
+              <motion.span key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.045, duration: 0.2 }}>
+                {w}{" "}
+              </motion.span>
+            ))}
+          </motion.p>
         )}
       </AnimatePresence>
     </div>
   );
-}
-
-function moodLabel(mood: string): string {
-  switch (mood) {
-    case "alert":
-      return "προσοχή";
-    case "proud":
-      return "ικανοποίηση";
-    default:
-      return "ουδέτερη";
-  }
 }

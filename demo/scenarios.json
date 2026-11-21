@@ -1,0 +1,270 @@
+[
+ {
+  "id": "s-demo-main",
+  "title": "Λωρίδα λεωφορείου + 42 δέντρα νότια πλευρά (κύριο σενάριο)",
+  "edits": [
+   {
+    "type": "bus_lane",
+    "wayIds": [
+     652510532,
+     734712545,
+     217698400
+    ]
+   },
+   {
+    "type": "add_trees",
+    "geometry": [
+     [
+      23.7073,
+      37.977
+     ],
+     [
+      23.7079,
+      37.978
+     ],
+     [
+      23.7085,
+      37.979
+     ],
+     [
+      23.7091,
+      37.98
+     ],
+     [
+      23.7097,
+      37.981
+     ],
+     [
+      23.7103,
+      37.982
+     ]
+    ],
+    "count": 42,
+    "side": "south"
+   }
+  ],
+  "when": "2026-07-15T13:00:00+03:00",
+  "origin": "user"
+ },
+ {
+  "id": "s-variant-trees-north",
+  "title": "Λωρίδα λεωφορείου + 42 δέντρα βόρεια πλευρά",
+  "edits": [
+   {
+    "type": "bus_lane",
+    "wayIds": [
+     652510532,
+     734712545,
+     217698400
+    ]
+   },
+   {
+    "type": "add_trees",
+    "geometry": [
+     [
+      23.7073,
+      37.977
+     ],
+     [
+      23.7085,
+      37.979
+     ],
+     [
+      23.7097,
+      37.981
+     ]
+    ],
+    "count": 42,
+    "side": "north"
+   }
+  ],
+  "when": "2026-07-15T13:00:00+03:00",
+  "origin": "agent_variant",
+  "parentId": "s-demo-main"
+ },
+ {
+  "id": "s-variant-trees-both",
+  "title": "Λωρίδα λεωφορείου + 28 δέντρα αμφίπλευρα (καλύτερη παραλλαγή)",
+  "edits": [
+   {
+    "type": "bus_lane",
+    "wayIds": [
+     652510532,
+     734712545,
+     217698400
+    ]
+   },
+   {
+    "type": "add_trees",
+    "geometry": [
+     [
+      23.7073,
+      37.977
+     ],
+     [
+      23.7085,
+      37.979
+     ],
+     [
+      23.7097,
+      37.981
+     ]
+    ],
+    "count": 28,
+    "side": "both"
+   }
+  ],
+  "when": "2026-07-15T13:00:00+03:00",
+  "origin": "agent_variant",
+  "parentId": "s-demo-main"
+ },
+ {
+  "id": "s-bus-lane-only",
+  "title": "Μόνο λωρίδα λεωφορείου (χωρίς δέντρα)",
+  "edits": [
+   {
+    "type": "bus_lane",
+    "wayIds": [
+     652510532,
+     734712545,
+     217698400
+    ]
+   }
+  ],
+  "when": "2026-07-15T13:00:00+03:00",
+  "origin": "agent_variant",
+  "parentId": "s-demo-main"
+ },
+ {
+  "id": "s-cool-pavement",
+  "title": "Αντανακλαστικό οδόστρωμα (cool pavement) + δέντρα",
+  "edits": [
+   {
+    "type": "cool_pavement",
+    "wayIds": [
+     652510532,
+     734712545,
+     217698400
+    ]
+   },
+   {
+    "type": "add_trees",
+    "geometry": [
+     [
+      23.7085,
+      37.979
+     ],
+     [
+      23.7097,
+      37.981
+     ]
+    ],
+    "count": 20,
+    "side": "south"
+   }
+  ],
+  "when": "2026-07-15T13:00:00+03:00",
+  "origin": "agent_variant",
+  "parentId": "s-demo-main"
+ },
+ {
+  "id": "s-heatwave-peak",
+  "title": "Καύσωνας Ιουλίου 14:00 (slider)",
+  "edits": [
+   {
+    "type": "bus_lane",
+    "wayIds": [
+     652510532,
+     734712545,
+     217698400
+    ]
+   },
+   {
+    "type": "add_trees",
+    "geometry": [
+     [
+      23.7073,
+      37.977
+     ],
+     [
+      23.7085,
+      37.979
+     ],
+     [
+      23.7097,
+      37.981
+     ]
+    ],
+    "count": 42,
+    "side": "south"
+   }
+  ],
+  "when": "2026-07-15T14:00:00+03:00",
+  "origin": "user"
+ },
+ {
+  "id": "s-morning-baseline",
+  "title": "Πρωί 09:00 (slider baseline)",
+  "edits": [
+   {
+    "type": "bus_lane",
+    "wayIds": [
+     652510532,
+     734712545,
+     217698400
+    ]
+   },
+   {
+    "type": "add_trees",
+    "geometry": [
+     [
+      23.7073,
+      37.977
+     ],
+     [
+      23.7085,
+      37.979
+     ],
+     [
+      23.7097,
+      37.981
+     ]
+    ],
+    "count": 42,
+    "side": "south"
+   }
+  ],
+  "when": "2026-07-15T09:00:00+03:00",
+  "origin": "user"
+ },
+ {
+  "id": "s-pedestrianize",
+  "title": "Πεζοδρόμηση τμήματος Πειραιώς (νότιο)",
+  "edits": [
+   {
+    "type": "close_road",
+    "wayIds": [
+     217698402,
+     652510532
+    ]
+   },
+   {
+    "type": "add_trees",
+    "geometry": [
+     [
+      23.7073,
+      37.977
+     ],
+     [
+      23.7085,
+      37.979
+     ]
+    ],
+    "count": 30,
+    "side": "both"
+   }
+  ],
+  "when": "2026-07-15T13:00:00+03:00",
+  "origin": "agent_variant"
+ }
+]

@@ -201,7 +201,7 @@ def load_or_build_cached_result(scenario_id: str, scenario_hash: str) -> SimResu
     cache_file = DEMO_CACHE_DIR / f"{scenario_hash}.json"
     if cache_file.exists():
         try:
-            data = json.loads(cache_file.read_text())
+            data = json.loads(cache_file.read_text(encoding="utf-8"))
             return SimResult.model_validate(data)
         except Exception:
             pass

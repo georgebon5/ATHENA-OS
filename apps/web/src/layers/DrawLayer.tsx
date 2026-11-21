@@ -61,7 +61,7 @@ export function DrawLayer({ viewer }: Props) {
           length: 6,
           topRadius: 1.8,
           bottomRadius: 0.4,
-          material: Cesium.Color.fromCssColorString("#55e6c1").withAlpha(0.9),
+          material: Cesium.Color.fromCssColorString("#2ee6c9").withAlpha(0.9),
           outline: true,
           outlineColor: Cesium.Color.fromCssColorString("#0f3a2d"),
         },
@@ -81,7 +81,7 @@ export function DrawLayer({ viewer }: Props) {
             drawPoints.flatMap(([lng, lat]) => [lng, lat]),
           ),
           width: 3,
-          material: Cesium.Color.fromCssColorString("#55e6c1").withAlpha(0.7),
+          material: Cesium.Color.fromCssColorString("#2ee6c9").withAlpha(0.7),
           clampToGround: true,
         },
       });

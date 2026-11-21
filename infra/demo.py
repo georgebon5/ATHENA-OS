@@ -103,6 +103,9 @@ def main() -> int:
     sim_port, agent_port = e.get("SIM_PORT", "8100"), e.get("AGENT_PORT", "8200")
     for s, p in (("sim", sim_port), ("agent", agent_port)):
         check(s, wait_for(f"http://localhost:{p}/health", 30 if has[s] else 2), "" if has[s] else "(δεν έχει Dockerfile ακόμα → fallback)", warn=not has[s])
+    _, sim_health = http("GET", f"http://localhost:{sim_port}/health")
+    if isinstance(sim_health, dict):
+        check("sim με πραγματικά δεδομένα", not sim_health.get("mock"), "MOCK=1: fixtures, όχι προσομοίωση" if sim_health.get("mock") else "", warn=True)
 
     print("→ prewarm", flush=True)
     status, live = http("GET", f"{gw}/api/city/live", timeout=40)
@@ -116,14 +119,13 @@ def main() -> int:
     check("backtests", status == 200, f"HTTP {status}", warn=True)
 
     scenarios = [json.loads((ROOT / f"packages/contracts/fixtures/{n}").read_text(encoding="utf-8")) for n in ("scenario.json", "scenario_variant.json")]
-    scenarios += [json.loads(p.read_text(encoding="utf-8")) for p in sorted((ROOT / "demo/scenarios").glob("*.json"))]
+    # Τα ίδια σενάρια με το demo/precompute.py: περνώντας από τον gateway ζεσταίνουν και το δικό του fallback cache
+    scenarios += json.loads((ROOT / "demo/scenarios.json").read_text(encoding="utf-8"))
     for s in scenarios:
         t = time.monotonic()
         status, res = http("POST", f"{gw}/api/scenarios?broadcast=false", s, timeout=30)
         ok = status == 200 and isinstance(res, dict) and res.get("status") == "ok"
         check(f"sim «{s['title'][:40]}»", ok, f"{(time.monotonic() - t):.1f}s", warn=True)
-    status, _ = http("POST", f"http://localhost:{agent_port}/prewarm", {}, timeout=60)
-    check("agent prewarm (TTS σταθερών φράσεων)", status in (200, 202, 204), f"HTTP {status}", warn=True)
 
     status, seeded = http("POST", f"{gw}/api/director/seed")
     check("ιστορικές αναφορές", status == 200, json.dumps(seeded, ensure_ascii=False))

@@ -306,3 +306,49 @@ def test_citizen_spa_served_under_c(make_client, tmp_path):
     assert "immutable" in client.get("/c/assets/app-123.js").headers["cache-control"]
     (tmp_path / "secret.txt").write_text("TOP SECRET", encoding="utf-8")
     assert "TOP SECRET" not in client.get("/c/..%2F..%2Fsecret.txt").text  # ποτέ αρχείο έξω από το dist
+
+
+def test_network_from_sim_with_cached_fallback(make_client, tmp_path):
+    assert make_client().get("/api/network").json()["features"]  # MOCK: fixture
+    client = make_client(mock=False)
+    assert client.get("/api/network").status_code == 503  # ο sim είναι κάτω, χωρίς cache
+    fc = {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {"wayId": 1}, "geometry": None}]}
+    (tmp_path / "demo/cache").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "demo/cache/network.json").write_text(json.dumps(fc), encoding="utf-8")
+    r = client.get("/api/network")
+    assert r.headers["x-athena-source"] == "fallback" and r.json() == fc
+
+
+def test_beats_map_to_agent_endpoints(client):
+    from app.routes.director import agent_beat_request
+
+    ctx = client.app.state.ctx
+    assert client.portal.call(agent_beat_request, ctx, "INTRO") == ("/intro", {})
+    assert client.portal.call(agent_beat_request, ctx, "ENGAGE") is None  # χωρίς σενάριο → cached fallback
+    assert client.portal.call(agent_beat_request, ctx, "SIMULATE") is None
+    client.post("/api/scenarios", json=SCENARIO | {"id": "s-beat"})
+    path, body = client.portal.call(agent_beat_request, ctx, "ENGAGE")
+    assert path == "/consult" and body["scenarioId"] == "s-beat" and body["simResult"]["status"] == "ok"
+    path, body = client.portal.call(agent_beat_request, ctx, "DECISION")
+    assert path == "/decision" and body["scenarioId"] == "s-beat"
+
+
+def test_engage_fallback_uses_the_judges_photo(make_client, tmp_path):
+    client = make_client()
+    (tmp_path / "web-cache").mkdir()
+    payload = {
+        "id": "c-fb-photo",
+        "scenarioId": "s-1",
+        "beforeUrl": "https://example.org/interior.jpg",
+        "afterUrl": "https://example.org/a.jpg",
+        "questionEl": "Συμφωνείτε;",
+        "publicUrl": "https://dead.example/x",
+    }
+    (tmp_path / "web-cache/engage.json").write_text(
+        json.dumps([{"atMs": 0, "event": {"type": "consultation.opened", "payload": payload}}]), encoding="utf-8"
+    )
+    report = post_report(client, {"x-device-id": "judge-photo-01"}).json()
+    client.post("/api/director/fallback/engage")
+    wait_for(lambda: client.get("/api/consultations/c-fb-photo").status_code == 200)
+    c = client.get("/api/consultations/c-fb-photo").json()
+    assert c["reportId"] == report["id"] and c["beforeUrl"].endswith(f"/media/photos/{report['id']}.jpg")

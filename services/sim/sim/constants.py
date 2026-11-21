@@ -87,6 +87,7 @@ TREE_SHADE_PEAK = 0.07            # per-tree shade peak; 42 trees accumulate ~0.
 
 # ── Cool pavement (cool_pavement scenario) ───────────────────────────────────
 COOL_PAVEMENT_ALBEDO_BOOST = 0.15
+COOL_PAVEMENT_REACH_M = 18.0      # κελί 25 m: μισό κελί + μισό πλάτος δρόμου
 
 # ── COPERT simplified CO₂ emission factor (kg / veh·km) ─────────────────────
 # Parabolic in [10, 120] km/h, minimum at ~80 km/h
@@ -102,9 +103,12 @@ COPERT_EMISSIONS_KG_KM: dict[int, float] = {
     90: 0.192, 100: 0.197, 110: 0.205, 120: 0.218,
 }
 
+# Μπαίνει στο κλειδί του cache: αλλάζει → τα παλιά αποτελέσματα δεν ξαναχρησιμοποιούνται.
+SIM_MODEL_VERSION = "2026-11-20.1"
+
 # ── Frank-Wolfe ───────────────────────────────────────────────────────────────
-FW_N_ITER_BASE = 20           # reduced for demo speed (SSSP-batched, converges early)
-FW_N_ITER_SCENARIO = 4       # warm-start from base → converges in 2–4 iters
+FW_N_ITER_BASE = 40           # scipy dijkstra: ~0.05 s ανά επανάληψη
+FW_N_ITER_SCENARIO = 12      # ίδιες για base αναφορές και σενάρια (δες traffic._BASE_REF)
 FW_CONVERGENCE_GAP = 1e-3    # 0.1% gap — sufficient for demo
 
 # ── Monte Carlo ───────────────────────────────────────────────────────────────

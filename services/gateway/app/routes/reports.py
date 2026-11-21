@@ -150,6 +150,7 @@ async def classify(ctx: AppContext, report: dict[str, Any], jpeg: bytes) -> None
         cls["duplicates"] = [n["id"] for n in nearby if n["distanceM"] <= 25][:3]
     else:
         body = {
+            "reportId": report["id"],  # ό,τι χρειάζεται ο agent· τα υπόλοιπα τον γλιτώνουν από fetch
             "report": report,
             "imageBase64": base64.b64encode(jpeg).decode(),
             "mimeType": "image/jpeg",

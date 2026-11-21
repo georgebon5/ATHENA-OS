@@ -53,7 +53,7 @@ export function ScenarioLayer({ viewer }: Props) {
 function renderEdit(
   ds: Cesium.CustomDataSource,
   edit: ScenarioEdit,
-  networkWays: Map<number, LngLat[]>,
+  networkWays: Map<number, LngLat[][]>,
 ) {
   switch (edit.type) {
     case "add_trees":
@@ -157,13 +157,13 @@ function renderTrees(ds: Cesium.CustomDataSource, geometry: LngLat[]) {
 function renderWayOverlay(
   ds: Cesium.CustomDataSource,
   wayIds: number[],
-  networkWays: Map<number, LngLat[]>,
+  networkWays: Map<number, LngLat[][]>,
   opts: { color: string; alpha: number; width: number; label: string },
 ) {
-  for (const wayId of wayIds) {
-    const path = networkWays.get(wayId);
-    if (!path || path.length < 2) continue;
-
+  const lines = wayIds.flatMap((id) => networkWays.get(id) ?? []).filter((l) => l.length >= 2);
+  // Μία ετικέτα για όλη την παρέμβαση, στο μακρύτερο τμήμα
+  const labelLine = lines.reduce<LngLat[] | null>((a, l) => (!a || l.length > a.length ? l : a), null);
+  for (const path of lines) {
     // Κύρια γραμμή
     ds.entities.add({
       polyline: {
@@ -181,7 +181,7 @@ function renderWayOverlay(
       },
     });
 
-    // Label στη μέση του way
+    if (path !== labelLine) continue;
     const mid = path[Math.floor(path.length / 2)];
     ds.entities.add({
       position: Cesium.Cartesian3.fromDegrees(mid[0], mid[1], 10),
@@ -205,11 +205,10 @@ function renderWayOverlay(
 function renderBarriers(
   ds: Cesium.CustomDataSource,
   wayIds: number[],
-  networkWays: Map<number, LngLat[]>,
+  networkWays: Map<number, LngLat[][]>,
 ) {
-  for (const wayId of wayIds) {
-    const path = networkWays.get(wayId);
-    if (!path || path.length < 2) continue;
+  for (const path of wayIds.flatMap((id) => networkWays.get(id) ?? [])) {
+    if (path.length < 2) continue;
 
     // Τοποθέτησε X-barriers κάθε ~50m περίπου (max 6)
     const step = Math.max(1, Math.floor(path.length / Math.min(6, path.length)));

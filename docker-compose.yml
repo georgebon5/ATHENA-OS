@@ -58,6 +58,8 @@ services:
     env_file:
       - path: .env
         required: false
+    environment:
+      MOCK: ${MOCK:-0}  # ίδιο με τον gateway· το Dockerfile του sim έχει MOCK=1 για το dev
     ports:
       - "${SIM_PORT:-8100}:8100"
     volumes:

@@ -68,7 +68,7 @@ export function VoteScreen({ id }: { id: string }) {
   if (loadError) {
     return (
       <Shell subtitle="Διαβούλευση">
-        <div className="rounded-2xl bg-white p-6 shadow-card">
+        <div className="card p-6">
           <h1 className="text-xl font-bold">Κάτι δεν πήγε καλά</h1>
           <p className="mt-2 text-muted">{loadError}</p>
         </div>
@@ -138,8 +138,8 @@ export function VoteScreen({ id }: { id: string }) {
                   type="button"
                   disabled={!!pending}
                   onClick={() => vote(c.value)}
-                  className={`flex h-[68px] items-center justify-center gap-3 rounded-2xl ${c.tone} text-[22px] font-bold text-white shadow-card transition active:scale-[0.98] disabled:opacity-70 ${
-                    mine === c.value ? "ring-4 ring-ink/20" : ""
+                  className={`flex h-[70px] items-center justify-center gap-3 rounded-2xl ${c.tone} font-display text-[24px] font-bold tracking-wide text-void shadow-[0_0_30px_-8px_currentColor] transition active:scale-[0.98] disabled:opacity-60 ${
+                    mine === c.value ? "ring-4 ring-white/60" : ""
                   }`}
                 >
                   {pending === c.value ? <Spinner /> : c.label}

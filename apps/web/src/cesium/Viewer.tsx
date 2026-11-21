@@ -12,7 +12,7 @@ interface Props {
 
 /**
  * ESRI World Imagery — δορυφορικό HD, χωρίς API key.
- * Slight brightness/contrast boost για cinematic look.
+ * Σκοτεινότερο, λιγότερο κορεσμένο: τα ολογραφικά layers (κυκλοφορία, θερμικό, ψήφοι) «λάμπουν» από πάνω.
  */
 function buildSatelliteLayer(): Cesium.ImageryLayer {
   return new Cesium.ImageryLayer(
@@ -24,7 +24,7 @@ function buildSatelliteLayer(): Cesium.ImageryLayer {
         false,
       ),
     }),
-    { brightness: 1.05, contrast: 1.1, saturation: 1.08 },
+    { brightness: 0.78, contrast: 1.18, saturation: 0.6, gamma: 1.05 },
   );
 }
 

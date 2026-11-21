@@ -30,10 +30,16 @@ router = APIRouter(prefix="/api")
 
 # Τελευταίο αποτέλεσμα ανά scenario id, από οποιαδήποτε πηγή (live/cache/fallback/mock)
 last_results: dict[str, dict[str, Any]] = {}
+# Μπαίνει στο κλειδί του cache: όταν αλλάζει το μοντέλο του sim, τα παλιά αποτελέσματα αγνοούνται.
+SIM_CACHE_VERSION = 2
 
 
 def scenario_hash(scenario: dict[str, Any]) -> str:
-    key = json.dumps({"edits": scenario["edits"], "when": scenario["when"]}, sort_keys=True, separators=(",", ":"))
+    key = json.dumps(
+        {"v": SIM_CACHE_VERSION, "edits": scenario["edits"], "when": scenario["when"]},
+        sort_keys=True,
+        separators=(",", ":"),
+    )
     return hashlib.sha256(key.encode()).hexdigest()[:24]
 
 
@@ -219,3 +225,25 @@ async def backtests(ctx: AppContext = Depends(get_ctx)) -> JSONResponse:
             ctx.status.fallback(f"Backtests: ο sim δεν απάντησε ({exc.__class__.__name__}) → cached")
             return JSONResponse(json.loads(cache.read_text(encoding="utf-8")), headers={"X-Athena-Source": "fallback"})
         raise HTTPException(503, "Τα backtests δεν είναι διαθέσιμα") from exc
+
+
+@router.get("/network")
+async def network(ctx: AppContext = Depends(get_ctx)) -> JSONResponse:
+    """Οδικό δίκτυο (GeoJSON, wayId ανά δρόμο) από τον sim, για να φωτίζει το web τους δρόμους του σεναρίου."""
+    if ctx.settings.mock:
+        return JSONResponse(ctx.fixture("network.geojson"), headers={"X-Athena-Source": "mock"})
+    cache = ctx.demo_path("cache", "network.json")
+    try:
+        r = await ctx.http.get(f"{ctx.settings.sim_url}/network", timeout=10.0)
+        r.raise_for_status()
+        data = r.json()
+        if not data.get("features"):
+            raise ValueError("κενό δίκτυο")
+        with contextlib.suppress(OSError):
+            cache.parent.mkdir(parents=True, exist_ok=True)
+            cache.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        return JSONResponse(data, headers={"X-Athena-Source": "live"})
+    except (httpx.HTTPError, ValueError) as exc:
+        if cache.exists():
+            return JSONResponse(json.loads(cache.read_text(encoding="utf-8")), headers={"X-Athena-Source": "fallback"})
+        raise HTTPException(503, "Το οδικό δίκτυο δεν είναι διαθέσιμο") from exc

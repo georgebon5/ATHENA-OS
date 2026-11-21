@@ -117,7 +117,7 @@ export const DEMO_CONSULTATION: Consultation = {
     "https://images.unsplash.com/photo-1507149833265-60c372daea22?auto=format&fit=crop&w=1200&q=70",
   questionEl:
     "Να προστεθούν 42 δέντρα και αποκλειστική λωρίδα λεωφορείου στην Πειραιώς;",
-  publicUrl: "https://athena.gov.gr/c/demo-001",
+  publicUrl: "http://localhost:8000/c/v/c-demo-001",
 };
 
 export const DEMO_BACKTESTS: Backtest[] = [

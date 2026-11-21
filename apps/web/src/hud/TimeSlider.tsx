@@ -26,19 +26,19 @@ export function TimeSlider() {
     prevRef.current = when;
   }, [when]);
 
+  const active = PRESETS.findIndex((p) => p.iso === when);
+
   return (
-    <div className="pointer-events-auto fixed left-1/2 top-6 -translate-x-1/2 glass rounded-full px-3 py-1.5 flex items-center gap-2 text-sm">
-      <span className="text-chalk/60 text-xs uppercase tracking-widest mr-1">
-        Χρόνος
-      </span>
-      {PRESETS.map((p) => (
+    <div className="glass !rounded-full flex items-center gap-1 p-1 pl-4">
+      <span className="hud-label mr-2 text-[10px]">χρονος</span>
+      {PRESETS.map((p, i) => (
         <button
           key={p.iso}
           onClick={() => setWhen(p.iso)}
-          className={`px-3 py-1 rounded-full text-xs ${
-            when === p.iso
-              ? "bg-athena text-ink font-medium"
-              : "text-chalk/80 hover:text-chalk"
+          className={`relative rounded-full px-4 py-1.5 text-[12px] font-semibold transition-all ${
+            i === active
+              ? "text-void bg-gradient-to-r from-holo to-plasma shadow-glow"
+              : "text-chalk/70 hover:text-chalk hover:bg-holo/10"
           }`}
         >
           {p.label}

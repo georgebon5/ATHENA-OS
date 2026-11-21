@@ -19,6 +19,7 @@ from ..context import AppContext, ContractError, now_iso, validate_event
 from ..seed import seed_reports
 from . import get_ctx, spawn
 from .engage import public_consultation, public_url_for, save_consultation
+from .reports import report_out
 from .scenarios import last_results
 
 log = logging.getLogger("athena.director")
@@ -58,8 +59,11 @@ async def play_fallback(ctx: AppContext, beat: str, items: list[dict[str, Any]])
             continue  # οι ψήφοι είναι πάντα live
         try:
             if etype == "consultation.opened":
-                # Η διαβούλευση του fallback γίνεται πραγματική: το QR δείχνει στο δικό μας citizen app.
+                # Η διαβούλευση του fallback γίνεται πραγματική: το QR δείχνει στο δικό μας citizen app,
+                # και το «πριν» είναι η φωτογραφία του κριτή (αν υπάρχει), όχι μια τυχαία cached εικόνα.
                 payload = {**payload, "publicUrl": public_url_for(ctx, payload["id"])}
+                if report := await _latest_citizen_report(ctx):
+                    payload |= {"beforeUrl": report["photoUrl"], "reportId": report["id"]}
                 validate_event(etype, payload)
                 await save_consultation(ctx, payload)
                 payload = public_consultation(ctx, payload, public=False)
@@ -131,21 +135,71 @@ async def director_beat(beat: str, auto_fallback: bool = True, ctx: AppContext =
     return {"ok": True, "beat": b, "agent": "forwarded"}
 
 
+def _slot(ctx: AppContext, event_type: str) -> dict[str, Any] | None:
+    ev = ctx.hub.slots.get(event_type)
+    return ev["payload"] if ev else None
+
+
+async def _latest_citizen_report(ctx: AppContext) -> dict[str, Any] | None:
+    async with ctx.db.engine.connect() as conn:
+        row = (
+            await conn.execute(
+                select(tables.reports)
+                .where(tables.reports.c.hidden.is_(False), tables.reports.c.seeded.is_(False))
+                .order_by(tables.reports.c.created_at.desc())
+                .limit(1)
+            )
+        ).first()
+    return report_out(ctx, row) if row else None
+
+
+async def agent_beat_request(ctx: AppContext, beat: str) -> tuple[str, dict[str, Any]] | None:
+    """Ποιο endpoint του agent «παίζει» κάθε beat και με τι στοιχεία. None: το beat δεν θέλει agent."""
+    scenario = _slot(ctx, "scenario.created")
+    sim = _slot(ctx, "sim.result")
+    if beat == "INTRO":
+        return "/intro", {}
+    if beat == "ENGAGE" and scenario:
+        body: dict[str, Any] = {"scenarioId": scenario["id"], "scenarioTitle": scenario["title"], "simResult": sim}
+        if report := await _latest_citizen_report(ctx):
+            body |= {"reportId": report["id"], "photoUrl": report["photoUrl"]}
+        return "/consult", body
+    if beat == "DECISION" and scenario:
+        body = {"scenarioId": scenario["id"], "scenarioTitle": scenario["title"], "simResult": sim}
+        if consultation := _slot(ctx, "consultation.opened"):
+            body["consultationId"] = consultation["id"]
+            body["voteSummary"] = await ctx.tallies.tally(consultation["id"])
+        return "/decision", body
+    return None
+
+
 async def _forward_beat(ctx: AppContext, beat: str, auto_fallback: bool) -> None:
+    """Ο agent παίζει το beat· αν δεν μπορεί (κάτω, σφάλμα, λείπει σενάριο), παίζει το cached."""
+    reason = ""
     try:
-        r = await ctx.http.post(f"{ctx.settings.agent_url}/director/{beat}", timeout=4.0)
-        ctx.status.set_service("agent", "up")
-        if r.status_code >= 400:
-            ctx.status.fallback(f"Ο agent απάντησε {r.status_code} στο beat {beat}")
+        req = await agent_beat_request(ctx, beat)
+        if req is None:
+            if beat in ("ENGAGE", "DECISION"):
+                reason = "δεν υπάρχει σενάριο ακόμα"
+            else:
+                return  # PITCH/SENSE/SIMULATE/CLOSE: τα οδηγεί ο presenter, το κινητό ή η εντολή
+        else:
+            path, body = req
+            r = await ctx.http.post(f"{ctx.settings.agent_url}{path}", json=body, timeout=ctx.settings.agent_timeout_s)
+            ctx.status.set_service("agent", "up")
+            if r.status_code < 400:
+                return
+            reason = f"ο agent απάντησε {r.status_code}"
     except httpx.ConnectError:
         ctx.status.set_service("agent", "down")
-        if auto_fallback and beat_cache_file(ctx, beat):
-            start_fallback(ctx, beat)
-            ctx.status.fallback(f"Agent εκτός → αυτόματο fallback για {beat}")
-        else:
-            ctx.status.fallback(f"Agent εκτός στο beat {beat}")
+        reason = "ο agent είναι εκτός"
     except httpx.HTTPError as exc:
-        ctx.status.fallback(f"Beat {beat}: ο agent δεν απάντησε ({exc.__class__.__name__})")
+        reason = f"ο agent δεν απάντησε ({exc.__class__.__name__})"
+    if auto_fallback and beat_cache_file(ctx, beat):
+        start_fallback(ctx, beat)
+        ctx.status.fallback(f"{beat}: {reason} → cached")
+    else:
+        ctx.status.fallback(f"{beat}: {reason}")
 
 
 # ---------- events από agent / director ----------
@@ -180,8 +234,11 @@ async def agent_prompt(body: dict[str, Any], ctx: AppContext = Depends(get_ctx))
 
     async def forward() -> None:
         try:
+            beat = _slot(ctx, "director.beat")
             r = await ctx.http.post(
-                f"{ctx.settings.agent_url}/prompt", json={"textEl": text}, timeout=ctx.settings.agent_timeout_s
+                f"{ctx.settings.agent_url}/command",
+                json={"textEl": text, "beatHint": beat["beat"] if beat else None},
+                timeout=ctx.settings.agent_timeout_s,
             )
             ctx.status.set_service("agent", "up")
             r.raise_for_status()

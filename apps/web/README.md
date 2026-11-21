@@ -36,9 +36,10 @@ VITE_WS_URL=ws://localhost:8787 pnpm dev
 | Πλήκτρο | Λειτουργία |
 |---|---|
 | `1`–`7` | Πήγαινε στο αντίστοιχο beat (INTRO…CLOSE) |
-| `F` | Fallback από `demo/cache/<beat>.json` |
+| `F` | Fallback μέσω gateway (σωστό QR, όλες οι οθόνες)· τοπικά από `public/demo/cache/<beat>.json` μόνο αν ο gateway είναι κάτω |
 | `T` | Στείλε text prompt στην ATHENA |
-| `R` | Reset κατάστασης για νέα πρόβα |
+| `R` | Reset για νέα πρόβα (gateway → `state.reset` σε όλες τις οθόνες) |
+| `H` | Κρύβει την πιο πρόσφατη φωτογραφία από όλες τις οθόνες (moderation) |
 | `Ctrl+D` | Κλείσε το director mode |
 
 ## Στοίβα

@@ -280,13 +280,25 @@ def _remove_ways(G: nx.MultiDiGraph, way_ids: list[int]) -> None:
 def _reduce_capacity_by_lanes(
     G: nx.MultiDiGraph, way_ids: list[int], lanes_removed: int
 ) -> None:
+    """Αφαιρεί λωρίδες με τη χωρητικότητα ανά λωρίδα της ίδιας της ακμής. Μένει πάντα ≥ 1 λωρίδα ΙΧ."""
     way_set = set(way_ids)
     for u, v, k, data in G.edges(keys=True, data=True):
         if data.get("wayId") in way_set:
-            highway = data.get("highway", "secondary")
-            if isinstance(highway, list):
-                highway = highway[0]
-            from .constants import CAPACITY_PER_LANE
-            cap_per_lane = CAPACITY_PER_LANE.get(highway, 1200.0)
-            current_cap = data.get("capacity", cap_per_lane * 2)
-            data["capacity"] = max(current_cap - lanes_removed * cap_per_lane, cap_per_lane)
+            lanes = max(int(data.get("lanes", 1)), 1)
+            per_lane = data.get("capacity", 1000.0) / lanes
+            data["lanes"] = max(lanes - lanes_removed, 1)
+            data["capacity"] = per_lane * data["lanes"]
+
+
+def way_points(G: nx.MultiDiGraph, way_ids: list[int], step_m: float = 10.0) -> np.ndarray:
+    """Σημεία (lng, lat) κάθε ~step_m κατά μήκος των δρόμων: για να βρει το θερμικό ποια κελιά αγγίζουν."""
+    pts: list[tuple[float, float]] = []
+    for u, v, k in _edges_for_ways(G, way_ids):
+        geom = G.edges[u, v, k].get("geometry")
+        line = list(geom.coords) if geom is not None and hasattr(geom, "coords") else [
+            (G.nodes[u]["x"], G.nodes[u]["y"]), (G.nodes[v]["x"], G.nodes[v]["y"])]
+        for (x0, y0), (x1, y1) in zip(line[:-1], line[1:]):
+            dist = np.hypot((x1 - x0) * M_PER_DEG_LNG_AT_38, (y1 - y0) * M_PER_DEG_LAT)
+            for t in np.linspace(0.0, 1.0, max(int(dist / step_m), 1) + 1):
+                pts.append((x0 + (x1 - x0) * t, y0 + (y1 - y0) * t))
+    return np.array(pts).reshape(-1, 2)

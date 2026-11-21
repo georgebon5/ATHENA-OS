@@ -67,7 +67,7 @@ export function TrafficLayer({ viewer }: Props) {
     for (const _ of tripsRef.current) {
       coll.add({
         position: Cesium.Cartesian3.fromDegrees(0, 0, 0),
-        color: Cesium.Color.fromCssColorString("#bfe5ff"),
+        color: Cesium.Color.fromCssColorString("#ffd3ec"),
         pixelSize: 4,
         outlineColor: Cesium.Color.BLACK.withAlpha(0.6),
         outlineWidth: 1,
@@ -91,32 +91,35 @@ export function TrafficLayer({ viewer }: Props) {
 function renderSegments(
   ds: Cesium.CustomDataSource,
   sim: SimResult,
-  networkWays: Map<number, LngLat[]>,
+  networkWays: Map<number, LngLat[][]>,
 ) {
   for (const seg of sim.traffic.segments) {
-    // Αν το sim δεν έστειλε inline path, το λύνουμε από το /network
-    const path = seg.path && seg.path.length >= 2 ? seg.path : networkWays.get(seg.wayId);
-    if (!path || path.length < 2) continue;
+    // Αν το sim δεν έστειλε inline path, το λύνουμε από το /api/network
+    const lines = seg.path && seg.path.length >= 2 ? [seg.path] : (networkWays.get(seg.wayId) ?? []);
     const ratio = seg.baseFlow > 0 ? seg.newFlow / seg.baseFlow : 1;
     const color = flowColor(ratio);
-    ds.entities.add({
-      polyline: {
-        positions: Cesium.Cartesian3.fromDegreesArray(
-          path.flatMap(([lng, lat]) => [lng, lat]),
-        ),
-        width: 6,
-        material: Cesium.Color.fromCssColorString(color).withAlpha(0.9),
-        clampToGround: true,
-      },
-    });
+    for (const path of lines) {
+      if (path.length < 2) continue;
+      ds.entities.add({
+        polyline: {
+          positions: Cesium.Cartesian3.fromDegreesArray(path.flatMap(([lng, lat]) => [lng, lat])),
+          width: 6,
+          material: new Cesium.PolylineGlowMaterialProperty({
+            glowPower: 0.22,
+            color: Cesium.Color.fromCssColorString(color).withAlpha(0.95),
+          }),
+          clampToGround: true,
+        },
+      });
+    }
   }
 }
 
 function flowColor(ratio: number): string {
   // 0 → πράσινο (λιγότερη κίνηση), 1 → κίτρινο, >1 → κόκκινο
   const r = Math.max(0, Math.min(2, ratio));
-  if (r < 1) return lerpHex("#55e6c1", "#ffcc5c", r);
-  return lerpHex("#ffcc5c", "#ff6a4c", r - 1);
+  if (r < 1) return lerpHex("#2ee6c9", "#ffd84d", r);
+  return lerpHex("#ffd84d", "#ff4b3e", r - 1);
 }
 
 function animateTrips(

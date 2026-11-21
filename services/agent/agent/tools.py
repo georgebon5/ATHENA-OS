@@ -52,17 +52,24 @@ async def get_report(report_id: str) -> dict:
 
 # ── Tool: run_scenario ─────────────────────────────────────────────────────
 
-async def run_scenario(title: str, edits: list[dict], when: str) -> dict:
-    """Δημιουργεί και τρέχει σενάριο. Επιστρέφει SimResult."""
+async def run_scenario(
+    title: str, edits: list[dict], when: str, *,
+    broadcast: bool = True, origin: str = "user", parent_id: str | None = None,
+) -> dict:
+    """Δημιουργεί και τρέχει σενάριο. Επιστρέφει SimResult. broadcast=False: δεν αλλάζει η οθόνη."""
     payload = {
         "id": f"s-{uuid.uuid4().hex[:8]}",
         "title": title,
         "edits": edits,
         "when": when,
-        "origin": "user",
+        "origin": origin,
     }
+    if parent_id:
+        payload["parentId"] = parent_id
     try:
-        r = await get_client().post("/api/scenarios", json=payload, timeout=12.0)
+        r = await get_client().post(
+            "/api/scenarios", json=payload, params={"broadcast": str(broadcast).lower()}, timeout=12.0
+        )
         r.raise_for_status()
         result = r.json()
         log.info("run_scenario '%s' → status=%s computeMs=%s",
@@ -120,7 +127,9 @@ async def explore_variants(base_scenario_id: str, base_edits: list[dict], when: 
     for tmpl in VARIANT_TEMPLATES:
         v_edits = _make_variant_edits(base_edits, tmpl)
         v_title = f"Παραλλαγή: {tmpl['suffix']}"
-        tasks.append(run_scenario(v_title, v_edits, when))
+        # Σιωπηλά: η οθόνη δείχνει μόνο τη σύγκριση (variant.compare), όχι κάθε δοκιμή
+        tasks.append(run_scenario(v_title, v_edits, when, broadcast=False,
+                                  origin="agent_variant", parent_id=base_scenario_id))
         templates.append(tmpl)
 
     results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -141,9 +150,8 @@ async def explore_variants(base_scenario_id: str, base_edits: list[dict], when: 
     b_corr  = best_result.get("traffic", {}).get("corridorTravelTimeDeltaPct", {}).get("p50", 0)
 
     reason = (
-        f"Η παραλλαγή «{best_tmpl['suffix']}» δίνει {abs(round(b_hot, 1))}°C "
-        f"λιγότερη θερμοκρασία με {abs(round(b_corr, 1))}% αλλαγή στον χρόνο διαδρομής "
-        f"(βαθμολογία: {round(best_score, 2)})."
+        f"Η παραλλαγή «{best_tmpl['suffix']}» δίνει {b_hot:+.1f}°C στη θερμοκρασία επιφάνειας "
+        f"και {b_corr:+.1f}% στον χρόνο διαδρομής (βαθμολογία: {round(best_score, 2)})."
     )
 
     return best_result, reason
@@ -191,6 +199,15 @@ async def render_before_after(photo_url: str, scenario_title: str) -> tuple[str,
 
 # ── Tool: draft_decision ───────────────────────────────────────────────────
 
+def fmt_range(rng: dict, unit: str) -> str:
+    """«**+0.0%** (εύρος +0.0% έως +0.1%)» με τα πραγματικά p10/p50/p90 του sim· ποτέ επινοημένα."""
+    if not rng or "p50" not in rng:
+        return "δεν υπάρχει αποτέλεσμα προσομοίωσης"
+    if rng["p10"] == rng["p50"] == rng["p90"] == 0:
+        return "καμία μεταβολή"
+    return f"**{rng['p50']:+.1f}{unit}** (εύρος {rng['p10']:+.1f}{unit} έως {rng['p90']:+.1f}{unit})"
+
+
 def _mock_decision(
     scenario_id: str,
     scenario_title: str,
@@ -200,8 +217,6 @@ def _mock_decision(
 ) -> dict:
     corridor = sim_result.get("traffic", {}).get("corridorTravelTimeDeltaPct", {})
     hotspot  = sim_result.get("thermal", {}).get("hotspotDeltaC", {})
-    tt_p50   = round(abs(corridor.get("p50", 4.0)))
-    ht_p50   = round(abs(hotspot.get("p50", 2.3)), 1)
 
     if vote_summary:
         yes   = vote_summary.get("yes", 0)
@@ -227,8 +242,8 @@ def _mock_decision(
 
 ## ΔΕΔΟΜΕΝΑ
 Σύμφωνα με προσομοίωση του συστήματος ATHENA-OS *(εκτίμηση — δεν αποτελεί επίσημη μελέτη)*:
-- Αλλαγή χρόνου διαδρομής κορυφαίας ώρας: **−{tt_p50}%** (εύρος 90%: −{tt_p50 + 3}% έως −{max(0, tt_p50 - 3)}%)
-- Μεταβολή θερμοκρασίας επιφάνειας hotspot: **−{ht_p50}°C** (εύρος 90%: −{round(ht_p50 + 1.5, 1)}°C έως −{round(max(0.0, ht_p50 - 1.5), 1)}°C)
+- Αλλαγή χρόνου διαδρομής κορυφαίας ώρας: {fmt_range(corridor, "%")}
+- Μεταβολή θερμοκρασίας επιφάνειας hotspot: {fmt_range(hotspot, "°C")}
 
 ## ΔΙΑΒΟΥΛΕΥΣΗ
 {votes_section}
@@ -269,8 +284,6 @@ async def draft_decision(
 
         corridor = sim_result.get("traffic", {}).get("corridorTravelTimeDeltaPct", {})
         hotspot  = sim_result.get("thermal", {}).get("hotspotDeltaC", {})
-        tt_p50   = round(corridor.get("p50", -4.0), 1)
-        ht_p50   = round(hotspot.get("p50", -2.3), 1)
 
         votes_text = ""
         if vote_summary:
@@ -282,12 +295,13 @@ async def draft_decision(
 
         prompt = (
             f"Σενάριο: {scenario_title}\n"
-            f"Αλλαγή χρόνου διαδρομής: {tt_p50}%\n"
-            f"Μεταβολή θερμοκρασίας hotspot: {ht_p50}°C{votes_text}\n\n"
+            f"Αλλαγή χρόνου διαδρομής: {fmt_range(corridor, '%')}\n"
+            f"Μεταβολή θερμοκρασίας hotspot: {fmt_range(hotspot, '°C')}{votes_text}\n\n"
             "Γράψε σχέδιο απόφασης Δημοτικού Συμβουλίου Αθηναίων με δομή:\n"
             "# ΣΧΕΔΙΟ ΑΠΟΦΑΣΗΣ — δεν έχει εγκριθεί\n"
             "## ΘΕΜΑ\n## ΣΚΕΠΤΙΚΟ\n## ΔΕΔΟΜΕΝΑ\n## ΔΙΑΒΟΥΛΕΥΣΗ\n## ΑΠΟΦΑΣΙΖΕΙ\n\n"
-            "Μέγιστο 300 λέξεις. Αριθμοί με εύρη αβεβαιότητας. Τόνος επίσημος/δημοτικός."
+            "Μέγιστο 300 λέξεις. Χρησιμοποίησε ΜΟΝΟ τους αριθμούς και τα εύρη που δίνονται, χωρίς να "
+            "προσθέσεις άλλους. Τόνος επίσημος/δημοτικός."
         )
 
         client = AsyncAnthropic(api_key=LLM_API_KEY)

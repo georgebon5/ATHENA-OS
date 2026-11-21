@@ -15,7 +15,9 @@ RUN pnpm --filter @athena-os/citizen build
 # Στάδιο 2: gateway
 FROM python:3.12-slim
 COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /bin/uv
-RUN apt-get update && apt-get install -y --no-install-recommends fonts-dejavu-core && rm -rf /var/lib/apt/lists/*
+# Ώρα Αθήνας: το CS_DATE του ΟΑΣΑ είναι τοπική ώρα (έλεγχος «παλιού» λεωφορείου) και ο director βλέπει σωστές ώρες
+ENV TZ=Europe/Athens
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends fonts-dejavu-core tzdata   && rm -rf /var/lib/apt/lists/*
 ENV ATHENA_ROOT=/repo PYTHONUNBUFFERED=1 UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 WORKDIR /repo/services/gateway
 COPY packages/contracts/generated/py /repo/packages/contracts/generated/py

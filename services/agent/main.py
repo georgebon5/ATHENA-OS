@@ -16,7 +16,6 @@ import time
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-import httpx
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -70,6 +69,7 @@ class CommandResponse(BaseModel):
 
 class ClassifyRequest(BaseModel):
     reportId: str
+    imageBase64: str | None = None  # ο gateway στέλνει τη φωτογραφία: δεν χρειάζεται fetch (Docker: άλλο host)
 
 class ClassifyResponse(BaseModel):
     reportId: str
@@ -175,13 +175,9 @@ async def command(req: CommandRequest):
 async def _mock_command(text: str, beat: str | None) -> tuple[str, int]:
     """Mock routing: keyword → event sequence."""
     from agent.mock import (
-        parse_intent_mock, out_of_scope_say, simulate_sequence,
-        PIREOS_WAY_IDS, _scenario_payload,
+        parse_intent_mock, out_of_scope_say, PIREOS_WAY_IDS,
     )
     from agent.tools import run_scenario, explore_variants
-    import json
-    from pathlib import Path
-    from agent.constants import FIXTURES_DIR
 
     intent = parse_intent_mock(text)
     n = 0
@@ -231,27 +227,16 @@ async def _mock_command(text: str, beat: str | None) -> tuple[str, int]:
     # Τρέξε sim
     sim_result = await run_scenario(title, edits, when)
 
-    if sim_result.get("status") == "error":
-        # Fallback στο cache fixture
-        fp = FIXTURES_DIR / "sim_result.json"
-        if fp.exists():
-            import json as _json
-            sim_result = _json.loads(fp.read_text())
-            sim_result["scenarioId"] = f"s-fallback-{intent}"
+    if sim_result.get("status") != "ok":
+        # Ο gateway έχει ήδη δοκιμάσει live + cached. Δεν εφευρίσκουμε νούμερα.
+        reply = "Η προσομοίωση δεν ολοκληρώθηκε αυτή τη φορά. Δεν θα σας δώσω νούμερα χωρίς αποτέλεσμα."
+        await bus.emit("agent.say", {"textEl": reply, "mood": "alert"})
+        return reply, n + 1
 
-    corridor_p50 = sim_result.get("traffic", {}).get("corridorTravelTimeDeltaPct", {}).get("p50", -4.1)
-    hotspot_p50  = sim_result.get("thermal", {}).get("hotspotDeltaC", {}).get("p50", -2.3)
-    scenario_id  = sim_result.get("scenarioId", "s-demo")
-
-    await bus.emit("scenario.created", {"id": scenario_id, "title": title, "edits": edits,
-                                         "when": when, "origin": "user"})
-    await bus.emit("sim.result", sim_result)
-    n += 2
-
-    reply = (
-        f"Το σενάριο δείχνει βελτίωση περίπου {abs(round(corridor_p50))} τοις εκατό στον χρόνο διαδρομής "
-        f"και μείωση θερμοκρασίας περίπου {abs(round(hotspot_p50, 1))} βαθμών στο hotspot."
-    )
+    hotspot_p50  = sim_result["thermal"]["hotspotDeltaC"]["p50"]
+    scenario_id  = sim_result["scenarioId"]
+    # Ο gateway έχει ήδη στείλει scenario.created + sim.result (broadcast)
+    reply = describe_result(sim_result)
     await bus.emit("agent.say", {"textEl": reply, "mood": "proud"})
     n += 1
 
@@ -263,10 +248,12 @@ async def _mock_command(text: str, beat: str | None) -> tuple[str, int]:
         best_result, reason = await explore_variants(scenario_id, edits, when)
         n += 1
 
-        if best_result and best_result.get("status") == "ok":
-            b_hot  = best_result.get("thermal", {}).get("hotspotDeltaC", {}).get("p50", hotspot_p50 * 1.3)
-            b_corr = best_result.get("traffic", {}).get("corridorTravelTimeDeltaPct", {}).get("p50", corridor_p50)
-            await bus.emit("agent.thinking", {"stepEl": f"Καλύτερη παραλλαγή: {abs(round(b_hot,1))}°C με {abs(round(b_corr,1))}% αλλαγή κυκλοφορίας"})
+        if best_result and best_result.get("status") == "ok" and (
+            best_result["thermal"]["hotspotDeltaC"]["p50"] < hotspot_p50
+        ):
+            b_hot  = best_result["thermal"]["hotspotDeltaC"]["p50"]
+            b_corr = best_result["traffic"]["corridorTravelTimeDeltaPct"]["p50"]
+            await bus.emit("agent.thinking", {"stepEl": f"Καλύτερη παραλλαγή: {b_hot:+.1f}°C, {b_corr:+.1f}% χρόνος διαδρομής"})
             await bus.emit("variant.compare", {
                 "base": sim_result,
                 "best": best_result,
@@ -281,6 +268,26 @@ async def _mock_command(text: str, beat: str | None) -> tuple[str, int]:
             n += 3
 
     return reply, n
+
+
+def describe_result(sim: dict) -> str:
+    """Τι λέει η ATHENA για ένα αποτέλεσμα: πρόσημο και εύρος όπως ήρθαν από τον sim."""
+    tt = sim["traffic"]["corridorTravelTimeDeltaPct"]
+    hot = sim["thermal"]["hotspotDeltaC"]
+    parts = []
+    if tt["p10"] == tt["p50"] == tt["p90"] == 0:
+        parts.append("η κυκλοφορία δεν αλλάζει")
+    else:
+        verb = "αυξάνεται" if tt["p50"] > 0 else "μειώνεται"
+        parts.append(f"ο χρόνος διαδρομής {verb} περίπου {abs(tt['p50']):.1f}% "
+                     f"(εύρος {tt['p10']:+.1f} έως {tt['p90']:+.1f}%)")
+    if hot["p10"] == hot["p50"] == hot["p90"] == 0:
+        parts.append("η θερμοκρασία δεν αλλάζει")
+    else:
+        verb = "πέφτει" if hot["p50"] < 0 else "ανεβαίνει"
+        parts.append(f"η θερμοκρασία επιφάνειας στο σημείο {verb} περίπου {abs(hot['p50']):.1f}°C "
+                     f"(εύρος {hot['p10']:+.1f} έως {hot['p90']:+.1f}°C)")
+    return "Εκτιμώ ότι " + " και ".join(parts) + "."
 
 
 # ── POST /voice ────────────────────────────────────────────────────────────
@@ -401,9 +408,13 @@ async def classify(req: ClassifyRequest):
     location  = report.get("location")
 
     # Classify
-    if photo_url and not MOCK:
+    if (photo_url or req.imageBase64) and not MOCK:
         try:
-            photo_bytes = await fetch_photo(photo_url)
+            if req.imageBase64:
+                import base64
+                photo_bytes = base64.b64decode(req.imageBase64)
+            else:
+                photo_bytes = await fetch_photo(photo_url)
             classification = await classify_photo(photo_bytes, tuple(location) if location else None)
         except Exception as e:
             log.warning("photo fetch/classify failed: %s — mock fallback", e)

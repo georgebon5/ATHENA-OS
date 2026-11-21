@@ -11,6 +11,7 @@ import type {
   Report,
   Scenario,
   SimResult,
+  SystemStatus,
   Vote,
 } from "@/types/contracts";
 
@@ -48,6 +49,7 @@ export interface AthenaState {
   wsConnected: boolean;
   wsLatencyMs: number | null;
   beat: DemoBeat;
+  beatSignal: number; // +1 σε κάθε live director.beat (όχι replay): κάρτα τίτλου
   director: boolean;
 
   // layers
@@ -57,6 +59,7 @@ export interface AthenaState {
   buses: Bus[];
   busesUpdatedAt: number;
   reports: Record<string, Report>;
+  liveReportIds: string[]; // νέες αναφορές αυτής της συνεδρίας (όχι replay): ειδοποιήσεις
   activeScenario: Scenario | null;
   simProgress: number | null; // 0..1
   simResult: SimResult | null;
@@ -78,16 +81,22 @@ export interface AthenaState {
   drawMode: boolean;
   drawPoints: LngLat[];
 
-  // road network (wayId → geometry) από GET /network — fallback για segments χωρίς inline path
-  networkWays: Map<number, LngLat[]>;
+  // road network (wayId → γραμμές του δρόμου) από GET /api/network
+  networkWays: Map<number, LngLat[][]>;
+
+  // υγεία υπηρεσιών + fallbacks (system.status, μόνο για τον director)
+  systemStatus: SystemStatus | null;
 
   // actions
   setWsConnected: (v: boolean, latencyMs?: number) => void;
   setBeat: (b: DemoBeat) => void;
+  bumpBeatSignal: () => void;
   setDirector: (v: boolean) => void;
   setLayer: (layer: LayerKey, visible: boolean) => void;
   setBuses: (buses: Bus[]) => void;
   upsertReport: (r: Report) => void;
+  removeReport: (id: string) => void;
+  markLiveReport: (id: string) => void;
   setActiveScenario: (s: Scenario | null) => void;
   setSimProgress: (pct: number | null) => void;
   setSimResult: (r: SimResult | null) => void;
@@ -104,7 +113,8 @@ export interface AthenaState {
   setDrawMode: (v: boolean) => void;
   pushDrawPoint: (p: LngLat) => void;
   clearDrawPoints: () => void;
-  setNetworkWays: (ways: Map<number, LngLat[]>) => void;
+  setNetworkWays: (ways: Map<number, LngLat[][]>) => void;
+  setSystemStatus: (st: SystemStatus) => void;
   reset: () => void;
 }
 
@@ -120,11 +130,13 @@ export const useStore = create<AthenaState>((set) => ({
   wsConnected: false,
   wsLatencyMs: null,
   beat: "INTRO",
+  beatSignal: 0,
   director: false,
   layers: initialLayers,
   buses: [],
   busesUpdatedAt: 0,
   reports: {},
+  liveReportIds: [],
   activeScenario: null,
   simProgress: null,
   simResult: null,
@@ -140,16 +152,25 @@ export const useStore = create<AthenaState>((set) => ({
   drawMode: false,
   drawPoints: [],
   networkWays: new Map(),
+  systemStatus: null,
 
   setWsConnected: (v, latencyMs) =>
     set({ wsConnected: v, wsLatencyMs: latencyMs ?? null }),
   setBeat: (b) => set({ beat: b }),
+  bumpBeatSignal: () => set((s) => ({ beatSignal: s.beatSignal + 1 })),
   setDirector: (v) => set({ director: v }),
   setLayer: (layer, visible) =>
     set((s) => ({ layers: { ...s.layers, [layer]: visible } })),
   setBuses: (buses) => set({ buses, busesUpdatedAt: performance.now() }),
   upsertReport: (r) =>
     set((s) => ({ reports: { ...s.reports, [r.id]: { ...s.reports[r.id], ...r } } })),
+  markLiveReport: (id) =>
+    set((s) => (s.liveReportIds.includes(id) ? s : { liveReportIds: [...s.liveReportIds, id] })),
+  removeReport: (id) =>
+    set((s) => {
+      const { [id]: _gone, ...rest } = s.reports;
+      return { reports: rest };
+    }),
   setActiveScenario: (s) => set({ activeScenario: s }),
   setSimProgress: (pct) => set({ simProgress: pct }),
   setSimResult: (r) => set({ simResult: r, simProgress: r ? 1 : null }),
@@ -175,6 +196,7 @@ export const useStore = create<AthenaState>((set) => ({
     set((s) => ({ drawPoints: [...s.drawPoints, p] })),
   clearDrawPoints: () => set({ drawPoints: [] }),
   setNetworkWays: (ways) => set({ networkWays: ways }),
+  setSystemStatus: (st) => set({ systemStatus: st }),
   reset: () =>
     set({
       beat: "INTRO",

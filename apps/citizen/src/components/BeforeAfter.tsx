@@ -16,7 +16,7 @@ export function BeforeAfter({ before, after }: { before: string; after: string }
     <div className="relative">
       <div
         ref={box}
-        className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-slab shadow-card select-none touch-none"
+        className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-slab shadow-card select-none touch-none ring-1 ring-holo/30"
         onPointerDown={(e) => {
           (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
           move(e.clientX);
@@ -33,13 +33,13 @@ export function BeforeAfter({ before, after }: { before: string; after: string }
           onLoad={() => setLoaded((n) => n + 1)}
         />
         {loaded < 2 && <div className="absolute inset-0 animate-pulse bg-slab" />}
-        <div className="absolute inset-y-0 w-[3px] bg-white shadow-[0_0_12px_rgba(0,0,0,0.5)]" style={{ left: `calc(${split}% - 1.5px)` }}>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full bg-white text-ink shadow-card text-lg font-bold">
+        <div className="absolute inset-y-0 w-[3px] bg-holo shadow-[0_0_18px_#ff5fb8]" style={{ left: `calc(${split}% - 1.5px)` }}>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 grid h-11 w-11 place-items-center rounded-full border-2 border-holo bg-void/85 text-holo shadow-glow text-lg font-bold">
             ⇆
           </div>
         </div>
-        <span className="absolute left-3 top-3 rounded-full bg-ink/75 px-3 py-1 text-[13px] font-semibold text-white">Σήμερα</span>
-        <span className="absolute right-3 top-3 rounded-full bg-athenaDeep/90 px-3 py-1 text-[13px] font-semibold text-white">Πρόταση</span>
+        <span className="absolute left-3 top-3 rounded-full bg-void/75 px-3 py-1 text-[13px] font-semibold text-chalk ring-1 ring-holo/30 backdrop-blur">Σήμερα</span>
+        <span className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-holo to-plasma px-3 py-1 text-[13px] font-bold text-void">Πρόταση</span>
       </div>
       <input
         type="range"

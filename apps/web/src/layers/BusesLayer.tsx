@@ -104,9 +104,9 @@ export function BusesLayer({ viewer }: Props) {
           position: Cesium.Cartesian3.fromDegrees(b.lngLat[0], b.lngLat[1], 2),
           box: {
             dimensions: new Cesium.Cartesian3(12, 3.5, 3),
-            material: Cesium.Color.fromCssColorString("#7bd1ff").withAlpha(0.95),
+            material: Cesium.Color.fromCssColorString("#ff5fb8").withAlpha(0.95),
             outline: true,
-            outlineColor: Cesium.Color.fromCssColorString("#bfe5ff"),
+            outlineColor: Cesium.Color.fromCssColorString("#ffd3ec"),
           },
           label: {
             text: b.line,

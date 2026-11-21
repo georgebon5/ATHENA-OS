@@ -41,12 +41,12 @@ export function MiniMap({ at, heading, approximate }: { at: LngLat; heading: num
   const [x, y] = project(inside ? at : SERAFIO);
   const [sx, sy] = project(SERAFIO);
   return (
-    <figure className="overflow-hidden rounded-2xl bg-slab shadow-card">
+    <figure className="card overflow-hidden">
       <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" role="img" aria-label="Η θέση της αναφοράς στον χάρτη">
         <defs>
           <radialGradient id="glow">
-            <stop offset="0" stopColor="#7bd1ff" stopOpacity="0.5" />
-            <stop offset="1" stopColor="#7bd1ff" stopOpacity="0" />
+            <stop offset="0" stopColor="#ff5fb8" stopOpacity="0.5" />
+            <stop offset="1" stopColor="#ff5fb8" stopOpacity="0" />
           </radialGradient>
         </defs>
         {STREETS.map((s, i) => (
@@ -54,7 +54,7 @@ export function MiniMap({ at, heading, approximate }: { at: LngLat; heading: num
             key={i}
             points={s.pts.map((p) => project(p).join(",")).join(" ")}
             fill="none"
-            stroke={s.main ? "#7bd1ff" : "#2a3644"}
+            stroke={s.main ? "#ff5fb8" : "#432553"}
             strokeOpacity={s.main ? 0.55 : 1}
             strokeWidth={s.main ? 5 : 3}
             strokeLinecap="round"
@@ -64,30 +64,30 @@ export function MiniMap({ at, heading, approximate }: { at: LngLat; heading: num
         {AREAS.map((a) => {
           const [ax, ay] = project(a.at);
           return (
-            <text key={a.name} x={ax} y={ay} fill="#5f7183" fontSize="9" letterSpacing="2" textAnchor="middle">
+            <text key={a.name} x={ax} y={ay} fill="#a07f99" fontSize="9" letterSpacing="2" textAnchor="middle">
               {a.name}
             </text>
           );
         })}
-        <text x={project([23.7215, 37.9838])[0]} y={project([23.7215, 37.9838])[1] - 6} fill="#7bd1ff" fontSize="10" opacity="0.8">
+        <text x={project([23.7215, 37.9838])[0]} y={project([23.7215, 37.9838])[1] - 6} fill="#ff5fb8" fontSize="10" opacity="0.8">
           Πειραιώς
         </text>
-        <rect x={sx - 4} y={sy - 4} width="8" height="8" fill="#e8edf2" opacity="0.8" transform={`rotate(45 ${sx} ${sy})`} />
-        <text x={sx + 8} y={sy + 14} fill="#e8edf2" fontSize="9" opacity="0.8">
+        <rect x={sx - 4} y={sy - 4} width="8" height="8" fill="#fff1ea" opacity="0.8" transform={`rotate(45 ${sx} ${sy})`} />
+        <text x={sx + 8} y={sy + 14} fill="#fff1ea" fontSize="9" opacity="0.8">
           Σεράφειο
         </text>
         <circle cx={x} cy={y} r="34" fill="url(#glow)" />
         {heading != null && (
-          <path d={`M ${x} ${y} L ${x - 11} ${y - 30} A 32 32 0 0 1 ${x + 11} ${y - 30} Z`} fill="#7bd1ff" opacity="0.35" transform={`rotate(${heading} ${x} ${y})`} />
+          <path d={`M ${x} ${y} L ${x - 11} ${y - 30} A 32 32 0 0 1 ${x + 11} ${y - 30} Z`} fill="#ff5fb8" opacity="0.35" transform={`rotate(${heading} ${x} ${y})`} />
         )}
         <g style={{ transformOrigin: `${x}px ${y}px` }}>
-          <circle cx={x} cy={y} r="10" fill="none" stroke="#7bd1ff" strokeWidth="2" className="animate-pulseRing" style={{ transformOrigin: `${x}px ${y}px` }} />
+          <circle cx={x} cy={y} r="10" fill="none" stroke="#ff5fb8" strokeWidth="2" className="animate-pulseRing" style={{ transformOrigin: `${x}px ${y}px` }} />
         </g>
-        <circle cx={x} cy={y} r="7" fill="#7bd1ff" stroke="#06090d" strokeWidth="2.5" />
+        <circle cx={x} cy={y} r="7" fill="#ff5fb8" stroke="#0c0614" strokeWidth="2.5" />
       </svg>
-      <figcaption className="px-4 py-2.5 text-[13px] text-white/75 flex justify-between gap-3">
+      <figcaption className="flex justify-between gap-3 border-t border-holo/10 px-4 py-2.5 text-[13px] text-chalk/75">
         <span>{approximate ? "Κατά προσέγγιση: Σεράφειο" : inside ? "Η αναφορά σου στον χάρτη" : "Εκτός της περιοχής του χάρτη"}</span>
-        <span className="tabular-nums text-white/50">
+        <span className="font-mono tabular-nums text-chalk/50">
           {at[1].toFixed(5)}, {at[0].toFixed(5)}
         </span>
       </figcaption>

@@ -1,6 +1,7 @@
 import type { WsEvent } from "@/types/contracts";
 import { useStore } from "@/store/useStore";
 import { cameraController } from "@/cesium/cameraShots";
+import { fetchReports } from "@/director/directorApi";
 
 /**
  * Παίρνει ένα WsEvent και το γράφει στο Zustand store ή στέλνει
@@ -18,6 +19,7 @@ export function dispatchWs(ev: WsEvent): void {
     case "report.created":
     case "report.classified":
       s.upsertReport(ev.payload);
+      if (ev.type === "report.created" && !(ev as { replay?: boolean }).replay) s.markLiveReport(ev.payload.id);
       return;
 
     case "agent.say":
@@ -100,6 +102,22 @@ export function dispatchWs(ev: WsEvent): void {
 
     case "director.beat":
       s.setBeat(ev.payload.beat);
+      // Ο gateway σημειώνει με replay ό,τι ξαναστέλνει σε νέο client: εκεί δεν θέλουμε κάρτα τίτλου
+      if (!(ev as { replay?: boolean }).replay) s.bumpBeatSignal();
+      return;
+
+    case "report.hidden":
+      s.removeReport(ev.payload.id);
+      return;
+
+    case "system.status":
+      s.setSystemStatus(ev.payload);
+      return;
+
+    case "state.reset":
+      // Νέα πρόβα: ο gateway κρατά τις ιστορικές αναφορές, τις ξαναφέρνουμε
+      s.reset();
+      void fetchReports().then((rs) => rs.forEach((r) => useStore.getState().upsertReport(r)));
       return;
   }
 }

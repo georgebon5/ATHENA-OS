@@ -200,4 +200,14 @@ export type WsEvent =
       };
     }
   | { type: "decision.ready"; payload: DecisionDraft }
-  | { type: "director.beat"; payload: { beat: DemoBeat } };
+  | { type: "director.beat"; payload: { beat: DemoBeat } }
+  | { type: "report.hidden"; payload: { id: string } }
+  | { type: "system.status"; payload: SystemStatus }
+  | { type: "state.reset"; payload: Record<string, never> };
+
+// Μόνο για τον director: υγεία υπηρεσιών + πρόσφατα fallbacks (gateway)
+export interface SystemStatus {
+  at: string;
+  services: { db: string; sim: string; agent: string; oasa: string };
+  fallbacks: string[];
+}

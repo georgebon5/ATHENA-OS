@@ -1,59 +1,33 @@
 import type { Scenario, ScenarioEdit } from "@/types/contracts";
 import { dispatchWs } from "@/ws/dispatcher";
-
-const GATEWAY_URL =
-  (import.meta.env.VITE_GATEWAY_URL as string | undefined) ??
-  (typeof window !== "undefined"
-    ? `${window.location.protocol}//${window.location.hostname}:8000`
-    : "http://localhost:8000");
-
-const AGENT_URL =
-  (import.meta.env.VITE_AGENT_URL as string | undefined) ??
-  (typeof window !== "undefined"
-    ? `${window.location.protocol}//${window.location.hostname}:8200`
-    : "http://localhost:8200");
+import { GATEWAY_URL } from "./directorApi";
 
 /**
- * Υποβάλλει σενάριο στον agent (POST /command).
- * Ο agent τρέχει simulate → emit events → φτάνουν μέσω WS.
- * Fallback: local dispatch του scenario.created για instant visual.
+ * Preset / σχεδιασμένο σενάριο → gateway (POST /api/scenarios) με τα ΑΚΡΙΒΗ edits.
+ * Ο gateway στέλνει αμέσως scenario.created και μετά sim.result σε όλες τις οθόνες.
+ * Αν ο gateway είναι κάτω, δείχνουμε τουλάχιστον τοπικά τι αλλάζει (χωρίς νούμερα).
  */
 export async function submitScenario(
   title: string,
   edits: ScenarioEdit[],
   when?: string,
 ): Promise<void> {
-  const id = `s-${Math.random().toString(36).slice(2, 10)}`;
   const scenario: Scenario = {
-    id,
+    id: `s-${Math.random().toString(36).slice(2, 10)}`,
     title,
     edits,
     when: when ?? new Date().toISOString(),
     origin: "user",
   };
-
-  // Άμεσα local dispatch ώστε το ScenarioLayer να δείξει τα visuals
-  dispatchWs({ type: "scenario.created", payload: scenario });
-
-  // Στέλνουμε στον agent για πλήρη simulate flow
   try {
-    await fetch(`${AGENT_URL}/command`, {
+    await fetch(`${GATEWAY_URL}/api/scenarios`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ textEl: title }),
+      body: JSON.stringify(scenario),
     });
   } catch (err) {
-    console.warn("[scenario] agent unreachable, trying gateway", err);
-    // Fallback: gateway /api/scenarios
-    try {
-      await fetch(`${GATEWAY_URL}/api/scenarios`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(scenario),
-      });
-    } catch (e2) {
-      console.warn("[scenario] gateway also unreachable", e2);
-    }
+    console.warn("[scenario] gateway unreachable", err);
+    dispatchWs({ type: "scenario.created", payload: scenario });
   }
 }
 

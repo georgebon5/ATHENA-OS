@@ -8,11 +8,11 @@ interface Props {
 }
 
 const SEVERITY_COLOR: Record<number, string> = {
-  1: "#55e6c1",
+  1: "#2ee6c9",
   2: "#9fe68a",
-  3: "#ffcc5c",
+  3: "#ffd84d",
   4: "#ff9a5a",
-  5: "#ff6a4c",
+  5: "#ff4b3e",
 };
 
 /**
@@ -51,7 +51,7 @@ export function ReportsLayer({ viewer }: Props) {
         p.entity.ellipse = new Cesium.EllipseGraphics({
           semiMajorAxis: radius,
           semiMinorAxis: radius,
-          material: Cesium.Color.fromCssColorString("#7bd1ff").withAlpha(alpha),
+          material: Cesium.Color.fromCssColorString("#ff5fb8").withAlpha(alpha),
           height: 1,
         });
       }
@@ -101,7 +101,7 @@ function upsertReportEntity(
   let ent = entities.get(r.id);
 
   const severity = r.classification?.severity ?? 3;
-  const color = SEVERITY_COLOR[severity] ?? "#7bd1ff";
+  const color = SEVERITY_COLOR[severity] ?? "#ff5fb8";
   const labelText = r.classification
     ? `${categoryLabel(r.classification.category)} · Σ${severity}`
     : "Νέα αναφορά";
@@ -129,7 +129,7 @@ function upsertReportEntity(
         verticalOrigin: Cesium.VerticalOrigin.TOP,
         pixelOffset: new Cesium.Cartesian2(0, 6),
         showBackground: true,
-        backgroundColor: Cesium.Color.fromCssColorString("#06090d").withAlpha(0.85),
+        backgroundColor: Cesium.Color.fromCssColorString("#0c0614").withAlpha(0.85),
         backgroundPadding: new Cesium.Cartesian2(6, 4),
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
       },
@@ -154,7 +154,7 @@ function upsertReportEntity(
   }
 }
 
-function categoryLabel(c: ReportCategory): string {
+export function categoryLabel(c: ReportCategory): string {
   switch (c) {
     case "pothole":
       return "Λακκούβα";

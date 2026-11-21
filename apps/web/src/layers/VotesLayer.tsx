@@ -7,9 +7,9 @@ interface Props {
 }
 
 const COLORS = {
-  yes: "#55e6c1",
-  no: "#ff6a4c",
-  maybe: "#ffcc5c",
+  yes: "#2ee6c9",
+  no: "#ff4b3e",
+  maybe: "#ffd84d",
 };
 
 /**

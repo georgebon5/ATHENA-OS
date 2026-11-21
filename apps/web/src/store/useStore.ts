@@ -92,9 +92,6 @@ export interface AthenaState {
   sensorMode: SensorMode;
   liveSimResult: SimResult | null;
 
-  // citizen mode (clean UI, camera above user, roam enabled)
-  citizenMode: boolean;
-
   // actions
   setWsConnected: (v: boolean, latencyMs?: number) => void;
   setBeat: (b: DemoBeat) => void;
@@ -125,7 +122,6 @@ export interface AthenaState {
   setSystemStatus: (st: SystemStatus) => void;
   setSensorMode: (m: SensorMode) => void;
   setLiveSimResult: (r: SimResult | null) => void;
-  setCitizenMode: (v: boolean) => void;
   reset: () => void;
 }
 
@@ -169,7 +165,6 @@ export const useStore = create<AthenaState>((set) => ({
   systemStatus: null,
   sensorMode: "normal",
   liveSimResult: null,
-  citizenMode: false,
 
   setWsConnected: (v, latencyMs) =>
     set({ wsConnected: v, wsLatencyMs: latencyMs ?? null }),
@@ -216,7 +211,6 @@ export const useStore = create<AthenaState>((set) => ({
   setSystemStatus: (st) => set({ systemStatus: st }),
   setSensorMode: (m) => set({ sensorMode: m }),
   setLiveSimResult: (r) => set({ liveSimResult: r }),
-  setCitizenMode: (v) => set({ citizenMode: v }),
   reset: () =>
     set({
       beat: "INTRO",

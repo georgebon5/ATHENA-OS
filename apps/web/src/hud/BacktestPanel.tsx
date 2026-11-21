@@ -3,8 +3,8 @@ import { useStore } from "@/store/useStore";
 import type { Backtest } from "@/types/contracts";
 
 /**
- * Πάνελ backtesting για ~5s (τον χρόνο τον ελέγχει ο dispatcher):
- * scatter «πρόβλεψη vs μέτρηση» και το metric σε δεδομένα που δεν είχε δει το μοντέλο.
+ * Πάνελ backtesting που εμφανίζεται για ~5s (τον χρόνο τον ελέγχει
+ * ο dispatcher). Δείχνει scatter predicted vs observed και το metric.
  */
 export function BacktestPanel() {
   const model = useStore((s) => s.backtestVisible);
@@ -15,22 +15,23 @@ export function BacktestPanel() {
     <AnimatePresence>
       {bt && (
         <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
-          className="glass-strong holo-corners holo-scan pointer-events-none fixed left-1/2 top-1/2 z-20 w-[720px] -translate-x-1/2 -translate-y-1/2 p-6"
+          className="pointer-events-none fixed left-1/2 bottom-32 -translate-x-1/2 glass-strong rounded-2xl p-5 w-[640px]"
         >
-          <span className="scanline" />
-          <div className="flex items-center justify-between gap-4">
-            <div className="hud-label">backtesting · {bt.model === "traffic" ? "κυκλοφορία" : "θερμικό"}</div>
-            <span className="chip max-w-[60%] truncate normal-case tracking-normal">{bt.heldOut}</span>
+          <div className="flex items-center justify-between">
+            <div className="text-xs uppercase tracking-widest text-chalk/60">
+              Backtesting · {bt.model === "traffic" ? "κυκλοφορία" : "θερμικό"}
+            </div>
+            <span className="chip">{bt.heldOut}</span>
           </div>
-          <div className="mt-3 flex items-baseline gap-4">
-            <div className="data text-[56px] font-bold leading-none holo-text">{formatMetric(bt)}</div>
-            <div className="text-[13px] text-chalk/60">
-              σε <span className="data text-chalk">{bt.nSamples}</span> δείγματα
-              <br />
-              που δεν είχε δει το μοντέλο
+          <div className="mt-2 flex items-baseline gap-3">
+            <div className="text-5xl font-semibold text-athena">
+              {formatMetric(bt)}
+            </div>
+            <div className="text-sm text-chalk/60">
+              σε {bt.nSamples} δείγματα που δεν είχε δει το μοντέλο
             </div>
           </div>
           <Scatter chart={bt.chart} />
@@ -58,34 +59,65 @@ function Scatter({ chart }: { chart: Backtest["chart"] }) {
   const min = Math.min(...xs, ...ys);
   const max = Math.max(...xs, ...ys);
   const span = max - min || 1;
-  const W = 640;
-  const H = 220;
-  const pad = 24;
-  const sx = (v: number) => pad + ((v - min) / span) * (W - 2 * pad);
-  const sy = (v: number) => H - pad - ((v - min) / span) * (H - 2 * pad);
+  const W = 560;
+  const H = 200;
+  const padL = 32;
+  const padB = 28;
+  const padT = 10;
+  const padR = 10;
+  const sx = (v: number) => padL + ((v - min) / span) * (W - padL - padR);
+  const sy = (v: number) => H - padB - ((v - min) / span) * (H - padT - padB);
+
+  // Faint grid lines
+  const gridTicks = [0.25, 0.5, 0.75];
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="mt-4 w-full">
-      {[0.25, 0.5, 0.75].map((f) => (
-        <line key={f} x1={pad} x2={W - pad} y1={pad + f * (H - 2 * pad)} y2={pad + f * (H - 2 * pad)} stroke="#ff5fb814" />
-      ))}
-      <line x1={sx(min)} y1={sy(min)} x2={sx(max)} y2={sy(max)} stroke="#ffa043" strokeOpacity={0.7} strokeWidth={1.5} strokeDasharray="5 5" />
-      <text x={W - pad} y={pad - 6} textAnchor="end" fontSize={10} fill="#ffa043" fontFamily="JetBrains Mono">
-        τέλεια πρόβλεψη
-      </text>
+    <svg viewBox={`0 0 ${W} ${H}`} className="mt-3 w-full">
+      {/* Grid */}
+      {gridTicks.map((t) => {
+        const v = min + t * span;
+        return (
+          <g key={t}>
+            <line x1={sx(v)} y1={padT} x2={sx(v)} y2={H - padB}
+              stroke="rgba(232,237,242,0.06)" strokeWidth={1} />
+            <line x1={padL} y1={sy(v)} x2={W - padR} y2={sy(v)}
+              stroke="rgba(232,237,242,0.06)" strokeWidth={1} />
+          </g>
+        );
+      })}
+      {/* Perfect-prediction line */}
+      <line
+        x1={sx(min)} y1={sy(min)}
+        x2={sx(max)} y2={sy(max)}
+        stroke="#7bd1ff55"
+        strokeWidth={1.5}
+        strokeDasharray="4 4"
+      />
+      {/* Data points */}
       {chart.map((p, i) => (
-        <motion.circle
+        <circle
           key={i}
-          initial={{ r: 0, opacity: 0 }}
-          animate={{ r: 3.5, opacity: 0.85 }}
-          transition={{ delay: 0.2 + i * 0.03 }}
           cx={sx(p.predicted)}
           cy={sy(p.observed)}
-          fill="#ff5fb8"
-          style={{ filter: "drop-shadow(0 0 4px #ff5fb8)" }}
+          r={3}
+          fill="#7bd1ff"
+          opacity={0.72}
         />
       ))}
-      <text x={pad} y={H - 4} fontSize={10} fill="#fff1ea66" fontFamily="JetBrains Mono">
-        πρόβλεψη →
+      {/* Axis labels */}
+      <text x={W / 2} y={H - 4} textAnchor="middle"
+        fill="rgba(232,237,242,0.35)" fontSize={10} fontFamily="Inter,sans-serif">
+        Προβλεπόμενο
+      </text>
+      <text
+        x={10} y={H / 2}
+        textAnchor="middle"
+        fill="rgba(232,237,242,0.35)"
+        fontSize={10}
+        fontFamily="Inter,sans-serif"
+        transform={`rotate(-90, 10, ${H / 2})`}
+      >
+        Παρατηρούμενο
       </text>
     </svg>
   );

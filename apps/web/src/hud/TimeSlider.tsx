@@ -3,10 +3,10 @@ import * as Cesium from "cesium";
 import { useStore } from "@/store/useStore";
 import { cameraController } from "@/cesium/cameraShots";
 
-const PRESETS: { label: string; iso: string }[] = [
-  { label: "τώρα", iso: new Date().toISOString() },
-  { label: "15 Ιουλίου 15:00", iso: `${new Date().getFullYear()}-07-15T12:00:00Z` },
-  { label: "2035", iso: `2035-07-15T12:00:00Z` },
+const PRESETS: { label: string; iso: string; icon: string }[] = [
+  { icon: "🕐", label: "τώρα", iso: new Date().toISOString() },
+  { icon: "🌡️", label: "Ιούλιος 15:00", iso: `${new Date().getFullYear()}-07-15T12:00:00Z` },
+  { icon: "🌍", label: "2035", iso: `2035-07-15T12:00:00Z` },
 ];
 
 /**
@@ -26,22 +26,22 @@ export function TimeSlider() {
     prevRef.current = when;
   }, [when]);
 
-  const active = PRESETS.findIndex((p) => p.iso === when);
-
   return (
-    <div className="glass !rounded-full flex items-center gap-1 p-1 pl-4">
-      <span className="hud-label mr-2 text-[10px]">χρονος</span>
-      {PRESETS.map((p, i) => (
+    <div className="pointer-events-auto fixed left-1/2 top-6 -translate-x-1/2 glass rounded-full px-3 py-1.5 flex items-center gap-1.5 text-sm">
+      <span className="hud-label mr-1">Χρόνος</span>
+      {PRESETS.map((p) => (
         <button
           key={p.iso}
           onClick={() => setWhen(p.iso)}
-          className={`relative rounded-full px-4 py-1.5 text-[12px] font-semibold transition-all ${
-            i === active
-              ? "text-void bg-gradient-to-r from-holo to-plasma shadow-glow"
-              : "text-chalk/70 hover:text-chalk hover:bg-holo/10"
+          className={`px-3 py-1 rounded-full text-xs flex items-center gap-1 transition-all duration-200 ${
+            when === p.iso
+              ? "bg-athena text-ink font-semibold"
+              : "text-chalk/75 hover:text-chalk"
           }`}
+          style={when === p.iso ? { boxShadow: "0 0 14px rgba(123,209,255,0.45)" } : undefined}
         >
-          {p.label}
+          <span>{p.icon}</span>
+          <span>{p.label}</span>
         </button>
       ))}
     </div>

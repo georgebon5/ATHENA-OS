@@ -29,11 +29,11 @@ import { VoteCounter } from "./hud/VoteCounter";
 import { SunClock } from "./hud/SunClock";
 import { NearbyPanel } from "./hud/NearbyPanel";
 
-import { ImpactPanel } from "./hud/ImpactPanel";
 import { ReportPopup } from "./hud/ReportPopup";
 import { ReportsListPanel } from "./hud/ReportsListPanel";
 import { ProposalsPanel } from "./hud/ProposalsPanel";
 import { ProjectPopup } from "./hud/ProjectPopup";
+import { ImpactPanel } from "./hud/ImpactPanel";
 import { WsClient } from "./ws/client";
 import { dispatchWs } from "./ws/dispatcher";
 import { useStore } from "./store/useStore";
@@ -151,7 +151,6 @@ export default function App() {
       <ErrorBoundary name="report-popup"><ReportPopup /></ErrorBoundary>
       <ErrorBoundary name="proposals"><ProposalsPanel /></ErrorBoundary>
       <ErrorBoundary name="project-popup"><ProjectPopup /></ErrorBoundary>
-
       <ErrorBoundary name="impact"><ImpactPanel /></ErrorBoundary>
 
       {/* ── full-screen στιγμές ── */}

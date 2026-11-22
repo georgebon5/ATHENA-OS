@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { LngLat, Report } from "@athena-os/contracts";
 import { Shell, Spinner } from "../components/Shell";
-import { MiniMap } from "../components/MiniMap";
+import { LiveMap } from "../components/LiveMap";
 import { getReport, uploadReport } from "../lib/api";
 import { preparePhoto } from "../lib/image";
 import { CATEGORY_EL } from "../lib/labels";
@@ -256,7 +256,7 @@ function Done({ report, approximate, heading, onAgain }: { report: Report; appro
         <p className="mt-1 text-[15px] text-muted">Τώρα φαίνεται στον ζωντανό χάρτη, στη μεγάλη οθόνη.</p>
       </div>
       <div className="animate-rise" style={{ animationDelay: "150ms" }}>
-        <MiniMap at={current.location} heading={heading} approximate={approximate} />
+        <LiveMap at={current.location} heading={heading} approximate={approximate} height="180px" />
       </div>
       <section className="card p-5 animate-rise" style={{ animationDelay: "300ms" }} aria-live="polite">
         {c ? (

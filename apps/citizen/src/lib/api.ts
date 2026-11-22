@@ -69,8 +69,26 @@ export interface Votable {
   maybe: number;
 }
 
-export const getVotables = ([lng, lat]: [number, number]) =>
-  fetch(`/api/votables?lng=${lng}&lat=${lat}`, { headers: headers() }).then((r) => json<Votable[]>(r));
+/** Mock votables for when gateway is down */
+const MOCK_VOTABLES: Votable[] = [
+  { id: "r-001", kind: "report", titleEl: "Λακκούβα στην Πειραιώς 142", lngLat: [23.7105, 37.9789], distanceM: 15, publicUrl: "", yes: 12, no: 2, maybe: 3 },
+  { id: "r-002", kind: "report", titleEl: "Σπασμένο πεζοδρόμιο Εχελιδών", lngLat: [23.7112, 37.9784], distanceM: 25, publicUrl: "", yes: 8, no: 1, maybe: 2 },
+  { id: "r-003", kind: "report", titleEl: "Χαλασμένος φωτισμός", lngLat: [23.7101, 37.9792], distanceM: 40, publicUrl: "", yes: 5, no: 0, maybe: 1 },
+  { id: "r-004", kind: "report", titleEl: "Σκουπίδια δίπλα στο Σεράφειο", lngLat: [23.7115, 37.9790], distanceM: 35, publicUrl: "", yes: 15, no: 3, maybe: 4 },
+  { id: "r-005", kind: "report", titleEl: "Παράνομη στάθμευση", lngLat: [23.7098, 37.9785], distanceM: 48, publicUrl: "", yes: 3, no: 1, maybe: 0 },
+  { id: "c-001", kind: "consultation", titleEl: "Πεζοδρόμηση Πειραιώς (πιλοτικό)", lngLat: [23.7108, 37.9795], distanceM: 120, publicUrl: "", yes: 24, no: 8, maybe: 5 },
+  { id: "p-001", kind: "project", titleEl: "Δεντροφύτευση Γκαζοχωρίου", lngLat: [23.7095, 37.9800], distanceM: 200, publicUrl: "", yes: 31, no: 2, maybe: 6 },
+  { id: "p-002", kind: "project", titleEl: "Ποδηλατόδρομος Κεραμεικού", lngLat: [23.7120, 37.9775], distanceM: 350, publicUrl: "", yes: 18, no: 5, maybe: 3 },
+];
+
+export const getVotables = async ([lng, lat]: [number, number]): Promise<Votable[]> => {
+  try {
+    return await fetch(`/api/votables?lng=${lng}&lat=${lat}`, { headers: headers() }).then((r) => json<Votable[]>(r));
+  } catch {
+    // Fallback: mock data when gateway is down
+    return MOCK_VOTABLES;
+  }
+};
 
 export const getReport = (id: string) =>
   fetch(`/api/reports/${encodeURIComponent(id)}`, { headers: headers() }).then((r) => json<Report>(r));

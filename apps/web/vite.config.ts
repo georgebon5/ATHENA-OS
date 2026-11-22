@@ -25,11 +25,12 @@ const ATHENA_SYSTEM = `Είσαι η ATHENA, η τεχνητή νοημοσύν�
 - "thermal": ρωτά για θερμοκρασία, καύσωνα, hotspot, σκιά, ήλιο
 - "sense": αναφέρεται σε πρόβλημα πόλης (λακκούβα, σκουπίδια, φωτισμός)
 - "reports": θέλει να δει αναφορές, αιτήματα, επείγοντα, τα πιο σοβαρά
+- "impact": θέλει να δει αντίκτυπο, αποτελέσματα, εξοικονόμηση, ROI, στατιστικά, KPIs, απόδοση
 - "chat": οτιδήποτε άλλο (χαιρετισμός, γενική ερώτηση)
 
 Αν η ενέργεια είναι "reports", δώσε συνοπτική ανάλυση (πόσα, τι κατηγορίες, ποια η πιο σοβαρή).
 
-Απάντησε ΜΟΝΟ με JSON (χωρίς markdown): {"text": "...", "action": "simulate"|"thermal"|"sense"|"reports"|"chat", "mood": "neutral"|"alert"|"proud"}`;
+Απάντησε ΜΟΝΟ με JSON (χωρίς markdown): {"text": "...", "action": "simulate"|"thermal"|"sense"|"reports"|"impact"|"chat", "mood": "neutral"|"alert"|"proud"}`;
 
 /** Vite plugin: POST /api/athena-chat → Claude API (server-side, key ασφαλές) */
 function athenaAgentPlugin(): Plugin {

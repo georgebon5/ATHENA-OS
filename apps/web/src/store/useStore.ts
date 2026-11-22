@@ -102,6 +102,9 @@ export interface AthenaState {
   // reports list panel
   showReportsList: boolean;
 
+  // impact dashboard
+  showImpactPanel: boolean;
+
   // actions
   setWsConnected: (v: boolean, latencyMs?: number) => void;
   setBeat: (b: DemoBeat) => void;
@@ -136,6 +139,7 @@ export interface AthenaState {
   setPickedProjectId: (id: string | null) => void;
   setShowUrgentNav: (v: boolean) => void;
   setShowReportsList: (v: boolean) => void;
+  setShowImpactPanel: (v: boolean) => void;
   reset: () => void;
 }
 
@@ -183,6 +187,7 @@ export const useStore = create<AthenaState>((set) => ({
   pickedProjectId: null,
   showUrgentNav: false,
   showReportsList: false,
+  showImpactPanel: false,
 
   setWsConnected: (v, latencyMs) =>
     set({ wsConnected: v, wsLatencyMs: latencyMs ?? null }),
@@ -233,6 +238,7 @@ export const useStore = create<AthenaState>((set) => ({
   setPickedProjectId: (id) => set({ pickedProjectId: id }),
   setShowUrgentNav: (v) => set({ showUrgentNav: v }),
   setShowReportsList: (v) => set({ showReportsList: v }),
+  setShowImpactPanel: (v) => set({ showImpactPanel: v }),
   reset: () =>
     set({
       beat: "INTRO",

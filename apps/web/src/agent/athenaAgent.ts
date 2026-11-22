@@ -7,7 +7,7 @@ import * as Cesium from "cesium";
 
 export interface AgentResponse {
   text: string;
-  action: "simulate" | "thermal" | "sense" | "reports" | "chat";
+  action: "simulate" | "thermal" | "sense" | "reports" | "impact" | "chat";
   mood: "neutral" | "alert" | "proud";
 }
 
@@ -119,6 +119,9 @@ async function executeAction(resp: AgentResponse): Promise<void> {
       }
       break;
     }
+    case "impact":
+      useStore.getState().setShowImpactPanel(true);
+      break;
     case "chat":
       break;
   }
@@ -129,6 +132,7 @@ const SIM_KW = ["λωρίδ", "δέντρ", "δρόμο", "κλείσ", "κυκ�
 const THERMAL_KW = ["θερμ", "θερμοκρασ", "hotspot", "ζέστη", "καύσων", "καλοκαίρι", "ήλιο", "σκιά", "flir"];
 const SENSE_KW = ["πρόβλημα", "φωτογραφ", "λακκούβ", "σκουπίδ", "φωτισμ"];
 const REPORT_KW = ["αναφορ", "αιτήμ", "επείγ", "σοβαρ", "σημαντικ", "καταγγελ", "παράπον"];
+const IMPACT_KW = ["impact", "αντίκτυπ", "αποτέλεσμ", "εξοικονόμ", "κόστος", "roi", "dashboard", "στατιστικ", "kpi", "μετρ", "απόδοση"];
 
 function matchesAny(text: string, keywords: string[]): boolean {
   const lower = text.toLowerCase();
@@ -141,6 +145,9 @@ function keywordFallback(q: string): AgentResponse {
   }
   if (matchesAny(q, THERMAL_KW)) {
     return { text: "Ενεργοποιώ τον θερμικό χάρτη. Βλέπεις τα hotspots στην περιοχή.", action: "thermal", mood: "neutral" };
+  }
+  if (matchesAny(q, IMPACT_KW)) {
+    return { text: "Ανοίγω το Impact Dashboard. Εκτιμώμενη εξοικονόμηση €2,1M/έτος με 87% κλείσιμο εντός 48 ωρών.", action: "impact", mood: "proud" };
   }
   if (matchesAny(q, REPORT_KW)) {
     const reports = Object.values(useStore.getState().reports);

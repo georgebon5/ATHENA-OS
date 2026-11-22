@@ -29,6 +29,7 @@ import { VoteCounter } from "./hud/VoteCounter";
 import { SunClock } from "./hud/SunClock";
 import { NearbyPanel } from "./hud/NearbyPanel";
 
+import { ImpactPanel } from "./hud/ImpactPanel";
 import { ReportPopup } from "./hud/ReportPopup";
 import { ReportsListPanel } from "./hud/ReportsListPanel";
 import { ProposalsPanel } from "./hud/ProposalsPanel";
@@ -94,6 +95,7 @@ export default function App() {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === "f" || e.key === "F") setSensorMode(sensorMode === "flir" ? "normal" : "flir");
       if (e.key === "n" || e.key === "N") setSensorMode(sensorMode === "nvg"  ? "normal" : "nvg");
+      if (e.key === "i" || e.key === "I") useStore.getState().setShowImpactPanel(!useStore.getState().showImpactPanel);
       if (BEAT_KEYS[e.key]) setBeat(BEAT_KEYS[e.key]);
     };
     window.addEventListener("keydown", onKey);
@@ -149,6 +151,8 @@ export default function App() {
       <ErrorBoundary name="report-popup"><ReportPopup /></ErrorBoundary>
       <ErrorBoundary name="proposals"><ProposalsPanel /></ErrorBoundary>
       <ErrorBoundary name="project-popup"><ProjectPopup /></ErrorBoundary>
+
+      <ErrorBoundary name="impact"><ImpactPanel /></ErrorBoundary>
 
       {/* ── full-screen στιγμές ── */}
       <ErrorBoundary name="beat-banner"><BeatBanner /></ErrorBoundary>
